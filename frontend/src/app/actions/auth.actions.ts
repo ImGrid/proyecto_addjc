@@ -45,11 +45,16 @@ export async function loginAction(data: LoginFormData) {
       path: '/', // Disponible en toda la app
     });
 
-    // Retornar exito
-    return {
-      success: true,
-      user: loginResponse.user,
+    // Redirect segun el rol del usuario
+    const redirectMap = {
+      ADMINISTRADOR: '/admin',
+      COMITE_TECNICO: '/comite-tecnico',
+      ENTRENADOR: '/entrenador',
+      ATLETA: '/atleta',
     };
+
+    const redirectPath = redirectMap[loginResponse.user.rol] || '/dashboard';
+    redirect(redirectPath);
   } catch (error) {
     console.error('Error en loginAction:', error);
     return {

@@ -35,18 +35,18 @@ export function LoginForm() {
     try {
       const result = await loginAction(data);
 
-      if (!result.success) {
+      // Si result es undefined, significa que el redirect fue exitoso
+      // (redirect() lanza un error especial que Next.js captura)
+      if (result && !result.success) {
         setError(result.error || 'Error al iniciar sesion');
+        setIsLoading(false);
         return;
       }
-
-      // Login exitoso - redirect al dashboard
-      router.push('/dashboard');
-      router.refresh(); // Refrescar para actualizar el estado de auth
     } catch (err) {
+      // Si el error es un redirect de Next.js, no hacer nada
+      // Next.js maneja el redirect automaticamente
       console.error('Error en login:', err);
       setError('Error inesperado. Por favor intenta nuevamente.');
-    } finally {
       setIsLoading(false);
     }
   }
