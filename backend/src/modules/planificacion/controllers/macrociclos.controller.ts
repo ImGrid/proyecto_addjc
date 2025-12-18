@@ -1,0 +1,68 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+  ParseIntPipe,
+} from '@nestjs/common';
+import { MacrociclosService } from '../services/macrociclos.service';
+import { CreateMacrocicloDto, UpdateMacrocicloDto } from '../dto';
+import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../common/guards/roles.guard';
+import { Roles } from '../../../common/decorators/roles.decorator';
+import { CurrentUser } from '../../../common/decorators/current-user.decorator';
+
+@Controller('macrociclos')
+@UseGuards(JwtAuthGuard, RolesGuard)
+export class MacrociclosController {
+  constructor(private readonly macrociclosService: MacrociclosService) {}
+
+  // POST /api/macrociclos - Crear macrociclo (solo COMITE_TECNICO)
+  @Post()
+  @Roles('COMITE_TECNICO')
+  create(
+    @Body() createMacrocicloDto: CreateMacrocicloDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.macrociclosService.create(createMacrocicloDto, user.id);
+  }
+
+  // GET /api/macrociclos - Listar macrociclos (COMITE_TECNICO, ENTRENADOR)
+  @Get()
+  @Roles('COMITE_TECNICO', 'ENTRENADOR')
+  findAll(
+    @Query('page', ParseIntPipe) page = 1,
+    @Query('limit', ParseIntPipe) limit = 10,
+  ) {
+    return this.macrociclosService.findAll(page, limit);
+  }
+
+  // GET /api/macrociclos/:id - Obtener macrociclo por ID
+  @Get(':id')
+  @Roles('COMITE_TECNICO', 'ENTRENADOR')
+  findOne(@Param('id') id: string) {
+    return this.macrociclosService.findOne(id);
+  }
+
+  // PATCH /api/macrociclos/:id - Actualizar macrociclo (solo COMITE_TECNICO)
+  @Patch(':id')
+  @Roles('COMITE_TECNICO')
+  update(
+    @Param('id') id: string,
+    @Body() updateMacrocicloDto: UpdateMacrocicloDto,
+  ) {
+    return this.macrociclosService.update(id, updateMacrocicloDto);
+  }
+
+  // DELETE /api/macrociclos/:id - Eliminar macrociclo (solo COMITE_TECNICO)
+  @Delete(':id')
+  @Roles('COMITE_TECNICO')
+  remove(@Param('id') id: string) {
+    return this.macrociclosService.remove(id);
+  }
+}
