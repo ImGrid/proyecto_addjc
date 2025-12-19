@@ -1,11 +1,23 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { usuariosListSchema } from '@/lib/usuarios-schema';
+import { usuariosListSchema, type UsuariosList } from '@/lib/usuarios-schema';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
-export async function getUsuariosAction() {
+type GetUsuariosSuccess = {
+  success: true;
+} & UsuariosList;
+
+type GetUsuariosError = {
+  success: false;
+  error: string;
+  data: never[];
+};
+
+type GetUsuariosResult = GetUsuariosSuccess | GetUsuariosError;
+
+export async function getUsuariosAction(): Promise<GetUsuariosResult> {
   try {
     // Obtener token de autenticacion desde cookies
     const cookieStore = await cookies();

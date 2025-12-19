@@ -77,33 +77,6 @@ export class TestsFisicosController {
     );
   }
 
-  // GET /api/tests-fisicos/:id - Obtener test por ID
-  @Get(':id')
-  @Roles('ENTRENADOR', 'COMITE_TECNICO', 'ATLETA')
-  @UseGuards(RolesGuard)
-  findOne(@Param('id') id: string, @CurrentUser() user: any) {
-    return this.testsFisicosService.findOne(
-      id,
-      BigInt(user.id),
-      user.rol,
-    );
-  }
-
-  // GET /api/atletas/:atletaId/tests - Tests de un atleta
-  @Get('atleta/:atletaId')
-  @Roles('ENTRENADOR', 'COMITE_TECNICO', 'ATLETA')
-  @UseGuards(RolesGuard)
-  findByAtleta(
-    @Param('atletaId') atletaId: string,
-    @CurrentUser() user: any,
-  ) {
-    return this.testsFisicosService.findByAtleta(
-      atletaId,
-      BigInt(user.id),
-      user.rol,
-    );
-  }
-
   // GET /api/atletas/:atletaId/tests/latest?tipoTest=pressBanca - Ultimo test por tipo
   @Get('atleta/:atletaId/latest')
   @Roles('ENTRENADOR', 'COMITE_TECNICO', 'ATLETA')
@@ -162,6 +135,33 @@ export class TestsFisicosController {
     return this.testsFisicosService.getEvolution(
       atletaId,
       tipoTest,
+      BigInt(user.id),
+      user.rol,
+    );
+  }
+
+  // GET /api/atletas/:atletaId/tests - Tests de un atleta
+  @Get('atleta/:atletaId')
+  @Roles('ENTRENADOR', 'COMITE_TECNICO', 'ATLETA')
+  @UseGuards(RolesGuard)
+  findByAtleta(
+    @Param('atletaId') atletaId: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.testsFisicosService.findByAtleta(
+      atletaId,
+      BigInt(user.id),
+      user.rol,
+    );
+  }
+
+  // GET /api/tests-fisicos/:id - Obtener test por ID
+  @Get(':id')
+  @Roles('ENTRENADOR', 'COMITE_TECNICO', 'ATLETA')
+  @UseGuards(RolesGuard)
+  findOne(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.testsFisicosService.findOne(
+      id,
       BigInt(user.id),
       user.rol,
     );

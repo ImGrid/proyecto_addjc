@@ -135,10 +135,41 @@ export class MicrociclosService {
   }
 
   // Listar microciclos con filtros opcionales
-  async findAll(mesocicloId?: string, page = 1, limit = 10) {
+  async findAll(
+    userId: bigint,
+    rol: string,
+    mesocicloId?: string,
+    page = 1,
+    limit = 10,
+  ) {
     const skip = (page - 1) * limit;
 
-    const where = mesocicloId ? { mesocicloId: BigInt(mesocicloId) } : {};
+    const where: any = {};
+    if (mesocicloId) {
+      where.mesocicloId = BigInt(mesocicloId);
+    }
+
+    // Si es ENTRENADOR, usar nested filter de Prisma (3 queries → 1 query)
+    if (rol === 'ENTRENADOR') {
+      // Buscar entrenadorId desde usuarioId
+      const entrenador = await this.prisma.entrenador.findUnique({
+        where: { usuarioId: userId },
+        select: { id: true },
+      });
+
+      if (!entrenador) {
+        throw new NotFoundException('Entrenador no encontrado');
+      }
+
+      // Usar nested filter para filtrar microciclos que tienen atletas del entrenador
+      where.asignacionesAtletas = {
+        some: {
+          atleta: {
+            entrenadorAsignadoId: entrenador.id,
+          },
+        },
+      };
+    }
 
     const [microciclos, total] = await Promise.all([
       this.prisma.microciclo.findMany({
@@ -179,8 +210,12 @@ export class MicrociclosService {
     };
   }
 
-  // Obtener un microciclo por ID
-  async findOne(id: string): Promise<MicrocicloResponseDto> {
+  // Obtener un microciclo por ID (con validacion de ownership para ENTRENADOR)
+  async findOne(
+    id: string,
+    userId: bigint,
+    rol: string,
+  ): Promise<MicrocicloResponseDto> {
     const microciclo = await this.prisma.microciclo.findUnique({
       where: { id: BigInt(id) },
       include: {
@@ -205,6 +240,33 @@ export class MicrociclosService {
 
     if (!microciclo) {
       throw new NotFoundException('Microciclo no encontrado');
+    }
+
+    // Si es ENTRENADOR, validar usando nested filter (3 queries → 1 query)
+    if (rol === 'ENTRENADOR') {
+      // Buscar entrenadorId desde usuarioId
+      const entrenador = await this.prisma.entrenador.findUnique({
+        where: { usuarioId: userId },
+        select: { id: true },
+      });
+
+      if (!entrenador) {
+        throw new NotFoundException('Entrenador no encontrado');
+      }
+
+      // Validar que existe al menos una asignacion usando nested filter
+      const asignacion = await this.prisma.asignacionAtletaMicrociclo.findFirst({
+        where: {
+          microcicloId: microciclo.id,
+          atleta: {
+            entrenadorAsignadoId: entrenador.id,
+          },
+        },
+      });
+
+      if (!asignacion) {
+        throw new NotFoundException('Microciclo no encontrado o no autorizado');
+      }
     }
 
     return this.formatMicrocicloResponse(microciclo);

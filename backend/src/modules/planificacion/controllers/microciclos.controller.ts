@@ -15,41 +15,49 @@ import { CreateMicrocicloDto, UpdateMicrocicloDto } from '../dto';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
+import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 
 @Controller('microciclos')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class MicrociclosController {
   constructor(private readonly microciclosService: MicrociclosService) {}
 
-  // POST /api/microciclos - Crear microciclo (COMITE_TECNICO, ENTRENADOR)
+  // POST /api/microciclos - Crear microciclo (solo COMITE_TECNICO)
   // Genera automáticamente 7 sesiones
   @Post()
-  @Roles('COMITE_TECNICO', 'ENTRENADOR')
+  @Roles('COMITE_TECNICO')
   create(@Body() createMicrocicloDto: CreateMicrocicloDto) {
     return this.microciclosService.create(createMicrocicloDto);
   }
 
-  // GET /api/microciclos - Listar microciclos (todos los roles autenticados)
+  // GET /api/microciclos - Listar microciclos (filtrados por rol)
   @Get()
   @Roles('COMITE_TECNICO', 'ENTRENADOR', 'ATLETA')
   findAll(
+    @CurrentUser() user: any,
     @Query('mesocicloId') mesocicloId?: string,
     @Query('page', ParseIntPipe) page = 1,
     @Query('limit', ParseIntPipe) limit = 10,
   ) {
-    return this.microciclosService.findAll(mesocicloId, page, limit);
+    return this.microciclosService.findAll(
+      BigInt(user.id),
+      user.rol,
+      mesocicloId,
+      page,
+      limit,
+    );
   }
 
   // GET /api/microciclos/:id - Obtener microciclo por ID (con sus 7 sesiones)
   @Get(':id')
   @Roles('COMITE_TECNICO', 'ENTRENADOR', 'ATLETA')
-  findOne(@Param('id') id: string) {
-    return this.microciclosService.findOne(id);
+  findOne(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.microciclosService.findOne(id, BigInt(user.id), user.rol);
   }
 
-  // PATCH /api/microciclos/:id - Actualizar microciclo (COMITE_TECNICO, ENTRENADOR)
+  // PATCH /api/microciclos/:id - Actualizar microciclo (solo COMITE_TECNICO)
   @Patch(':id')
-  @Roles('COMITE_TECNICO', 'ENTRENADOR')
+  @Roles('COMITE_TECNICO')
   update(
     @Param('id') id: string,
     @Body() updateMicrocicloDto: UpdateMicrocicloDto,

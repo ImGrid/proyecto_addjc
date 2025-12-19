@@ -76,8 +76,15 @@ export class SesionesService {
     return this.formatSesionResponse(sesion);
   }
 
-  // Listar sesiones con filtros opcionales
-  async findAll(microcicloId?: string, fecha?: string, page = 1, limit = 10) {
+  // Listar sesiones con filtros opcionales y filtrado por rol
+  async findAll(
+    userId: bigint,
+    rol: string,
+    microcicloId?: string,
+    fecha?: string,
+    page = 1,
+    limit = 10,
+  ) {
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -86,6 +93,30 @@ export class SesionesService {
     }
     if (fecha) {
       where.fecha = new Date(fecha);
+    }
+
+    // Si es ENTRENADOR, usar nested filter de Prisma (3 queries → 1 query)
+    if (rol === 'ENTRENADOR') {
+      // Buscar entrenadorId desde usuarioId
+      const entrenador = await this.prisma.entrenador.findUnique({
+        where: { usuarioId: userId },
+        select: { id: true },
+      });
+
+      if (!entrenador) {
+        throw new NotFoundException('Entrenador no encontrado');
+      }
+
+      // Usar nested filter para filtrar sesiones de microciclos con atletas del entrenador
+      where.microciclo = {
+        asignacionesAtletas: {
+          some: {
+            atleta: {
+              entrenadorAsignadoId: entrenador.id,
+            },
+          },
+        },
+      };
     }
 
     const [sesiones, total] = await Promise.all([
@@ -119,8 +150,8 @@ export class SesionesService {
     };
   }
 
-  // Obtener una sesión por ID
-  async findOne(id: string): Promise<SesionResponseDto> {
+  // Obtener una sesión por ID (con validación de ownership para ENTRENADOR)
+  async findOne(id: string, userId: bigint, rol: string): Promise<SesionResponseDto> {
     const sesion = await this.prisma.sesion.findUnique({
       where: { id: BigInt(id) },
       include: {
@@ -137,6 +168,33 @@ export class SesionesService {
 
     if (!sesion) {
       throw new NotFoundException('Sesión no encontrada');
+    }
+
+    // Si es ENTRENADOR, validar usando nested filter (3 queries → 1 query)
+    if (rol === 'ENTRENADOR') {
+      // Buscar entrenadorId desde usuarioId
+      const entrenador = await this.prisma.entrenador.findUnique({
+        where: { usuarioId: userId },
+        select: { id: true },
+      });
+
+      if (!entrenador) {
+        throw new NotFoundException('Entrenador no encontrado');
+      }
+
+      // Validar que existe al menos una asignacion usando nested filter
+      const asignacion = await this.prisma.asignacionAtletaMicrociclo.findFirst({
+        where: {
+          microcicloId: sesion.microcicloId,
+          atleta: {
+            entrenadorAsignadoId: entrenador.id,
+          },
+        },
+      });
+
+      if (!asignacion) {
+        throw new NotFoundException('Sesión no encontrada o no autorizada');
+      }
     }
 
     return this.formatSesionResponse(sesion);

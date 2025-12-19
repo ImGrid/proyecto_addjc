@@ -2,19 +2,19 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { LogOut } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { KimonoIcon } from '@/components/ui/kimono-icon';
 import { navigationConfig } from '@/lib/navigation';
 import type { Usuario } from '@/types/auth';
 
@@ -26,41 +26,46 @@ export function AppSidebar({ user }: AppSidebarProps) {
   const pathname = usePathname();
   const navigation = navigationConfig[user.rol];
 
-  // Obtener iniciales del nombre
-  const initials = user.nombreCompleto
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .substring(0, 2)
-    .toUpperCase();
-
   return (
-    <Sidebar>
-      <SidebarHeader className="border-b p-4">
+    <Sidebar className="w-[260px]">
+      <SidebarHeader className="border-b p-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <span className="text-lg font-bold">ADDJC</span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-semibold">Sistema ADDJC</span>
-            <span className="text-xs text-muted-foreground">Judo Cochabamba</span>
-          </div>
+          <KimonoIcon size={32} className="inline-block" />
+          <span className="text-[1.5rem] font-bold text-secondary tracking-tight">
+            ADDJC
+          </span>
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="py-4">
         <SidebarGroup>
-          <SidebarGroupLabel>Navegacion</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="gap-1 px-3">
               {navigation.map((item) => {
                 const isActive = pathname === item.href;
 
                 return (
                   <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton asChild isActive={isActive}>
-                      <Link href={item.href}>
-                        <item.icon className="h-4 w-4" />
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive}
+                      className={`
+                        flex items-center gap-3 px-6 py-[0.875rem] my-1 rounded-lg font-medium transition-all duration-300
+                        ${
+                          isActive
+                            ? 'bg-gradient-to-br from-primary to-primary-dark text-white shadow-md hover:shadow-lg'
+                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                        }
+                      `}
+                    >
+                      <Link
+                        href={item.href}
+                        className="flex items-center gap-3 w-full"
+                      >
+                        <item.icon
+                          className="h-5 w-5 flex-shrink-0"
+                          strokeWidth={2}
+                        />
                         <span>{item.label}</span>
                       </Link>
                     </SidebarMenuButton>
@@ -73,17 +78,13 @@ export function AppSidebar({ user }: AppSidebarProps) {
       </SidebarContent>
 
       <SidebarFooter className="border-t p-4">
-        <div className="flex items-center gap-3">
-          <Avatar>
-            <AvatarFallback className="bg-secondary text-secondary-foreground">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex flex-col overflow-hidden">
-            <span className="truncate text-sm font-medium">{user.nombreCompleto}</span>
-            <span className="truncate text-xs text-muted-foreground">{user.rol.replace('_', ' ')}</span>
-          </div>
-        </div>
+        <Link
+          href="/api/auth/logout"
+          className="flex items-center gap-3 px-4 py-[0.875rem] text-danger font-medium rounded-lg transition-all duration-300 hover:bg-danger/10"
+        >
+          <LogOut className="h-5 w-5 flex-shrink-0" strokeWidth={2} />
+          <span>Cerrar sesión</span>
+        </Link>
       </SidebarFooter>
     </Sidebar>
   );

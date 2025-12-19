@@ -76,7 +76,7 @@ export async function editarUsuarioAction(id: string, formData: Partial<EditarUs
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: error.errors[0]?.message || 'Datos invalidos',
+        error: error.issues[0]?.message || 'Datos invalidos',
       };
     }
 

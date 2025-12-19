@@ -13,35 +13,33 @@ export type RolUsuario = (typeof rolesUsuario)[number];
 // Schema para crear usuario (coincide con CreateUserDto del backend)
 export const crearUsuarioSchema = z.object({
   ci: z
-    .string({ required_error: 'CI es obligatorio' })
+    .string()
     .min(5, 'CI debe tener al menos 5 caracteres')
     .max(20, 'CI no puede tener más de 20 caracteres')
     .trim(),
   nombreCompleto: z
-    .string({ required_error: 'Nombre completo es obligatorio' })
+    .string()
     .min(3, 'Nombre debe tener al menos 3 caracteres')
     .max(255, 'Nombre no puede tener más de 255 caracteres')
     .trim(),
   email: z
-    .string({ required_error: 'Email es obligatorio' })
+    .string()
     .email('Email inválido')
     .max(255, 'Email no puede tener más de 255 caracteres')
     .toLowerCase()
     .trim(),
   contrasena: z
-    .string({ required_error: 'Contraseña es obligatoria' })
+    .string()
     .min(8, 'Contraseña debe tener al menos 8 caracteres')
     .max(100, 'Contraseña no puede tener más de 100 caracteres'),
-  rol: z.enum(rolesUsuario, {
-    errorMap: () => ({ message: 'Rol inválido' }),
-  }),
-  estado: z.boolean().default(true),
+  rol: z.enum(rolesUsuario),
+  estado: z.boolean().optional(),
 });
 
 // Schema para editar usuario (coincide con UpdateUserDto del backend)
 // Todos los campos son opcionales excepto el ID
 export const editarUsuarioSchema = z.object({
-  id: z.string({ required_error: 'ID es obligatorio' }),
+  id: z.string(),
   ci: z
     .string()
     .min(5, 'CI debe tener al menos 5 caracteres')

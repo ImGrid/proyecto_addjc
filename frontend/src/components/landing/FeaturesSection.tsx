@@ -1,53 +1,48 @@
-import { Calendar, BarChart, Bell, Trophy } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Layers, Grid3x3, Users, Shield } from 'lucide-react';
 
 const features = [
   {
-    icon: Calendar,
-    title: 'Planificacion Inteligente',
-    description: 'Sistema completo de macrociclos, mesociclos y microciclos adaptados a tus competencias.',
+    icon: Layers,
+    title: 'Camino a la Perfección',
+    description: 'Desarrollo continuo de habilidades y técnicas avanzadas',
   },
   {
-    icon: BarChart,
-    title: 'Seguimiento Personalizado',
-    description: 'Monitorea el progreso de cada atleta con tests fisicos y registros post-entrenamiento.',
+    icon: Grid3x3,
+    title: 'Competencia Sana',
+    description: 'Fomentamos valores deportivos y espíritu competitivo ético',
   },
   {
-    icon: Bell,
-    title: 'Recomendaciones Automaticas',
-    description: 'Algoritmo inteligente que sugiere ajustes en la carga segun el rendimiento del atleta.',
+    icon: Users,
+    title: 'Masificar la Práctica del Judo',
+    description: 'Expandir el alcance del judo en toda la comunidad',
   },
   {
-    icon: Trophy,
-    title: 'Gestion por Roles',
-    description: 'Acceso diferenciado para administradores, comite tecnico, entrenadores y atletas.',
+    icon: Shield,
+    title: 'Seguridad y Bienestar',
+    description: 'Entornos seguros y saludables para todos los atletas',
   },
 ];
 
 export function FeaturesSection() {
   return (
-    <section className="bg-muted/40 py-20">
-      <div className="container mx-auto px-6">
-        <div className="mb-12 text-center">
-          <h2 className="mb-4 text-4xl font-bold">Funcionalidades del Sistema</h2>
-          <p className="text-xl text-muted-foreground">
-            Todo lo que necesitas para optimizar el rendimiento deportivo
-          </p>
-        </div>
-
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+    <section className="bg-white pb-12">
+      <div className="container mx-auto px-16">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-8 mt-16 animate-[fadeIn_0.8s_ease-out]">
           {features.map((feature) => (
-            <Card key={feature.title} className="transition-transform hover:-translate-y-2">
-              <CardHeader>
-                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <feature.icon className="h-6 w-6" />
-                </div>
-                <CardTitle className="text-xl">{feature.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription className="text-base">{feature.description}</CardDescription>
-              </CardContent>
-            </Card>
+            <div
+              key={feature.title}
+              className="bg-white p-10 px-8 rounded-2xl shadow-sm transition-all duration-300 text-center hover:-translate-y-2 hover:shadow-lg"
+            >
+              <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-primary to-accent rounded-[20px] flex items-center justify-center text-white">
+                <feature.icon className="h-12 w-12" strokeWidth={2} />
+              </div>
+              <h3 className="text-[1.3rem] font-bold mb-4 text-secondary">
+                {feature.title}
+              </h3>
+              <p className="text-text-light leading-[1.6]">
+                {feature.description}
+              </p>
+            </div>
           ))}
         </div>
       </div>

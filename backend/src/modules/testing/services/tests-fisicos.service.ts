@@ -403,10 +403,24 @@ export class TestsFisicosService {
       return null;
     }
 
+    // Extraer el valor ANTES de formatear (puede ser Decimal o number)
+    const valorCampo = test[field as keyof typeof test];
+    let valorNumerico: number | string | null = null;
+
+    if (valorCampo !== null && valorCampo !== undefined) {
+      // Si es objeto Decimal, usar .toNumber()
+      if (typeof valorCampo === 'object' && 'toNumber' in valorCampo) {
+        valorNumerico = valorCampo.toNumber();
+      } else {
+        // Si es number directo (barraFija, paralelas)
+        valorNumerico = Number(valorCampo);
+      }
+    }
+
     return {
       test: this.formatResponse(test),
       tipoTest,
-      valor: test[field as keyof typeof test],
+      valor: valorNumerico,
     };
   }
 
@@ -471,7 +485,8 @@ export class TestsFisicosService {
       return null;
     }
 
-    const valores = tests.map((t) => Number(t[field]));
+    // Convertir valores usando helper (maneja Decimal correctamente)
+    const valores = tests.map((t) => this.extractNumericValue(t[field]));
     const stats = this.calculations.calculateStatistics(valores);
     const tendencia = this.calculations.calculateTrend(valores);
 
@@ -490,7 +505,7 @@ export class TestsFisicosService {
       historial: tests.map((t) => ({
         id: t.id.toString(),
         fechaTest: t.fechaTest,
-        valor: Number(t[field]),
+        valor: this.extractNumericValue(t[field]),
       })),
     };
   }
@@ -595,6 +610,30 @@ export class TestsFisicosService {
   }
 
   // ===== HELPER METHODS =====
+
+  /**
+   * Extrae valor numerico de un campo que puede ser Decimal, number, o null
+   * Util para acceso dinamico a campos (t[field])
+   */
+  private extractNumericValue(value: unknown): number {
+    // Null o undefined
+    if (value === null || value === undefined) {
+      return 0;
+    }
+
+    // Objeto Decimal (tiene metodo .toNumber())
+    if (typeof value === 'object' && value !== null && 'toNumber' in value) {
+      return (value as any).toNumber();
+    }
+
+    // Ya es number
+    if (typeof value === 'number') {
+      return value;
+    }
+
+    // Fallback: intentar parsear
+    return Number(value) || 0;
+  }
 
   private formatResponse(test: any) {
     // Calcular clasificacion VO2max si existe

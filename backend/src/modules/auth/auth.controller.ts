@@ -15,7 +15,10 @@ export class AuthController {
   @Public()
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
-    return this.authService.signIn(loginDto.email, loginDto.password);
+    console.log('[AuthController] Login request recibido para email:', loginDto.email);
+    const result = await this.authService.signIn(loginDto.email, loginDto.password);
+    console.log('[AuthController] Login exitoso para:', loginDto.email);
+    return result;
   }
 
   // GET /auth/profile - Endpoint protegido para obtener perfil del usuario actual

@@ -261,9 +261,29 @@ export class EntrenadoresService {
     return { message: 'Atleta asignado exitosamente al entrenador' };
   }
 
-  // Obtener todos los atletas asignados a un entrenador
-  async getAtletas(entrenadorId: string) {
+  // Obtener todos los atletas asignados a un entrenador (con validación de ownership)
+  async getAtletas(entrenadorId: string, userId: bigint, rol: string) {
     const entrenaderId = BigInt(entrenadorId);
+
+    // Si es ENTRENADOR, validar que solo vea sus propios atletas
+    if (rol === 'ENTRENADOR') {
+      // Buscar el entrenadorId del usuario autenticado
+      const entrenadorAutenticado = await this.prisma.entrenador.findUnique({
+        where: { usuarioId: userId },
+        select: { id: true },
+      });
+
+      if (!entrenadorAutenticado) {
+        throw new NotFoundException('Entrenador no encontrado');
+      }
+
+      // Verificar que el entrenadorId solicitado sea el suyo
+      if (entrenadorAutenticado.id !== entrenaderId) {
+        throw new BadRequestException(
+          'No tienes permiso para ver los atletas de otro entrenador',
+        );
+      }
+    }
 
     // Verificar que el entrenador exista
     const entrenador = await this.prisma.entrenador.findUnique({

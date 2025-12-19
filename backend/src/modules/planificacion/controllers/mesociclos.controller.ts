@@ -15,6 +15,7 @@ import { CreateMesocicloDto, UpdateMesocicloDto } from '../dto';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
+import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 
 @Controller('mesociclos')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -28,22 +29,29 @@ export class MesociclosController {
     return this.mesociclosService.create(createMesocicloDto);
   }
 
-  // GET /api/mesociclos - Listar mesociclos (COMITE_TECNICO, ENTRENADOR)
+  // GET /api/mesociclos - Listar mesociclos (COMITE_TECNICO, ENTRENADOR, ATLETA)
   @Get()
-  @Roles('COMITE_TECNICO', 'ENTRENADOR')
+  @Roles('COMITE_TECNICO', 'ENTRENADOR', 'ATLETA')
   findAll(
+    @CurrentUser() user: any,
     @Query('macrocicloId') macrocicloId?: string,
     @Query('page', ParseIntPipe) page = 1,
     @Query('limit', ParseIntPipe) limit = 10,
   ) {
-    return this.mesociclosService.findAll(macrocicloId, page, limit);
+    return this.mesociclosService.findAll(
+      BigInt(user.id),
+      user.rol,
+      macrocicloId,
+      page,
+      limit,
+    );
   }
 
   // GET /api/mesociclos/:id - Obtener mesociclo por ID
   @Get(':id')
-  @Roles('COMITE_TECNICO', 'ENTRENADOR')
-  findOne(@Param('id') id: string) {
-    return this.mesociclosService.findOne(id);
+  @Roles('COMITE_TECNICO', 'ENTRENADOR', 'ATLETA')
+  findOne(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.mesociclosService.findOne(id, BigInt(user.id), user.rol);
   }
 
   // PATCH /api/mesociclos/:id - Actualizar mesociclo (solo COMITE_TECNICO)

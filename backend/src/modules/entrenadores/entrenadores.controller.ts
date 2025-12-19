@@ -74,7 +74,6 @@ export class EntrenadoresController {
   @Get(':id/atletas')
   @Roles('ADMINISTRADOR', 'COMITE_TECNICO', 'ENTRENADOR')
   getAtletas(@Param('id') id: string, @CurrentUser() user: any) {
-    // TODO: Agregar validacion para que ENTRENADOR solo vea sus propios atletas
-    return this.entrenadoresService.getAtletas(id);
+    return this.entrenadoresService.getAtletas(id, BigInt(user.id), user.rol);
   }
 }

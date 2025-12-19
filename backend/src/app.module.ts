@@ -14,6 +14,7 @@ import { EntrenadoresModule } from './modules/entrenadores/entrenadores.module';
 import { PlanificacionModule } from './modules/planificacion/planificacion.module';
 import { RegistroPostEntrenamientoModule } from './modules/registro-post-entrenamiento/registro-post-entrenamiento.module';
 import { DolenciasModule } from './modules/dolencias/dolencias.module';
+import { AsignacionesModule } from './modules/asignaciones/asignaciones.module';
 import { TestingModule } from './modules/testing/testing.module';
 
 @Module({
@@ -45,6 +46,7 @@ import { TestingModule } from './modules/testing/testing.module';
     PlanificacionModule,
     RegistroPostEntrenamientoModule,
     DolenciasModule,
+    AsignacionesModule,
     TestingModule,
   ],
   controllers: [AppController],

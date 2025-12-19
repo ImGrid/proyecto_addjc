@@ -5,12 +5,63 @@ import {
 } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { PrismaService } from '../../database/prisma.service';
-import { MarcarRecuperadoDto } from './dto';
+import { CreateDolenciaDto, MarcarRecuperadoDto } from './dto';
 import { RolUsuario } from '@prisma/client';
 
 @Injectable()
 export class DolenciasService {
   constructor(private readonly prisma: PrismaService) {}
+
+  // Crear una dolencia asociada a un registro post-entrenamiento
+  @Transactional()
+  async create(createDto: CreateDolenciaDto) {
+    const registroId = BigInt(createDto.registroPostEntrenamientoId);
+
+    // Verificar que el registro post-entrenamiento existe
+    const registro = await this.prisma.registroPostEntrenamiento.findUnique({
+      where: { id: registroId },
+      select: {
+        id: true,
+        atletaId: true,
+      },
+    });
+
+    if (!registro) {
+      throw new NotFoundException('Registro post-entrenamiento no encontrado');
+    }
+
+    // Crear la dolencia
+    const dolencia = await this.prisma.dolencia.create({
+      data: {
+        registroPostEntrenamientoId: registroId,
+        zona: createDto.zona,
+        nivel: createDto.nivel,
+        descripcion: createDto.descripcion || null,
+        tipoLesion: createDto.tipoLesion || null,
+      },
+      include: {
+        registroPostEntrenamiento: {
+          select: {
+            id: true,
+            atletaId: true,
+            fechaRegistro: true,
+            atleta: {
+              select: {
+                id: true,
+                usuario: {
+                  select: {
+                    nombreCompleto: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return this.formatResponse(dolencia);
+  }
 
   // Listar dolencias con filtros
   async findAll(

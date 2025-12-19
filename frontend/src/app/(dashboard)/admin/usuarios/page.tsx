@@ -22,6 +22,9 @@ export default async function UsuariosPage() {
     );
   }
 
+  // Type narrowing: ahora TypeScript sabe que result tiene data y meta
+  const { data: usuarios, meta } = result;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -38,31 +41,31 @@ export default async function UsuariosPage() {
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-4">
         <div className="rounded-lg border bg-card p-6">
-          <div className="text-2xl font-bold">{result.meta.total}</div>
+          <div className="text-2xl font-bold">{meta.total}</div>
           <p className="text-xs text-muted-foreground">Total Usuarios</p>
         </div>
         <div className="rounded-lg border bg-card p-6">
           <div className="text-2xl font-bold">
-            {result.data.filter((u) => u.rol === 'ATLETA').length}
+            {usuarios.filter((u) => u.rol === 'ATLETA').length}
           </div>
           <p className="text-xs text-muted-foreground">Atletas</p>
         </div>
         <div className="rounded-lg border bg-card p-6">
           <div className="text-2xl font-bold">
-            {result.data.filter((u) => u.rol === 'ENTRENADOR').length}
+            {usuarios.filter((u) => u.rol === 'ENTRENADOR').length}
           </div>
           <p className="text-xs text-muted-foreground">Entrenadores</p>
         </div>
         <div className="rounded-lg border bg-card p-6">
           <div className="text-2xl font-bold">
-            {result.data.filter((u) => u.estado).length}
+            {usuarios.filter((u) => u.estado).length}
           </div>
           <p className="text-xs text-muted-foreground">Activos</p>
         </div>
       </div>
 
       {/* Table */}
-      <UsuariosTable usuarios={result.data} />
+      <UsuariosTable usuarios={usuarios} />
     </div>
   );
 }

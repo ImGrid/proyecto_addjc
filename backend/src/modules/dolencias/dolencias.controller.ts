@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Post,
   Patch,
   Param,
   Query,
@@ -10,7 +11,7 @@ import {
   ParseBoolPipe,
 } from '@nestjs/common';
 import { DolenciasService } from './dolencias.service';
-import { MarcarRecuperadoDto } from './dto';
+import { CreateDolenciaDto, MarcarRecuperadoDto } from './dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -20,6 +21,14 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 @UseGuards(JwtAuthGuard)
 export class DolenciasController {
   constructor(private readonly dolenciasService: DolenciasService) {}
+
+  // POST /api/dolencias - Crear dolencia (ENTRENADOR, COMITE_TECNICO)
+  @Post()
+  @Roles('ENTRENADOR', 'COMITE_TECNICO')
+  @UseGuards(RolesGuard)
+  create(@Body() createDto: CreateDolenciaDto) {
+    return this.dolenciasService.create(createDto);
+  }
 
   // GET /api/dolencias - Listar dolencias
   @Get()

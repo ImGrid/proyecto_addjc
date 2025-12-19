@@ -12,7 +12,7 @@ const config: Config = {
   		colors: {
   			primary: {
   				DEFAULT: 'hsl(var(--primary))',
-  				dark: '#e05a00',
+  				dark: 'var(--primary-dark)',
   				light: '#ff8533',
   				foreground: 'hsl(var(--primary-foreground))'
   			},
@@ -28,6 +28,9 @@ const config: Config = {
   				light: '#fdc855',
   				foreground: 'hsl(var(--accent-foreground))'
   			},
+  			'text-dark': 'var(--text-dark)',
+  			'text-light': 'var(--text-light)',
+  			'bg-light': 'var(--bg-light)',
   			success: {
   				DEFAULT: '#10b981',
   				dark: '#059669',

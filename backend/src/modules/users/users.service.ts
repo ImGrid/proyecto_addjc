@@ -75,13 +75,25 @@ export class UsersService {
     // Calcular skip para paginación
     const skip = (page - 1) * limit;
 
-    // Ejecutar consultas en paralelo
+    // Ejecutar consultas en paralelo con select explícito (evitar traer contraseña)
     const [users, total] = await Promise.all([
       this.prisma.usuario.findMany({
         where,
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          ci: true,
+          nombreCompleto: true,
+          email: true,
+          rol: true,
+          estado: true,
+          fechaRegistro: true,
+          ultimoAcceso: true,
+          createdAt: true,
+          updatedAt: true,
+        },
       }),
       this.prisma.usuario.count({ where }),
     ]);
@@ -106,6 +118,18 @@ export class UsersService {
 
     const user = await this.prisma.usuario.findUnique({
       where: { id: userId },
+      select: {
+        id: true,
+        ci: true,
+        nombreCompleto: true,
+        email: true,
+        rol: true,
+        estado: true,
+        fechaRegistro: true,
+        ultimoAcceso: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     if (!user) {

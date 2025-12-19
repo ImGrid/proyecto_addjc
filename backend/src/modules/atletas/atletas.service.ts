@@ -76,7 +76,23 @@ export class AtletasService {
           pesoActual: createAtletaDto.pesoActual,
           fcReposo: createAtletaDto.fcReposo,
         },
-        include: {
+        select: {
+          id: true,
+          usuarioId: true,
+          municipio: true,
+          club: true,
+          categoria: true,
+          peso: true,
+          fechaNacimiento: true,
+          edad: true,
+          direccion: true,
+          telefono: true,
+          entrenadorAsignadoId: true,
+          categoriaPeso: true,
+          pesoActual: true,
+          fcReposo: true,
+          createdAt: true,
+          updatedAt: true,
           usuario: {
             select: {
               id: true,
@@ -87,7 +103,8 @@ export class AtletasService {
             },
           },
           entrenadorAsignado: {
-            include: {
+            select: {
+              id: true,
               usuario: {
                 select: {
                   nombreCompleto: true,
@@ -157,14 +174,30 @@ export class AtletasService {
     // Calcular skip para paginacion
     const skip = (page - 1) * limit;
 
-    // Ejecutar consultas en paralelo
+    // Ejecutar consultas en paralelo con select explícito
     const [atletas, total] = await Promise.all([
       this.prisma.atleta.findMany({
         where,
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
-        include: {
+        select: {
+          id: true,
+          usuarioId: true,
+          municipio: true,
+          club: true,
+          categoria: true,
+          peso: true,
+          fechaNacimiento: true,
+          edad: true,
+          direccion: true,
+          telefono: true,
+          entrenadorAsignadoId: true,
+          categoriaPeso: true,
+          pesoActual: true,
+          fcReposo: true,
+          createdAt: true,
+          updatedAt: true,
           usuario: {
             select: {
               id: true,
@@ -175,7 +208,8 @@ export class AtletasService {
             },
           },
           entrenadorAsignado: {
-            include: {
+            select: {
+              id: true,
               usuario: {
                 select: {
                   nombreCompleto: true,
@@ -208,7 +242,23 @@ export class AtletasService {
 
     const atleta = await this.prisma.atleta.findUnique({
       where: { id: atletaId },
-      include: {
+      select: {
+        id: true,
+        usuarioId: true,
+        municipio: true,
+        club: true,
+        categoria: true,
+        peso: true,
+        fechaNacimiento: true,
+        edad: true,
+        direccion: true,
+        telefono: true,
+        entrenadorAsignadoId: true,
+        categoriaPeso: true,
+        pesoActual: true,
+        fcReposo: true,
+        createdAt: true,
+        updatedAt: true,
         usuario: {
           select: {
             id: true,
@@ -219,7 +269,8 @@ export class AtletasService {
           },
         },
         entrenadorAsignado: {
-          include: {
+          select: {
+            id: true,
             usuario: {
               select: {
                 nombreCompleto: true,

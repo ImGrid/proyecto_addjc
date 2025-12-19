@@ -32,21 +32,22 @@ export class MacrociclosController {
     return this.macrociclosService.create(createMacrocicloDto, user.id);
   }
 
-  // GET /api/macrociclos - Listar macrociclos (COMITE_TECNICO, ENTRENADOR)
+  // GET /api/macrociclos - Listar macrociclos (COMITE_TECNICO, ENTRENADOR, ATLETA)
   @Get()
-  @Roles('COMITE_TECNICO', 'ENTRENADOR')
+  @Roles('COMITE_TECNICO', 'ENTRENADOR', 'ATLETA')
   findAll(
+    @CurrentUser() user: any,
     @Query('page', ParseIntPipe) page = 1,
     @Query('limit', ParseIntPipe) limit = 10,
   ) {
-    return this.macrociclosService.findAll(page, limit);
+    return this.macrociclosService.findAll(BigInt(user.id), user.rol, page, limit);
   }
 
   // GET /api/macrociclos/:id - Obtener macrociclo por ID
   @Get(':id')
-  @Roles('COMITE_TECNICO', 'ENTRENADOR')
-  findOne(@Param('id') id: string) {
-    return this.macrociclosService.findOne(id);
+  @Roles('COMITE_TECNICO', 'ENTRENADOR', 'ATLETA')
+  findOne(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.macrociclosService.findOne(id, BigInt(user.id), user.rol);
   }
 
   // PATCH /api/macrociclos/:id - Actualizar macrociclo (solo COMITE_TECNICO)
