@@ -2,15 +2,20 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { PrismaService } from '../../database/prisma.service';
+import { AccessControlService } from '../../common/services/access-control.service';
 import { CreateDolenciaDto, MarcarRecuperadoDto } from './dto';
 import { RolUsuario } from '@prisma/client';
 
 @Injectable()
 export class DolenciasService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly accessControl: AccessControlService,
+  ) {}
 
   // Crear una dolencia asociada a un registro post-entrenamiento
   @Transactional()
@@ -78,16 +83,12 @@ export class DolenciasService {
 
     // ENTRENADOR solo ve dolencias de sus atletas asignados
     if (userRole === RolUsuario.ENTRENADOR) {
-      // Buscar el entrenadorId del usuario
-      const entrenador = await this.prisma.entrenador.findUnique({
-        where: { usuarioId: userId },
-        select: { id: true },
-      });
+      const entrenadorId = await this.accessControl.getEntrenadorId(userId);
 
-      if (entrenador) {
+      if (entrenadorId) {
         whereClause.registroPostEntrenamiento = {
           atleta: {
-            entrenadorAsignadoId: entrenador.id,
+            entrenadorAsignadoId: entrenadorId,
           },
         };
       }
@@ -163,15 +164,11 @@ export class DolenciasService {
 
     // ENTRENADOR solo ve dolencias de sus atletas
     if (userRole === RolUsuario.ENTRENADOR) {
-      // Buscar el entrenadorId del usuario
-      const entrenador = await this.prisma.entrenador.findUnique({
-        where: { usuarioId: userId },
-        select: { id: true },
-      });
+      const entrenadorId = await this.accessControl.getEntrenadorId(userId);
 
-      if (entrenador) {
+      if (entrenadorId) {
         whereClause.registroPostEntrenamiento.atleta = {
-          entrenadorAsignadoId: entrenador.id,
+          entrenadorAsignadoId: entrenadorId,
         };
       }
     }
@@ -230,20 +227,14 @@ export class DolenciasService {
 
     // Verificar autorizacion si es ENTRENADOR
     if (userRole === RolUsuario.ENTRENADOR) {
-      // Buscar el entrenadorId del usuario
-      const entrenador = await this.prisma.entrenador.findUnique({
-        where: { usuarioId: userId },
-        select: { id: true },
-      });
+      const hasAccess = await this.accessControl.checkAtletaOwnership(
+        userId,
+        userRole,
+        dolencia.registroPostEntrenamiento.atleta.id,
+      );
 
-      if (
-        !entrenador ||
-        dolencia.registroPostEntrenamiento.atleta.entrenadorAsignadoId !==
-          entrenador.id
-      ) {
-        throw new BadRequestException(
-          'No tienes permiso para ver esta dolencia',
-        );
+      if (!hasAccess) {
+        throw new ForbiddenException('No tienes permiso para ver esta dolencia');
       }
     }
 
@@ -258,18 +249,13 @@ export class DolenciasService {
     dto?: MarcarRecuperadoDto,
   ) {
     // 1. Buscar el entrenadorId usando el userId
-    const entrenador = await this.prisma.entrenador.findUnique({
-      where: { usuarioId: userId },
-      select: { id: true },
-    });
+    const entrenadorId = await this.accessControl.getEntrenadorId(userId);
 
-    if (!entrenador) {
+    if (!entrenadorId) {
       throw new BadRequestException(
         'No se encontró el registro de entrenador para este usuario',
       );
     }
-
-    const entrenadorId = entrenador.id;
 
     // 2. Verificar que la dolencia existe
     const dolencia = await this.prisma.dolencia.findUnique({

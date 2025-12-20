@@ -1,8 +1,9 @@
 import { RolUsuario } from '@prisma/client';
 
 // DTO para respuestas (NO incluye la contraseña)
+// BigInt se convierte automaticamente a string por BigIntTransformInterceptor
 export interface UserResponseDto {
-  id: string; // BigInt convertido a string para JSON
+  id: bigint;
   ci: string;
   nombreCompleto: string;
   email: string;

@@ -1,7 +1,8 @@
 // DTO para respuestas (incluye datos del usuario asociado y atletas)
+// BigInt se convierte automaticamente a string por BigIntTransformInterceptor
 export interface EntrenadorResponseDto {
-  id: string; // BigInt convertido a string
-  usuarioId: string;
+  id: bigint;
+  usuarioId: bigint;
   municipio: string;
   especialidad: string | null;
   createdAt: Date;
@@ -9,7 +10,7 @@ export interface EntrenadorResponseDto {
 
   // Datos del usuario asociado
   usuario: {
-    id: string;
+    id: bigint;
     ci: string;
     nombreCompleto: string;
     email: string;
@@ -18,7 +19,7 @@ export interface EntrenadorResponseDto {
 
   // Atletas asignados (opcional, solo cuando se solicite)
   atletasAsignados?: Array<{
-    id: string;
+    id: bigint;
     nombreCompleto: string;
     club: string;
     categoria: string;

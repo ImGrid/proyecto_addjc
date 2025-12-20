@@ -1,11 +1,15 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { PrismaService } from '../../../database/prisma.service';
+import { AccessControlService } from '../../../common/services/access-control.service';
 import { CreateSesionDto, UpdateSesionDto, SesionResponseDto } from '../dto';
 
 @Injectable()
 export class SesionesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly accessControl: AccessControlService,
+  ) {}
 
   // Crear una sesión individual
   @Transactional()
@@ -97,13 +101,9 @@ export class SesionesService {
 
     // Si es ENTRENADOR, usar nested filter de Prisma (3 queries → 1 query)
     if (rol === 'ENTRENADOR') {
-      // Buscar entrenadorId desde usuarioId
-      const entrenador = await this.prisma.entrenador.findUnique({
-        where: { usuarioId: userId },
-        select: { id: true },
-      });
+      const entrenadorId = await this.accessControl.getEntrenadorId(userId);
 
-      if (!entrenador) {
+      if (!entrenadorId) {
         throw new NotFoundException('Entrenador no encontrado');
       }
 
@@ -112,7 +112,7 @@ export class SesionesService {
         asignacionesAtletas: {
           some: {
             atleta: {
-              entrenadorAsignadoId: entrenador.id,
+              entrenadorAsignadoId: entrenadorId,
             },
           },
         },
@@ -172,13 +172,9 @@ export class SesionesService {
 
     // Si es ENTRENADOR, validar usando nested filter (3 queries → 1 query)
     if (rol === 'ENTRENADOR') {
-      // Buscar entrenadorId desde usuarioId
-      const entrenador = await this.prisma.entrenador.findUnique({
-        where: { usuarioId: userId },
-        select: { id: true },
-      });
+      const entrenadorId = await this.accessControl.getEntrenadorId(userId);
 
-      if (!entrenador) {
+      if (!entrenadorId) {
         throw new NotFoundException('Entrenador no encontrado');
       }
 
@@ -187,7 +183,7 @@ export class SesionesService {
         where: {
           microcicloId: sesion.microcicloId,
           atleta: {
-            entrenadorAsignadoId: entrenador.id,
+            entrenadorAsignadoId: entrenadorId,
           },
         },
       });

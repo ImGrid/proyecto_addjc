@@ -1,7 +1,8 @@
 import { NestFactory, HttpAdapterHost } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
-import { PrismaClientExceptionFilter } from './common/filters/prisma-client-exception.filter';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { BigIntTransformInterceptor } from './common/interceptors/bigint-transform.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -15,9 +16,14 @@ async function bootstrap() {
     }),
   );
 
-  // Configurar filtro global de excepciones de Prisma
-  const { httpAdapter } = app.get(HttpAdapterHost);
-  app.useGlobalFilters(new PrismaClientExceptionFilter(httpAdapter));
+  // Configurar filtro global de excepciones
+  // Captura TODAS las excepciones: HTTP, Prisma, validacion, errores inesperados
+  const httpAdapterHost = app.get(HttpAdapterHost);
+  app.useGlobalFilters(new AllExceptionsFilter(httpAdapterHost));
+
+  // Configurar interceptor global para transformar BigInt a string
+  // Aplica a todas las respuestas HTTP, eliminando necesidad de formatResponse manual
+  app.useGlobalInterceptors(new BigIntTransformInterceptor());
 
   // Habilitar CORS para permitir peticiones desde el frontend
   // IMPORTANTE: credentials: true es necesario para HttpOnly cookies

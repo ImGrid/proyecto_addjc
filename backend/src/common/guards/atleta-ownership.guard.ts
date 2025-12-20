@@ -3,20 +3,21 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
-import { PrismaService } from '../../database/prisma.service';
-import { RolUsuario } from '@prisma/client';
+import { AccessControlService } from '../services/access-control.service';
 
 @Injectable()
 export class AtletaOwnershipGuard implements CanActivate {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly accessControl: AccessControlService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const user = request.user; // Agregado por JwtAuthGuard
 
     if (!user) {
-      throw new ForbiddenException('Usuario no autenticado');
+      throw new UnauthorizedException('Usuario no autenticado');
     }
 
     // Extraer atletaId del body o params
@@ -25,49 +26,24 @@ export class AtletaOwnershipGuard implements CanActivate {
     );
 
     if (!atletaId) {
-      throw new ForbiddenException(
+      throw new BadRequestException(
         'ID de atleta no proporcionado en la solicitud',
       );
     }
 
-    // COMITE_TECNICO y ADMINISTRADOR pueden ver/modificar todos los atletas
-    if (
-      user.rol === RolUsuario.COMITE_TECNICO ||
-      user.rol === RolUsuario.ADMINISTRADOR
-    ) {
-      return true;
-    }
+    // Delegar la verificacion al servicio centralizado
+    const hasAccess = await this.accessControl.checkAtletaOwnership(
+      user.id,
+      user.rol,
+      atletaId,
+    );
 
-    // ENTRENADOR: verificar relacion con atleta asignado
-    if (user.rol === RolUsuario.ENTRENADOR) {
-      // Buscar el entrenador por usuarioId
-      const entrenador = await this.prisma.entrenador.findUnique({
-        where: { usuarioId: user.id },
-        include: {
-          atletasAsignados: {
-            where: { id: atletaId },
-            select: { id: true },
-          },
-        },
-      });
-
-      // Verificar que el atleta esta en la lista de asignados
-      if (!entrenador || entrenador.atletasAsignados.length === 0) {
-        throw new ForbiddenException(
-          `No tienes permiso para registrar datos del atleta ${atletaId}. Solo puedes registrar datos de tus atletas asignados.`,
-        );
-      }
-
-      return true;
-    }
-
-    // ATLETA no puede registrar datos de otros
-    if (user.rol === RolUsuario.ATLETA) {
+    if (!hasAccess) {
       throw new ForbiddenException(
-        'Los atletas no tienen permiso para registrar datos post-entrenamiento',
+        `No tienes permiso para acceder a los datos del atleta ${atletaId}. Solo puedes acceder a tus atletas asignados.`,
       );
     }
 
-    return false;
+    return true;
   }
 }

@@ -1,12 +1,16 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { PrismaService } from '../../../database/prisma.service';
+import { AccessControlService } from '../../../common/services/access-control.service';
 import { CreateMacrocicloDto, UpdateMacrocicloDto, MacrocicloResponseDto } from '../dto';
 import { EstadoMacrociclo } from '@prisma/client';
 
 @Injectable()
 export class MacrociclosService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly accessControl: AccessControlService,
+  ) {}
 
   // Crear un nuevo macrociclo
   @Transactional()
@@ -40,7 +44,24 @@ export class MacrociclosService {
         totalHoras: createMacrocicloDto.totalHoras || 0,
         creadoPor: BigInt(creadoPorUserId),
       },
-      include: {
+      select: {
+        id: true,
+        nombre: true,
+        temporada: true,
+        equipo: true,
+        categoriaObjetivo: true,
+        objetivo1: true,
+        objetivo2: true,
+        objetivo3: true,
+        fechaInicio: true,
+        fechaFin: true,
+        estado: true,
+        totalMicrociclos: true,
+        totalSesiones: true,
+        totalHoras: true,
+        creadoPor: true,
+        createdAt: true,
+        updatedAt: true,
         creador: {
           select: {
             id: true,
@@ -51,7 +72,7 @@ export class MacrociclosService {
       },
     });
 
-    return this.formatMacrocicloResponse(macrociclo);
+    return macrociclo;
   }
 
   // Listar todos los macrociclos con filtros y paginación
@@ -62,13 +83,9 @@ export class MacrociclosService {
 
     // Si es ENTRENADOR, usar nested filter de Prisma (5 queries → 1 query)
     if (rol === 'ENTRENADOR') {
-      // Buscar entrenadorId desde usuarioId
-      const entrenador = await this.prisma.entrenador.findUnique({
-        where: { usuarioId: userId },
-        select: { id: true },
-      });
+      const entrenadorId = await this.accessControl.getEntrenadorId(userId);
 
-      if (!entrenador) {
+      if (!entrenadorId) {
         throw new NotFoundException('Entrenador no encontrado');
       }
 
@@ -80,7 +97,7 @@ export class MacrociclosService {
               asignacionesAtletas: {
                 some: {
                   atleta: {
-                    entrenadorAsignadoId: entrenador.id,
+                    entrenadorAsignadoId: entrenadorId,
                   },
                 },
               },
@@ -92,13 +109,9 @@ export class MacrociclosService {
 
     // Si es ATLETA, usar nested filter de Prisma (4 queries → 1 query)
     if (rol === 'ATLETA') {
-      // Buscar atletaId desde usuarioId
-      const atleta = await this.prisma.atleta.findUnique({
-        where: { usuarioId: userId },
-        select: { id: true },
-      });
+      const atletaId = await this.accessControl.getAtletaId(userId);
 
-      if (!atleta) {
+      if (!atletaId) {
         throw new NotFoundException('Atleta no encontrado');
       }
 
@@ -109,7 +122,7 @@ export class MacrociclosService {
             some: {
               asignacionesAtletas: {
                 some: {
-                  atletaId: atleta.id,
+                  atletaId,
                 },
               },
             },
@@ -124,7 +137,24 @@ export class MacrociclosService {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
-        include: {
+        select: {
+          id: true,
+          nombre: true,
+          temporada: true,
+          equipo: true,
+          categoriaObjetivo: true,
+          objetivo1: true,
+          objetivo2: true,
+          objetivo3: true,
+          fechaInicio: true,
+          fechaFin: true,
+          estado: true,
+          totalMicrociclos: true,
+          totalSesiones: true,
+          totalHoras: true,
+          creadoPor: true,
+          createdAt: true,
+          updatedAt: true,
           creador: {
             select: {
               id: true,
@@ -138,7 +168,7 @@ export class MacrociclosService {
     ]);
 
     return {
-      data: macrociclos.map((m) => this.formatMacrocicloResponse(m)),
+      data: macrociclos,
       meta: {
         total,
         page,
@@ -156,7 +186,24 @@ export class MacrociclosService {
   ): Promise<MacrocicloResponseDto> {
     const macrociclo = await this.prisma.macrociclo.findUnique({
       where: { id: BigInt(id) },
-      include: {
+      select: {
+        id: true,
+        nombre: true,
+        temporada: true,
+        equipo: true,
+        categoriaObjetivo: true,
+        objetivo1: true,
+        objetivo2: true,
+        objetivo3: true,
+        fechaInicio: true,
+        fechaFin: true,
+        estado: true,
+        totalMicrociclos: true,
+        totalSesiones: true,
+        totalHoras: true,
+        creadoPor: true,
+        createdAt: true,
+        updatedAt: true,
         creador: {
           select: {
             id: true,
@@ -173,13 +220,9 @@ export class MacrociclosService {
 
     // Si es ENTRENADOR, validar usando nested filter (3 queries → 1 query)
     if (rol === 'ENTRENADOR') {
-      // Buscar entrenadorId desde usuarioId
-      const entrenador = await this.prisma.entrenador.findUnique({
-        where: { usuarioId: userId },
-        select: { id: true },
-      });
+      const entrenadorId = await this.accessControl.getEntrenadorId(userId);
 
-      if (!entrenador) {
+      if (!entrenadorId) {
         throw new NotFoundException('Entrenador no encontrado');
       }
 
@@ -187,7 +230,7 @@ export class MacrociclosService {
       const asignacion = await this.prisma.asignacionAtletaMicrociclo.findFirst({
         where: {
           atleta: {
-            entrenadorAsignadoId: entrenador.id,
+            entrenadorAsignadoId: entrenadorId,
           },
           microciclo: {
             mesociclo: {
@@ -204,20 +247,16 @@ export class MacrociclosService {
 
     // Si es ATLETA, validar usando nested filter (ya optimizado)
     if (rol === 'ATLETA') {
-      // Buscar atletaId desde usuarioId
-      const atleta = await this.prisma.atleta.findUnique({
-        where: { usuarioId: userId },
-        select: { id: true },
-      });
+      const atletaId = await this.accessControl.getAtletaId(userId);
 
-      if (!atleta) {
+      if (!atletaId) {
         throw new NotFoundException('Atleta no encontrado');
       }
 
       // Verificar si el atleta esta asignado a algun microciclo de este macrociclo
       const asignacion = await this.prisma.asignacionAtletaMicrociclo.findFirst({
         where: {
-          atletaId: atleta.id,
+          atletaId,
           microciclo: {
             mesociclo: {
               macrocicloId: macrociclo.id,
@@ -231,7 +270,7 @@ export class MacrociclosService {
       }
     }
 
-    return this.formatMacrocicloResponse(macrociclo);
+    return macrociclo;
   }
 
   // Actualizar un macrociclo
@@ -282,7 +321,24 @@ export class MacrociclosService {
         ...(updateMacrocicloDto.totalSesiones !== undefined && { totalSesiones: updateMacrocicloDto.totalSesiones }),
         ...(updateMacrocicloDto.totalHoras !== undefined && { totalHoras: updateMacrocicloDto.totalHoras }),
       },
-      include: {
+      select: {
+        id: true,
+        nombre: true,
+        temporada: true,
+        equipo: true,
+        categoriaObjetivo: true,
+        objetivo1: true,
+        objetivo2: true,
+        objetivo3: true,
+        fechaInicio: true,
+        fechaFin: true,
+        estado: true,
+        totalMicrociclos: true,
+        totalSesiones: true,
+        totalHoras: true,
+        creadoPor: true,
+        createdAt: true,
+        updatedAt: true,
         creador: {
           select: {
             id: true,
@@ -293,7 +349,7 @@ export class MacrociclosService {
       },
     });
 
-    return this.formatMacrocicloResponse(macrociclo);
+    return macrociclo;
   }
 
   // Eliminar un macrociclo (hard delete)
@@ -323,35 +379,5 @@ export class MacrociclosService {
     });
 
     return { message: 'Macrociclo eliminado permanentemente' };
-  }
-
-  // Método auxiliar para formatear respuesta
-  private formatMacrocicloResponse(macrociclo: any): MacrocicloResponseDto {
-    return {
-      id: macrociclo.id.toString(),
-      nombre: macrociclo.nombre,
-      temporada: macrociclo.temporada,
-      equipo: macrociclo.equipo,
-      categoriaObjetivo: macrociclo.categoriaObjetivo,
-      objetivo1: macrociclo.objetivo1,
-      objetivo2: macrociclo.objetivo2,
-      objetivo3: macrociclo.objetivo3,
-      fechaInicio: macrociclo.fechaInicio,
-      fechaFin: macrociclo.fechaFin,
-      estado: macrociclo.estado,
-      totalMicrociclos: macrociclo.totalMicrociclos,
-      totalSesiones: macrociclo.totalSesiones,
-      totalHoras: parseFloat(macrociclo.totalHoras.toString()),
-      creadoPor: macrociclo.creadoPor.toString(),
-      createdAt: macrociclo.createdAt,
-      updatedAt: macrociclo.updatedAt,
-      ...(macrociclo.creador && {
-        creador: {
-          id: macrociclo.creador.id.toString(),
-          nombreCompleto: macrociclo.creador.nombreCompleto,
-          email: macrociclo.creador.email,
-        },
-      }),
-    };
   }
 }

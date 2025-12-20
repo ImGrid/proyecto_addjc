@@ -26,4 +26,11 @@ export class AppController {
   getDatabaseHealth() {
     return this.appService.getDatabaseHealth();
   }
+
+  // GET /api/health/pool - Estadisticas del pool de conexiones
+  @Public()
+  @Get('health/pool')
+  getPoolStats() {
+    return this.appService.getPoolStats();
+  }
 }

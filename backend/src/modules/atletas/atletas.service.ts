@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
+import { AccessControlService } from '../../common/services/access-control.service';
 import { AuthService } from '../auth/auth.service';
 import { CreateAtletaDto, UpdateAtletaDto, QueryAtletaDto, AtletaResponseDto } from './dto';
 
@@ -7,11 +8,12 @@ import { CreateAtletaDto, UpdateAtletaDto, QueryAtletaDto, AtletaResponseDto } f
 export class AtletasService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly accessControl: AccessControlService,
     private readonly authService: AuthService,
   ) {}
 
   // Crear un nuevo atleta (incluye crear usuario con rol ATLETA)
-  async create(createAtletaDto: CreateAtletaDto): Promise<AtletaResponseDto> {
+  async create(createAtletaDto: CreateAtletaDto) {
     // Verificar que el email no exista
     const existingEmail = await this.prisma.usuario.findUnique({
       where: { email: createAtletaDto.email },
@@ -118,7 +120,7 @@ export class AtletasService {
       return atleta;
     });
 
-    return this.formatAtletaResponse(result);
+    return result;
   }
 
   // Listar atletas con filtros y paginacion
@@ -156,12 +158,10 @@ export class AtletasService {
 
     // Si el usuario es ENTRENADOR, solo mostrar sus atletas asignados
     if (currentUserRole === 'ENTRENADOR' && currentUserId) {
-      const entrenador = await this.prisma.entrenador.findUnique({
-        where: { usuarioId: BigInt(currentUserId) },
-      });
+      const entrenadorId = await this.accessControl.getEntrenadorId(BigInt(currentUserId));
 
-      if (entrenador) {
-        where.entrenadorAsignadoId = entrenador.id;
+      if (entrenadorId) {
+        where.entrenadorAsignadoId = entrenadorId;
       } else {
         // Si no tiene perfil de entrenador, no mostrar nada
         return {
@@ -222,11 +222,8 @@ export class AtletasService {
       this.prisma.atleta.count({ where }),
     ]);
 
-    // Formatear respuestas
-    const data = atletas.map((atleta) => this.formatAtletaResponse(atleta));
-
     return {
-      data,
+      data: atletas,
       meta: {
         total,
         page,
@@ -237,7 +234,7 @@ export class AtletasService {
   }
 
   // Obtener un atleta por ID
-  async findOne(id: string, currentUserId?: string, currentUserRole?: string): Promise<AtletaResponseDto> {
+  async findOne(id: string, currentUserId?: string, currentUserRole?: string) {
     const atletaId = BigInt(id);
 
     const atleta = await this.prisma.atleta.findUnique({
@@ -287,20 +284,22 @@ export class AtletasService {
 
     // Si el usuario es ENTRENADOR, verificar que sea su atleta asignado
     if (currentUserRole === 'ENTRENADOR' && currentUserId) {
-      const entrenador = await this.prisma.entrenador.findUnique({
-        where: { usuarioId: BigInt(currentUserId) },
-      });
+      const hasAccess = await this.accessControl.checkAtletaOwnership(
+        BigInt(currentUserId),
+        'ENTRENADOR' as any,
+        atleta.id,
+      );
 
-      if (!entrenador || atleta.entrenadorAsignadoId?.toString() !== entrenador.id.toString()) {
-        throw new NotFoundException('Atleta no encontrado o no asignado a este entrenador');
+      if (!hasAccess) {
+        throw new ForbiddenException('No tienes permiso para ver este atleta');
       }
     }
 
-    return this.formatAtletaResponse(atleta);
+    return atleta;
   }
 
   // Actualizar un atleta
-  async update(id: string, updateAtletaDto: UpdateAtletaDto): Promise<AtletaResponseDto> {
+  async update(id: string, updateAtletaDto: UpdateAtletaDto) {
     const atletaId = BigInt(id);
 
     // Verificar que el atleta exista
@@ -363,7 +362,7 @@ export class AtletasService {
       },
     });
 
-    return this.formatAtletaResponse(updatedAtleta);
+    return updatedAtleta;
   }
 
   // Eliminar un atleta (hard delete - elimina usuario + atleta por cascade)
@@ -385,40 +384,5 @@ export class AtletasService {
     });
 
     return { message: 'Atleta eliminado permanentemente' };
-  }
-
-  // Metodo auxiliar para formatear respuesta
-  private formatAtletaResponse(atleta: any): AtletaResponseDto {
-    return {
-      id: atleta.id.toString(),
-      usuarioId: atleta.usuarioId.toString(),
-      municipio: atleta.municipio,
-      club: atleta.club,
-      categoria: atleta.categoria,
-      peso: atleta.peso,
-      fechaNacimiento: atleta.fechaNacimiento,
-      edad: atleta.edad,
-      direccion: atleta.direccion,
-      telefono: atleta.telefono,
-      entrenadorAsignadoId: atleta.entrenadorAsignadoId ? atleta.entrenadorAsignadoId.toString() : null,
-      categoriaPeso: atleta.categoriaPeso,
-      pesoActual: atleta.pesoActual ? parseFloat(atleta.pesoActual.toString()) : null,
-      fcReposo: atleta.fcReposo,
-      createdAt: atleta.createdAt,
-      updatedAt: atleta.updatedAt,
-      usuario: {
-        id: atleta.usuario.id.toString(),
-        ci: atleta.usuario.ci,
-        nombreCompleto: atleta.usuario.nombreCompleto,
-        email: atleta.usuario.email,
-        estado: atleta.usuario.estado,
-      },
-      entrenadorAsignado: atleta.entrenadorAsignado
-        ? {
-            id: atleta.entrenadorAsignado.id.toString(),
-            nombreCompleto: atleta.entrenadorAsignado.usuario.nombreCompleto,
-          }
-        : null,
-    };
   }
 }

@@ -2,9 +2,11 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { PrismaService } from '../../../database/prisma.service';
+import { AccessControlService } from '../../../common/services/access-control.service';
 import { CalculationsService } from './calculations.service';
 import { CreateTestFisicoDto, UpdateTestFisicoDto } from '../dto';
 import { RolUsuario } from '@prisma/client';
@@ -13,6 +15,7 @@ import { RolUsuario } from '@prisma/client';
 export class TestsFisicosService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly accessControl: AccessControlService,
     private readonly calculations: CalculationsService,
   ) {}
 
@@ -179,14 +182,11 @@ export class TestsFisicosService {
 
     // ENTRENADOR solo ve tests de sus atletas asignados
     if (userRole === RolUsuario.ENTRENADOR) {
-      const entrenador = await this.prisma.entrenador.findUnique({
-        where: { usuarioId: userId },
-        select: { id: true },
-      });
+      const entrenadorId = await this.accessControl.getEntrenadorId(userId);
 
-      if (entrenador) {
+      if (entrenadorId) {
         whereClause.atleta = {
-          entrenadorAsignadoId: entrenador.id,
+          entrenadorAsignadoId: entrenadorId,
         };
       }
     }
@@ -279,13 +279,14 @@ export class TestsFisicosService {
 
     // Verificar autorizacion si es ENTRENADOR
     if (userRole === RolUsuario.ENTRENADOR) {
-      const entrenador = await this.prisma.entrenador.findUnique({
-        where: { usuarioId: userId },
-        select: { id: true },
-      });
+      const hasAccess = await this.accessControl.checkAtletaOwnership(
+        userId,
+        userRole,
+        test.atleta.id,
+      );
 
-      if (!entrenador || test.atleta.entrenadorAsignadoId !== entrenador.id) {
-        throw new BadRequestException(
+      if (!hasAccess) {
+        throw new ForbiddenException(
           'No tienes permiso para ver este test',
         );
       }
@@ -306,14 +307,11 @@ export class TestsFisicosService {
 
     // ENTRENADOR solo ve tests de sus atletas
     if (userRole === RolUsuario.ENTRENADOR) {
-      const entrenador = await this.prisma.entrenador.findUnique({
-        where: { usuarioId: userId },
-        select: { id: true },
-      });
+      const entrenadorId = await this.accessControl.getEntrenadorId(userId);
 
-      if (entrenador) {
+      if (entrenadorId) {
         whereClause.atleta = {
-          entrenadorAsignadoId: entrenador.id,
+          entrenadorAsignadoId: entrenadorId,
         };
       }
     }
@@ -350,18 +348,14 @@ export class TestsFisicosService {
   ) {
     // Verificar autorizacion
     if (userRole === RolUsuario.ENTRENADOR) {
-      const entrenador = await this.prisma.entrenador.findUnique({
-        where: { usuarioId: userId },
-        select: { id: true },
-      });
+      const hasAccess = await this.accessControl.checkAtletaOwnership(
+        userId,
+        userRole,
+        BigInt(atletaId),
+      );
 
-      const atleta = await this.prisma.atleta.findUnique({
-        where: { id: BigInt(atletaId) },
-        select: { entrenadorAsignadoId: true },
-      });
-
-      if (!entrenador || !atleta || atleta.entrenadorAsignadoId !== entrenador.id) {
-        throw new BadRequestException(
+      if (!hasAccess) {
+        throw new ForbiddenException(
           'No tienes permiso para ver tests de este atleta',
         );
       }
@@ -435,18 +429,14 @@ export class TestsFisicosService {
   ) {
     // Verificar autorizacion
     if (userRole === RolUsuario.ENTRENADOR) {
-      const entrenador = await this.prisma.entrenador.findUnique({
-        where: { usuarioId: userId },
-        select: { id: true },
-      });
+      const hasAccess = await this.accessControl.checkAtletaOwnership(
+        userId,
+        userRole,
+        BigInt(atletaId),
+      );
 
-      const atleta = await this.prisma.atleta.findUnique({
-        where: { id: BigInt(atletaId) },
-        select: { entrenadorAsignadoId: true },
-      });
-
-      if (!entrenador || !atleta || atleta.entrenadorAsignadoId !== entrenador.id) {
-        throw new BadRequestException(
+      if (!hasAccess) {
+        throw new ForbiddenException(
           'No tienes permiso para ver estadisticas de este atleta',
         );
       }

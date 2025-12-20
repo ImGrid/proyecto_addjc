@@ -3,15 +3,20 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { PrismaService } from '../../database/prisma.service';
+import { AccessControlService } from '../../common/services/access-control.service';
 import { CreateRegistroPostEntrenamientoDto } from './dto';
 import { RolUsuario } from '@prisma/client';
 
 @Injectable()
 export class RegistroPostEntrenamientoService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly accessControl: AccessControlService,
+  ) {}
 
   // Crear registro post-entrenamiento con validacion 1:1
   @Transactional()
@@ -166,15 +171,11 @@ export class RegistroPostEntrenamientoService {
     // COMITE_TECNICO puede ver todos los registros
     // ENTRENADOR solo ve registros de sus atletas asignados
     if (userRole === RolUsuario.ENTRENADOR) {
-      // Buscar el entrenadorId del usuario
-      const entrenador = await this.prisma.entrenador.findUnique({
-        where: { usuarioId: userId },
-        select: { id: true },
-      });
+      const entrenadorId = await this.accessControl.getEntrenadorId(userId);
 
-      if (entrenador) {
+      if (entrenadorId) {
         whereClause.atleta = {
-          entrenadorAsignadoId: entrenador.id,
+          entrenadorAsignadoId: entrenadorId,
         };
       }
     }
@@ -262,16 +263,14 @@ export class RegistroPostEntrenamientoService {
 
     // Verificar autorizacion si es ENTRENADOR
     if (userRole === RolUsuario.ENTRENADOR) {
-      // Buscar el entrenadorId del usuario
-      const entrenador = await this.prisma.entrenador.findUnique({
-        where: { usuarioId: userId },
-        select: { id: true },
-      });
+      const hasAccess = await this.accessControl.checkAtletaOwnership(
+        userId,
+        userRole,
+        registro.atleta.id,
+      );
 
-      if (!entrenador || registro.atleta.entrenadorAsignadoId !== entrenador.id) {
-        throw new BadRequestException(
-          'No tienes permiso para ver este registro',
-        );
+      if (!hasAccess) {
+        throw new ForbiddenException('No tienes permiso para ver este registro');
       }
     }
 
@@ -286,15 +285,11 @@ export class RegistroPostEntrenamientoService {
 
     // ENTRENADOR solo ve registros de sus atletas
     if (userRole === RolUsuario.ENTRENADOR) {
-      // Buscar el entrenadorId del usuario
-      const entrenador = await this.prisma.entrenador.findUnique({
-        where: { usuarioId: userId },
-        select: { id: true },
-      });
+      const entrenadorId = await this.accessControl.getEntrenadorId(userId);
 
-      if (entrenador) {
+      if (entrenadorId) {
         whereClause.atleta = {
-          entrenadorAsignadoId: entrenador.id,
+          entrenadorAsignadoId: entrenadorId,
         };
       }
     }

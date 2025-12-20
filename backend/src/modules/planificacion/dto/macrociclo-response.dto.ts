@@ -1,9 +1,10 @@
-import { EstadoMacrociclo } from '@prisma/client';
+import { EstadoMacrociclo, Prisma } from '@prisma/client';
 
 // DTO de respuesta para Macrociclo
 // Estructura que se envía al cliente
+// BigInt y Decimal se convierten automaticamente por BigIntTransformInterceptor
 export interface MacrocicloResponseDto {
-  id: string; // BigInt convertido a string para JSON
+  id: bigint;
   nombre: string;
   temporada: string;
   equipo: string;
@@ -16,14 +17,14 @@ export interface MacrocicloResponseDto {
   estado: EstadoMacrociclo;
   totalMicrociclos: number;
   totalSesiones: number;
-  totalHoras: number; // Decimal convertido a number
-  creadoPor: string; // BigInt convertido a string
+  totalHoras: Prisma.Decimal;
+  creadoPor: bigint;
   createdAt: Date;
   updatedAt: Date;
 
   // Relaciones opcionales (si se incluyen)
   creador?: {
-    id: string;
+    id: bigint;
     nombreCompleto: string;
     email: string;
   };

@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { PrismaService } from '../../../database/prisma.service';
+import { AccessControlService } from '../../../common/services/access-control.service';
 import { CreateMicrocicloDto, UpdateMicrocicloDto, MicrocicloResponseDto } from '../dto';
 import { DateRangeValidator } from '../validators/date-range.validator';
 import { SesionFactory } from './sesion.factory';
@@ -10,6 +11,7 @@ import { Prisma } from '@prisma/client';
 export class MicrociclosService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly accessControl: AccessControlService,
     private readonly dateRangeValidator: DateRangeValidator,
     private readonly sesionFactory: SesionFactory,
   ) {}
@@ -151,13 +153,9 @@ export class MicrociclosService {
 
     // Si es ENTRENADOR, usar nested filter de Prisma (3 queries → 1 query)
     if (rol === 'ENTRENADOR') {
-      // Buscar entrenadorId desde usuarioId
-      const entrenador = await this.prisma.entrenador.findUnique({
-        where: { usuarioId: userId },
-        select: { id: true },
-      });
+      const entrenadorId = await this.accessControl.getEntrenadorId(userId);
 
-      if (!entrenador) {
+      if (!entrenadorId) {
         throw new NotFoundException('Entrenador no encontrado');
       }
 
@@ -165,7 +163,7 @@ export class MicrociclosService {
       where.asignacionesAtletas = {
         some: {
           atleta: {
-            entrenadorAsignadoId: entrenador.id,
+            entrenadorAsignadoId: entrenadorId,
           },
         },
       };
@@ -244,13 +242,9 @@ export class MicrociclosService {
 
     // Si es ENTRENADOR, validar usando nested filter (3 queries → 1 query)
     if (rol === 'ENTRENADOR') {
-      // Buscar entrenadorId desde usuarioId
-      const entrenador = await this.prisma.entrenador.findUnique({
-        where: { usuarioId: userId },
-        select: { id: true },
-      });
+      const entrenadorId = await this.accessControl.getEntrenadorId(userId);
 
-      if (!entrenador) {
+      if (!entrenadorId) {
         throw new NotFoundException('Entrenador no encontrado');
       }
 
@@ -259,7 +253,7 @@ export class MicrociclosService {
         where: {
           microcicloId: microciclo.id,
           atleta: {
-            entrenadorAsignadoId: entrenador.id,
+            entrenadorAsignadoId: entrenadorId,
           },
         },
       });

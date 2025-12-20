@@ -5,6 +5,7 @@ import { ClsPluginTransactional } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { CommonModule } from './common/common.module';
 import { DatabaseModule } from './database/database.module';
 import { PrismaService } from './database/prisma.service';
 import { AuthModule } from './modules/auth/auth.module';
@@ -16,12 +17,25 @@ import { RegistroPostEntrenamientoModule } from './modules/registro-post-entrena
 import { DolenciasModule } from './modules/dolencias/dolencias.module';
 import { AsignacionesModule } from './modules/asignaciones/asignaciones.module';
 import { TestingModule } from './modules/testing/testing.module';
+import {
+  databaseConfig,
+  jwtConfig,
+  appConfig,
+  validationSchema,
+} from './config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      cache: true,
       envFilePath: '.env',
+      load: [databaseConfig, jwtConfig, appConfig],
+      validationSchema: validationSchema,
+      validationOptions: {
+        allowUnknown: true,
+        abortEarly: false,
+      },
     }),
     // Configuracion de transacciones declarativas con CLS
     ClsModule.forRoot({
@@ -38,6 +52,7 @@ import { TestingModule } from './modules/testing/testing.module';
         }),
       ],
     }),
+    CommonModule,
     DatabaseModule,
     AuthModule,
     UsersModule,

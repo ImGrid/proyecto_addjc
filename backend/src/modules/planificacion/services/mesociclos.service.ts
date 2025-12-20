@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { PrismaService } from '../../../database/prisma.service';
+import { AccessControlService } from '../../../common/services/access-control.service';
 import { CreateMesocicloDto, UpdateMesocicloDto, MesocicloResponseDto } from '../dto';
 import { DateRangeValidator } from '../validators/date-range.validator';
 
@@ -8,6 +9,7 @@ import { DateRangeValidator } from '../validators/date-range.validator';
 export class MesociclosService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly accessControl: AccessControlService,
     private readonly dateRangeValidator: DateRangeValidator,
   ) {}
 
@@ -43,7 +45,20 @@ export class MesociclosService {
         objetivoTactico: createMesocicloDto.objetivoTactico,
         totalMicrociclos: createMesocicloDto.totalMicrociclos || 0,
       },
-      include: {
+      select: {
+        id: true,
+        macrocicloId: true,
+        nombre: true,
+        numeroMesociclo: true,
+        etapa: true,
+        fechaInicio: true,
+        fechaFin: true,
+        objetivoFisico: true,
+        objetivoTecnico: true,
+        objetivoTactico: true,
+        totalMicrociclos: true,
+        createdAt: true,
+        updatedAt: true,
         macrociclo: {
           select: {
             id: true,
@@ -54,7 +69,7 @@ export class MesociclosService {
       },
     });
 
-    return this.formatMesocicloResponse(mesociclo);
+    return mesociclo;
   }
 
   // Listar mesociclos con filtros opcionales
@@ -74,13 +89,9 @@ export class MesociclosService {
 
     // Si es ENTRENADOR, usar nested filter de Prisma (4 queries → 1 query)
     if (rol === 'ENTRENADOR') {
-      // Buscar entrenadorId desde usuarioId
-      const entrenador = await this.prisma.entrenador.findUnique({
-        where: { usuarioId: userId },
-        select: { id: true },
-      });
+      const entrenadorId = await this.accessControl.getEntrenadorId(userId);
 
-      if (!entrenador) {
+      if (!entrenadorId) {
         throw new NotFoundException('Entrenador no encontrado');
       }
 
@@ -90,7 +101,7 @@ export class MesociclosService {
           asignacionesAtletas: {
             some: {
               atleta: {
-                entrenadorAsignadoId: entrenador.id,
+                entrenadorAsignadoId: entrenadorId,
               },
             },
           },
@@ -100,13 +111,9 @@ export class MesociclosService {
 
     // Si es ATLETA, usar nested filter de Prisma (3 queries → 1 query)
     if (rol === 'ATLETA') {
-      // Buscar atletaId desde usuarioId
-      const atleta = await this.prisma.atleta.findUnique({
-        where: { usuarioId: userId },
-        select: { id: true },
-      });
+      const atletaId = await this.accessControl.getAtletaId(userId);
 
-      if (!atleta) {
+      if (!atletaId) {
         throw new NotFoundException('Atleta no encontrado');
       }
 
@@ -115,7 +122,7 @@ export class MesociclosService {
         some: {
           asignacionesAtletas: {
             some: {
-              atletaId: atleta.id,
+              atletaId,
             },
           },
         },
@@ -128,7 +135,20 @@ export class MesociclosService {
         skip,
         take: limit,
         orderBy: { numeroMesociclo: 'asc' },
-        include: {
+        select: {
+          id: true,
+          macrocicloId: true,
+          nombre: true,
+          numeroMesociclo: true,
+          etapa: true,
+          fechaInicio: true,
+          fechaFin: true,
+          objetivoFisico: true,
+          objetivoTecnico: true,
+          objetivoTactico: true,
+          totalMicrociclos: true,
+          createdAt: true,
+          updatedAt: true,
           macrociclo: {
             select: {
               id: true,
@@ -142,7 +162,7 @@ export class MesociclosService {
     ]);
 
     return {
-      data: mesociclos.map((m) => this.formatMesocicloResponse(m)),
+      data: mesociclos,
       meta: {
         total,
         page,
@@ -160,7 +180,20 @@ export class MesociclosService {
   ): Promise<MesocicloResponseDto> {
     const mesociclo = await this.prisma.mesociclo.findUnique({
       where: { id: BigInt(id) },
-      include: {
+      select: {
+        id: true,
+        macrocicloId: true,
+        nombre: true,
+        numeroMesociclo: true,
+        etapa: true,
+        fechaInicio: true,
+        fechaFin: true,
+        objetivoFisico: true,
+        objetivoTecnico: true,
+        objetivoTactico: true,
+        totalMicrociclos: true,
+        createdAt: true,
+        updatedAt: true,
         macrociclo: {
           select: {
             id: true,
@@ -177,13 +210,9 @@ export class MesociclosService {
 
     // Si es ENTRENADOR, validar usando nested filter (3 queries → 1 query)
     if (rol === 'ENTRENADOR') {
-      // Buscar entrenadorId desde usuarioId
-      const entrenador = await this.prisma.entrenador.findUnique({
-        where: { usuarioId: userId },
-        select: { id: true },
-      });
+      const entrenadorId = await this.accessControl.getEntrenadorId(userId);
 
-      if (!entrenador) {
+      if (!entrenadorId) {
         throw new NotFoundException('Entrenador no encontrado');
       }
 
@@ -191,7 +220,7 @@ export class MesociclosService {
       const asignacion = await this.prisma.asignacionAtletaMicrociclo.findFirst({
         where: {
           atleta: {
-            entrenadorAsignadoId: entrenador.id,
+            entrenadorAsignadoId: entrenadorId,
           },
           microciclo: {
             mesocicloId: mesociclo.id,
@@ -206,20 +235,16 @@ export class MesociclosService {
 
     // Si es ATLETA, validar usando nested filter (ya optimizado)
     if (rol === 'ATLETA') {
-      // Buscar atletaId desde usuarioId
-      const atleta = await this.prisma.atleta.findUnique({
-        where: { usuarioId: userId },
-        select: { id: true },
-      });
+      const atletaId = await this.accessControl.getAtletaId(userId);
 
-      if (!atleta) {
+      if (!atletaId) {
         throw new NotFoundException('Atleta no encontrado');
       }
 
       // Verificar si el atleta esta asignado a algun microciclo de este mesociclo
       const asignacion = await this.prisma.asignacionAtletaMicrociclo.findFirst({
         where: {
-          atletaId: atleta.id,
+          atletaId,
           microciclo: {
             mesocicloId: mesociclo.id,
           },
@@ -231,7 +256,7 @@ export class MesociclosService {
       }
     }
 
-    return this.formatMesocicloResponse(mesociclo);
+    return mesociclo;
   }
 
   // Actualizar un mesociclo
@@ -284,7 +309,20 @@ export class MesociclosService {
         ...(updateMesocicloDto.objetivoTactico && { objetivoTactico: updateMesocicloDto.objetivoTactico }),
         ...(updateMesocicloDto.totalMicrociclos !== undefined && { totalMicrociclos: updateMesocicloDto.totalMicrociclos }),
       },
-      include: {
+      select: {
+        id: true,
+        macrocicloId: true,
+        nombre: true,
+        numeroMesociclo: true,
+        etapa: true,
+        fechaInicio: true,
+        fechaFin: true,
+        objetivoFisico: true,
+        objetivoTecnico: true,
+        objetivoTactico: true,
+        totalMicrociclos: true,
+        createdAt: true,
+        updatedAt: true,
         macrociclo: {
           select: {
             id: true,
@@ -295,7 +333,7 @@ export class MesociclosService {
       },
     });
 
-    return this.formatMesocicloResponse(mesociclo);
+    return mesociclo;
   }
 
   // Eliminar un mesociclo
@@ -325,31 +363,5 @@ export class MesociclosService {
     });
 
     return { message: 'Mesociclo eliminado permanentemente' };
-  }
-
-  // Método auxiliar para formatear respuesta
-  private formatMesocicloResponse(mesociclo: any): MesocicloResponseDto {
-    return {
-      id: mesociclo.id.toString(),
-      macrocicloId: mesociclo.macrocicloId.toString(),
-      nombre: mesociclo.nombre,
-      numeroMesociclo: mesociclo.numeroMesociclo,
-      etapa: mesociclo.etapa,
-      fechaInicio: mesociclo.fechaInicio,
-      fechaFin: mesociclo.fechaFin,
-      objetivoFisico: mesociclo.objetivoFisico,
-      objetivoTecnico: mesociclo.objetivoTecnico,
-      objetivoTactico: mesociclo.objetivoTactico,
-      totalMicrociclos: mesociclo.totalMicrociclos,
-      createdAt: mesociclo.createdAt,
-      updatedAt: mesociclo.updatedAt,
-      ...(mesociclo.macrociclo && {
-        macrociclo: {
-          id: mesociclo.macrociclo.id.toString(),
-          nombre: mesociclo.macrociclo.nombre,
-          temporada: mesociclo.macrociclo.temporada,
-        },
-      }),
-    };
   }
 }

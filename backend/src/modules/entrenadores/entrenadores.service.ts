@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
+import { AccessControlService } from '../../common/services/access-control.service';
 import { AuthService } from '../auth/auth.service';
 import { CreateEntrenadorDto, UpdateEntrenadorDto, QueryEntrenadorDto, AssignAtletaDto, EntrenadorResponseDto } from './dto';
 
@@ -7,6 +8,7 @@ import { CreateEntrenadorDto, UpdateEntrenadorDto, QueryEntrenadorDto, AssignAtl
 export class EntrenadoresService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly accessControl: AccessControlService,
     private readonly authService: AuthService,
   ) {}
 
@@ -54,7 +56,13 @@ export class EntrenadoresService {
           municipio: createEntrenadorDto.municipio,
           especialidad: createEntrenadorDto.especialidad,
         },
-        include: {
+        select: {
+          id: true,
+          usuarioId: true,
+          municipio: true,
+          especialidad: true,
+          createdAt: true,
+          updatedAt: true,
           usuario: {
             select: {
               id: true,
@@ -70,7 +78,7 @@ export class EntrenadoresService {
       return entrenador;
     });
 
-    return this.formatEntrenadorResponse(result);
+    return result;
   }
 
   // Listar entrenadores con filtros y paginacion
@@ -108,7 +116,13 @@ export class EntrenadoresService {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
-        include: {
+        select: {
+          id: true,
+          usuarioId: true,
+          municipio: true,
+          especialidad: true,
+          createdAt: true,
+          updatedAt: true,
           usuario: {
             select: {
               id: true,
@@ -123,11 +137,8 @@ export class EntrenadoresService {
       this.prisma.entrenador.count({ where }),
     ]);
 
-    // Formatear respuestas
-    const data = entrenadores.map((entrenador) => this.formatEntrenadorResponse(entrenador));
-
     return {
-      data,
+      data: entrenadores,
       meta: {
         total,
         page,
@@ -143,7 +154,13 @@ export class EntrenadoresService {
 
     const entrenador = await this.prisma.entrenador.findUnique({
       where: { id: entrenadorId },
-      include: {
+      select: {
+        id: true,
+        usuarioId: true,
+        municipio: true,
+        especialidad: true,
+        createdAt: true,
+        updatedAt: true,
         usuario: {
           select: {
             id: true,
@@ -160,7 +177,7 @@ export class EntrenadoresService {
       throw new NotFoundException('Entrenador no encontrado');
     }
 
-    return this.formatEntrenadorResponse(entrenador);
+    return entrenador;
   }
 
   // Actualizar un entrenador
@@ -180,7 +197,13 @@ export class EntrenadoresService {
     const updatedEntrenador = await this.prisma.entrenador.update({
       where: { id: entrenadorId },
       data: updateEntrenadorDto,
-      include: {
+      select: {
+        id: true,
+        usuarioId: true,
+        municipio: true,
+        especialidad: true,
+        createdAt: true,
+        updatedAt: true,
         usuario: {
           select: {
             id: true,
@@ -193,7 +216,7 @@ export class EntrenadoresService {
       },
     });
 
-    return this.formatEntrenadorResponse(updatedEntrenador);
+    return updatedEntrenador;
   }
 
   // Eliminar un entrenador (hard delete - elimina usuario + entrenador por cascade)
@@ -267,19 +290,15 @@ export class EntrenadoresService {
 
     // Si es ENTRENADOR, validar que solo vea sus propios atletas
     if (rol === 'ENTRENADOR') {
-      // Buscar el entrenadorId del usuario autenticado
-      const entrenadorAutenticado = await this.prisma.entrenador.findUnique({
-        where: { usuarioId: userId },
-        select: { id: true },
-      });
+      const entrenadorAutenticadoId = await this.accessControl.getEntrenadorId(userId);
 
-      if (!entrenadorAutenticado) {
+      if (!entrenadorAutenticadoId) {
         throw new NotFoundException('Entrenador no encontrado');
       }
 
       // Verificar que el entrenadorId solicitado sea el suyo
-      if (entrenadorAutenticado.id !== entrenaderId) {
-        throw new BadRequestException(
+      if (entrenadorAutenticadoId !== entrenaderId) {
+        throw new ForbiddenException(
           'No tienes permiso para ver los atletas de otro entrenador',
         );
       }
@@ -326,25 +345,6 @@ export class EntrenadoresService {
       nombreCompleto: entrenador.usuario.nombreCompleto,
       totalAtletas: atletas.length,
       atletas,
-    };
-  }
-
-  // Metodo auxiliar para formatear respuesta
-  private formatEntrenadorResponse(entrenador: any): EntrenadorResponseDto {
-    return {
-      id: entrenador.id.toString(),
-      usuarioId: entrenador.usuarioId.toString(),
-      municipio: entrenador.municipio,
-      especialidad: entrenador.especialidad,
-      createdAt: entrenador.createdAt,
-      updatedAt: entrenador.updatedAt,
-      usuario: {
-        id: entrenador.usuario.id.toString(),
-        ci: entrenador.usuario.ci,
-        nombreCompleto: entrenador.usuario.nombreCompleto,
-        email: entrenador.usuario.email,
-        estado: entrenador.usuario.estado,
-      },
     };
   }
 }

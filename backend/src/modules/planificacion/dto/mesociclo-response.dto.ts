@@ -1,8 +1,9 @@
 import { EtapaMesociclo } from '@prisma/client';
 
+// BigInt se convierte automaticamente a string por BigIntTransformInterceptor
 export interface MesocicloResponseDto {
-  id: string; // BigInt → string
-  macrocicloId: string; // BigInt → string
+  id: bigint;
+  macrocicloId: bigint;
   nombre: string;
   numeroMesociclo: number;
   etapa: EtapaMesociclo;
@@ -15,7 +16,7 @@ export interface MesocicloResponseDto {
   createdAt: Date;
   updatedAt: Date;
   macrociclo?: {
-    id: string;
+    id: bigint;
     nombre: string;
     temporada: string;
   };

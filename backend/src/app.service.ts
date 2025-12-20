@@ -44,4 +44,15 @@ export class AppService {
       };
     }
   }
+
+  // Estadisticas del pool de conexiones
+  getPoolStats() {
+    const stats = this.prisma.getPoolStats();
+    return {
+      status: 'ok',
+      pool: stats,
+      utilizationPercent: ((stats.total - stats.idle) / stats.max) * 100,
+      timestamp: new Date().toISOString(),
+    };
+  }
 }

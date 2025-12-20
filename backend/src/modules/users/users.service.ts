@@ -43,10 +43,21 @@ export class UsersService {
         rol: createUserDto.rol,
         estado: createUserDto.estado ?? true,
       },
+      select: {
+        id: true,
+        ci: true,
+        nombreCompleto: true,
+        email: true,
+        rol: true,
+        estado: true,
+        fechaRegistro: true,
+        ultimoAcceso: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
-    // Convertir BigInt a string y omitir la contraseña
-    return this.formatUserResponse(user);
+    return user;
   }
 
   // Listar usuarios con filtros y paginación
@@ -98,11 +109,8 @@ export class UsersService {
       this.prisma.usuario.count({ where }),
     ]);
 
-    // Formatear respuestas
-    const data = users.map((user) => this.formatUserResponse(user));
-
     return {
-      data,
+      data: users,
       meta: {
         total,
         page,
@@ -136,7 +144,7 @@ export class UsersService {
       throw new NotFoundException('Usuario no encontrado');
     }
 
-    return this.formatUserResponse(user);
+    return user;
   }
 
   // Actualizar un usuario
@@ -186,9 +194,21 @@ export class UsersService {
     const updatedUser = await this.prisma.usuario.update({
       where: { id: userId },
       data: dataToUpdate,
+      select: {
+        id: true,
+        ci: true,
+        nombreCompleto: true,
+        email: true,
+        rol: true,
+        estado: true,
+        fechaRegistro: true,
+        ultimoAcceso: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
-    return this.formatUserResponse(updatedUser);
+    return updatedUser;
   }
 
   // Soft delete (desactivar usuario)
@@ -206,9 +226,21 @@ export class UsersService {
     const updatedUser = await this.prisma.usuario.update({
       where: { id: userId },
       data: { estado: false },
+      select: {
+        id: true,
+        ci: true,
+        nombreCompleto: true,
+        email: true,
+        rol: true,
+        estado: true,
+        fechaRegistro: true,
+        ultimoAcceso: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
-    return this.formatUserResponse(updatedUser);
+    return updatedUser;
   }
 
   // Hard delete (borrar permanentemente)
@@ -228,21 +260,5 @@ export class UsersService {
     });
 
     return { message: 'Usuario eliminado permanentemente' };
-  }
-
-  // Método auxiliar para formatear respuesta (sin contraseña, BigInt a string)
-  private formatUserResponse(user: any): UserResponseDto {
-    return {
-      id: user.id.toString(),
-      ci: user.ci,
-      nombreCompleto: user.nombreCompleto,
-      email: user.email,
-      rol: user.rol,
-      estado: user.estado,
-      fechaRegistro: user.fechaRegistro,
-      ultimoAcceso: user.ultimoAcceso,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
   }
 }
