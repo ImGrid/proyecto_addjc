@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { PrismaService } from '../../../database/prisma.service';
 import { AccessControlService } from '../../../common/services/access-control.service';
@@ -119,6 +119,25 @@ export class SesionesService {
       };
     }
 
+    // Si es ATLETA, usar nested filter de Prisma
+    if (rol === 'ATLETA') {
+      const atletaId = await this.accessControl.getAtletaId(userId);
+
+      if (!atletaId) {
+        throw new NotFoundException('No se encontro el perfil de atleta para este usuario');
+      }
+
+      // Filtrar sesiones de microciclos asignados al atleta
+      where.microciclo = {
+        asignacionesAtletas: {
+          some: {
+            atletaId: atletaId,
+            activa: true,
+          },
+        },
+      };
+    }
+
     const [sesiones, total] = await Promise.all([
       this.prisma.sesion.findMany({
         where,
@@ -190,6 +209,27 @@ export class SesionesService {
 
       if (!asignacion) {
         throw new NotFoundException('Sesión no encontrada o no autorizada');
+      }
+    }
+
+    // Si es ATLETA, validar que esta asignado al microciclo de esta sesion
+    if (rol === 'ATLETA') {
+      const atletaId = await this.accessControl.getAtletaId(userId);
+
+      if (!atletaId) {
+        throw new NotFoundException('No se encontro el perfil de atleta para este usuario');
+      }
+
+      const asignacion = await this.prisma.asignacionAtletaMicrociclo.findFirst({
+        where: {
+          microcicloId: sesion.microcicloId,
+          atletaId: atletaId,
+          activa: true,
+        },
+      });
+
+      if (!asignacion) {
+        throw new ForbiddenException('No tienes permiso para ver esta sesion');
       }
     }
 

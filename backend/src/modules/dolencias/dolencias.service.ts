@@ -94,8 +94,30 @@ export class DolenciasService {
       }
     }
 
+    // ATLETA solo ve sus propias dolencias
+    if (userRole === RolUsuario.ATLETA) {
+      const atletaIdFromUser = await this.accessControl.getAtletaId(userId);
+
+      if (!atletaIdFromUser) {
+        throw new NotFoundException('No se encontro el perfil de atleta para este usuario');
+      }
+
+      whereClause.registroPostEntrenamiento = {
+        ...whereClause.registroPostEntrenamiento,
+        atletaId: atletaIdFromUser,
+      };
+    }
+
     // Filtros adicionales
     if (atletaId) {
+      // Si es ATLETA, validar que no intente ver dolencias de otro atleta
+      if (userRole === RolUsuario.ATLETA) {
+        const atletaIdFromUser = await this.accessControl.getAtletaId(userId);
+        if (BigInt(atletaId) !== atletaIdFromUser) {
+          throw new ForbiddenException('Solo puedes ver tus propias dolencias');
+        }
+      }
+
       whereClause.registroPostEntrenamiento = {
         ...whereClause.registroPostEntrenamiento,
         atletaId: BigInt(atletaId),
@@ -173,6 +195,19 @@ export class DolenciasService {
       }
     }
 
+    // ATLETA solo ve sus propias dolencias activas
+    if (userRole === RolUsuario.ATLETA) {
+      const atletaIdFromUser = await this.accessControl.getAtletaId(userId);
+
+      if (!atletaIdFromUser) {
+        throw new NotFoundException('No se encontro el perfil de atleta para este usuario');
+      }
+
+      if (BigInt(atletaId) !== atletaIdFromUser) {
+        throw new ForbiddenException('Solo puedes ver tus propias dolencias');
+      }
+    }
+
     const dolencias = await this.prisma.dolencia.findMany({
       where: whereClause,
       orderBy: { nivel: 'desc' }, // Ordenar por nivel de dolor (más alto primero)
@@ -235,6 +270,19 @@ export class DolenciasService {
 
       if (!hasAccess) {
         throw new ForbiddenException('No tienes permiso para ver esta dolencia');
+      }
+    }
+
+    // Verificar autorizacion si es ATLETA
+    if (userRole === RolUsuario.ATLETA) {
+      const atletaId = await this.accessControl.getAtletaId(userId);
+
+      if (!atletaId) {
+        throw new NotFoundException('No se encontro el perfil de atleta para este usuario');
+      }
+
+      if (dolencia.registroPostEntrenamiento.atleta.id !== atletaId) {
+        throw new ForbiddenException('Solo puedes ver tus propias dolencias');
       }
     }
 

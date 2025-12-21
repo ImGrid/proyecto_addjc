@@ -292,6 +292,19 @@ export class TestsFisicosService {
       }
     }
 
+    // Verificar autorizacion si es ATLETA
+    if (userRole === RolUsuario.ATLETA) {
+      const atletaId = await this.accessControl.getAtletaId(userId);
+
+      if (!atletaId) {
+        throw new NotFoundException('No se encontro el perfil de atleta para este usuario');
+      }
+
+      if (test.atleta.id !== atletaId) {
+        throw new ForbiddenException('Solo puedes ver tus propios tests fisicos');
+      }
+    }
+
     return this.formatResponse(test);
   }
 
@@ -313,6 +326,19 @@ export class TestsFisicosService {
         whereClause.atleta = {
           entrenadorAsignadoId: entrenadorId,
         };
+      }
+    }
+
+    // ATLETA solo ve sus propios tests
+    if (userRole === RolUsuario.ATLETA) {
+      const atletaIdFromUser = await this.accessControl.getAtletaId(userId);
+
+      if (!atletaIdFromUser) {
+        throw new NotFoundException('No se encontro el perfil de atleta para este usuario');
+      }
+
+      if (BigInt(atletaId) !== atletaIdFromUser) {
+        throw new ForbiddenException('Solo puedes ver tus propios tests fisicos');
       }
     }
 
@@ -358,6 +384,19 @@ export class TestsFisicosService {
         throw new ForbiddenException(
           'No tienes permiso para ver tests de este atleta',
         );
+      }
+    }
+
+    // Verificar autorizacion si es ATLETA
+    if (userRole === RolUsuario.ATLETA) {
+      const atletaIdFromUser = await this.accessControl.getAtletaId(userId);
+
+      if (!atletaIdFromUser) {
+        throw new NotFoundException('No se encontro el perfil de atleta para este usuario');
+      }
+
+      if (BigInt(atletaId) !== atletaIdFromUser) {
+        throw new ForbiddenException('Solo puedes ver tus propios tests fisicos');
       }
     }
 
@@ -439,6 +478,19 @@ export class TestsFisicosService {
         throw new ForbiddenException(
           'No tienes permiso para ver estadisticas de este atleta',
         );
+      }
+    }
+
+    // Verificar autorizacion si es ATLETA
+    if (userRole === RolUsuario.ATLETA) {
+      const atletaIdFromUser = await this.accessControl.getAtletaId(userId);
+
+      if (!atletaIdFromUser) {
+        throw new NotFoundException('No se encontro el perfil de atleta para este usuario');
+      }
+
+      if (BigInt(atletaId) !== atletaIdFromUser) {
+        throw new ForbiddenException('Solo puedes ver tus propias estadisticas');
       }
     }
 

@@ -32,7 +32,7 @@ export class DolenciasController {
 
   // GET /api/dolencias - Listar dolencias
   @Get()
-  @Roles('ENTRENADOR', 'COMITE_TECNICO')
+  @Roles('ENTRENADOR', 'COMITE_TECNICO', 'ATLETA')
   @UseGuards(RolesGuard)
   findAll(
     @CurrentUser() user: any,
@@ -54,7 +54,7 @@ export class DolenciasController {
 
   // GET /api/dolencias/:id - Obtener dolencia por ID
   @Get(':id')
-  @Roles('ENTRENADOR', 'COMITE_TECNICO')
+  @Roles('ENTRENADOR', 'COMITE_TECNICO', 'ATLETA')
   @UseGuards(RolesGuard)
   findOne(@Param('id') id: string, @CurrentUser() user: any) {
     return this.dolenciasService.findOne(id, BigInt(user.id), user.rol);
@@ -62,7 +62,7 @@ export class DolenciasController {
 
   // GET /api/atletas/:atletaId/dolencias/activas - Dolencias activas de un atleta
   @Get('atleta/:atletaId/activas')
-  @Roles('ENTRENADOR', 'COMITE_TECNICO')
+  @Roles('ENTRENADOR', 'COMITE_TECNICO', 'ATLETA')
   @UseGuards(RolesGuard)
   findActiveByAtleta(
     @Param('atletaId') atletaId: string,

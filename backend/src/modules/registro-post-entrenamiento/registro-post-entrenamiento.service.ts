@@ -180,8 +180,26 @@ export class RegistroPostEntrenamientoService {
       }
     }
 
+    // ATLETA solo ve sus propios registros
+    if (userRole === RolUsuario.ATLETA) {
+      const atletaIdFromUser = await this.accessControl.getAtletaId(userId);
+
+      if (!atletaIdFromUser) {
+        throw new NotFoundException('No se encontro el perfil de atleta para este usuario');
+      }
+
+      whereClause.atletaId = atletaIdFromUser;
+    }
+
     // Filtros adicionales
     if (atletaId) {
+      // Si es ATLETA, validar que no intente ver registros de otro atleta
+      if (userRole === RolUsuario.ATLETA) {
+        const atletaIdFromUser = await this.accessControl.getAtletaId(userId);
+        if (BigInt(atletaId) !== atletaIdFromUser) {
+          throw new ForbiddenException('Solo puedes ver tus propios registros');
+        }
+      }
       whereClause.atletaId = BigInt(atletaId);
     }
     if (sesionId) {
@@ -274,6 +292,19 @@ export class RegistroPostEntrenamientoService {
       }
     }
 
+    // Verificar autorizacion si es ATLETA
+    if (userRole === RolUsuario.ATLETA) {
+      const atletaId = await this.accessControl.getAtletaId(userId);
+
+      if (!atletaId) {
+        throw new NotFoundException('No se encontro el perfil de atleta para este usuario');
+      }
+
+      if (registro.atleta.id !== atletaId) {
+        throw new ForbiddenException('Solo puedes ver tus propios registros');
+      }
+    }
+
     return this.formatResponse(registro);
   }
 
@@ -292,6 +323,17 @@ export class RegistroPostEntrenamientoService {
           entrenadorAsignadoId: entrenadorId,
         };
       }
+    }
+
+    // ATLETA solo ve sus propios registros
+    if (userRole === RolUsuario.ATLETA) {
+      const atletaId = await this.accessControl.getAtletaId(userId);
+
+      if (!atletaId) {
+        throw new NotFoundException('No se encontro el perfil de atleta para este usuario');
+      }
+
+      whereClause.atletaId = atletaId;
     }
 
     const registros = await this.prisma.registroPostEntrenamiento.findMany({
