@@ -155,6 +155,17 @@ export class TestsFisicosController {
     );
   }
 
+  // GET /api/tests-fisicos/me - Obtener tests del atleta autenticado (solo ATLETA)
+  @Get('me')
+  @Roles('ATLETA')
+  @UseGuards(RolesGuard)
+  findMyTests(@CurrentUser() user: any) {
+    return this.testsFisicosService.findMyTests(
+      BigInt(user.id),
+      user.rol,
+    );
+  }
+
   // GET /api/tests-fisicos/:id - Obtener test por ID
   @Get(':id')
   @Roles('ENTRENADOR', 'COMITE_TECNICO', 'ATLETA')

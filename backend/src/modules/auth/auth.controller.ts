@@ -8,7 +8,9 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 @Controller('auth')
 @UseGuards(JwtAuthGuard) // Aplicar autenticacion a todas las rutas por defecto
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+  ) {}
 
   // POST /auth/login - Endpoint publico para login
   // No requiere autenticacion (marcado con @Public())

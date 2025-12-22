@@ -96,7 +96,12 @@ export const navigationConfig: Record<RolUsuario, NavigationItem[]> = {
       icon: Home,
     },
     {
-      href: '/atleta/mi-plan',
+      href: '/atleta/tests',
+      label: 'Tests Fisicos',
+      icon: Activity,
+    },
+    {
+      href: '/atleta/planificacion',
       label: 'Mi Plan',
       icon: Calendar,
     },
@@ -105,10 +110,11 @@ export const navigationConfig: Record<RolUsuario, NavigationItem[]> = {
       label: 'Mi Progreso',
       icon: BarChart,
     },
-    {
-      href: '/atleta/recomendaciones',
-      label: 'Recomendaciones',
-      icon: Bell,
-    },
+    // Pendiente de implementar (Fase 6)
+    // {
+    //   href: '/atleta/recomendaciones',
+    //   label: 'Recomendaciones',
+    //   icon: Bell,
+    // },
   ],
 };

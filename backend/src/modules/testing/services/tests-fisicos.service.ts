@@ -365,6 +365,25 @@ export class TestsFisicosService {
     return tests.map((t) => this.formatResponse(t));
   }
 
+  // Obtener tests fisicos del atleta autenticado (solo para rol ATLETA)
+  // Endpoint optimizado que evita query duplicada de atletaId
+  async findMyTests(userId: bigint, userRole: RolUsuario) {
+    // Validar que sea rol ATLETA
+    if (userRole !== RolUsuario.ATLETA) {
+      throw new ForbiddenException('Este endpoint es solo para atletas');
+    }
+
+    // Obtener atletaId del usuario autenticado
+    const atletaId = await this.accessControl.getAtletaId(userId);
+
+    if (!atletaId) {
+      throw new NotFoundException('No se encontro el perfil de atleta para este usuario');
+    }
+
+    // Reutilizar metodo existente
+    return this.findByAtleta(atletaId.toString(), userId, userRole);
+  }
+
   // Obtener ultimo test de un atleta por tipo
   async findLatestByType(
     atletaId: string,

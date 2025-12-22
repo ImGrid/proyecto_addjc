@@ -351,7 +351,7 @@ export class RegistroPostEntrenamientoService {
     return registros.map((r) => this.formatResponse(r));
   }
 
-  // Metodo auxiliar para formatear respuesta con BigInt convertidos a string
+  // Metodo auxiliar para formatear respuesta con BigInt a string y Decimal a number
   private formatResponse(registro: any) {
     return {
       id: registro.id.toString(),
@@ -361,12 +361,12 @@ export class RegistroPostEntrenamientoService {
       fechaRegistro: registro.fechaRegistro,
       asistio: registro.asistio,
       motivoInasistencia: registro.motivoInasistencia,
-      ejerciciosCompletados: registro.ejerciciosCompletados,
-      intensidadAlcanzada: registro.intensidadAlcanzada,
+      ejerciciosCompletados: parseFloat(registro.ejerciciosCompletados.toString()),
+      intensidadAlcanzada: parseFloat(registro.intensidadAlcanzada.toString()),
       duracionReal: registro.duracionReal,
       rpe: registro.rpe,
       calidadSueno: registro.calidadSueno,
-      horasSueno: registro.horasSueno,
+      horasSueno: registro.horasSueno ? parseFloat(registro.horasSueno.toString()) : null,
       estadoAnimico: registro.estadoAnimico,
       observaciones: registro.observaciones,
       createdAt: registro.createdAt,
