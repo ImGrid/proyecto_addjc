@@ -5,7 +5,9 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { BigIntTransformInterceptor } from './common/interceptors/bigint-transform.interceptor';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: ['error', 'warn', 'log'], // Excluir 'debug' y 'verbose'
+  });
 
   // Configurar ValidationPipe global para validar DTOs automaticamente
   app.useGlobalPipes(

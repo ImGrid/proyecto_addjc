@@ -171,7 +171,8 @@ export type RegistroPostEntrenamiento = z.infer<typeof registroPostEntrenamiento
 // SCHEMAS PARA DOLENCIAS
 // ===================================
 
-// Schema para Dolencia (verificado con schema.prisma lineas 527-551)
+// Schema para Dolencia
+// Verificado contra: backend/src/modules/dolencias/dolencias.service.ts lineas 389-433
 export const dolenciaSchema = z.object({
   id: z.string(),
   registroPostEntrenamientoId: z.string(),
@@ -186,6 +187,31 @@ export const dolenciaSchema = z.object({
   // Metadata
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
+  // Relaciones opcionales (incluidas en findAll, findOne, findActiveByAtleta)
+  registroPostEntrenamiento: z
+    .object({
+      id: z.string(),
+      fechaRegistro: z.coerce.date(),
+      atleta: z
+        .object({
+          id: z.string(),
+          nombreCompleto: z.string(),
+        })
+        .optional(),
+      sesion: z
+        .object({
+          fecha: z.coerce.date(),
+          numeroSesion: z.number(),
+        })
+        .optional(),
+    })
+    .optional(),
+  entrenadorRecuperacion: z
+    .object({
+      id: z.string(),
+      nombreCompleto: z.string(),
+    })
+    .optional(),
 });
 
 export type Dolencia = z.infer<typeof dolenciaSchema>;

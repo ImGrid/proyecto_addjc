@@ -9,6 +9,7 @@ import {
   BarChart,
   Bell,
   Database,
+  Heart,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { RolUsuario } from '@/types/auth';
@@ -109,6 +110,11 @@ export const navigationConfig: Record<RolUsuario, NavigationItem[]> = {
       href: '/atleta/progreso',
       label: 'Mi Progreso',
       icon: BarChart,
+    },
+    {
+      href: '/atleta/dolencias',
+      label: 'Mis Dolencias',
+      icon: Heart,
     },
     // Pendiente de implementar (Fase 6)
     // {
