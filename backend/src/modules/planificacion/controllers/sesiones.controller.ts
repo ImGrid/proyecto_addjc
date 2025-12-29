@@ -36,8 +36,8 @@ export class SesionesController {
     @CurrentUser() user: any,
     @Query('microcicloId') microcicloId?: string,
     @Query('fecha') fecha?: string,
-    @Query('page', ParseIntPipe) page = 1,
-    @Query('limit', ParseIntPipe) limit = 10,
+    @Query('page', new ParseIntPipe({ optional: true })) page = 1,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit = 10,
   ) {
     return this.sesionesService.findAll(
       BigInt(user.id),

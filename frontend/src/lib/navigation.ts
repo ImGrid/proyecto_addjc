@@ -10,6 +10,7 @@ import {
   Bell,
   Database,
   Heart,
+  AlertTriangle,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { RolUsuario } from '@/types/auth';
@@ -87,6 +88,11 @@ export const navigationConfig: Record<RolUsuario, NavigationItem[]> = {
       href: '/entrenador/post-entrenamiento',
       label: 'Post-Entrenamiento',
       icon: Activity,
+    },
+    {
+      href: '/entrenador/dolencias',
+      label: 'Dolencias',
+      icon: AlertTriangle,
     },
   ],
 
