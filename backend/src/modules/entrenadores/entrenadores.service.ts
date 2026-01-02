@@ -132,13 +132,30 @@ export class EntrenadoresService {
               estado: true,
             },
           },
+          _count: {
+            select: {
+              atletasAsignados: true,
+            },
+          },
         },
       }),
       this.prisma.entrenador.count({ where }),
     ]);
 
+    // Formatear respuesta para incluir atletasAsignadosCount
+    const formattedData = entrenadores.map((e) => ({
+      id: e.id,
+      usuarioId: e.usuarioId,
+      municipio: e.municipio,
+      especialidad: e.especialidad,
+      createdAt: e.createdAt,
+      updatedAt: e.updatedAt,
+      usuario: e.usuario,
+      atletasAsignadosCount: e._count.atletasAsignados,
+    }));
+
     return {
-      data: entrenadores,
+      data: formattedData,
       meta: {
         total,
         page,
@@ -170,6 +187,11 @@ export class EntrenadoresService {
             estado: true,
           },
         },
+        _count: {
+          select: {
+            atletasAsignados: true,
+          },
+        },
       },
     });
 
@@ -177,7 +199,11 @@ export class EntrenadoresService {
       throw new NotFoundException('Entrenador no encontrado');
     }
 
-    return entrenador;
+    // Formatear respuesta para incluir atletasAsignadosCount
+    return {
+      ...entrenador,
+      atletasAsignadosCount: entrenador._count.atletasAsignados,
+    };
   }
 
   // Actualizar un entrenador

@@ -12,6 +12,22 @@ export class AtletasService {
     private readonly authService: AuthService,
   ) {}
 
+  // Helper para aplanar entrenadorAsignado (consistencia con otros endpoints)
+  // Transforma { id, usuario: { nombreCompleto } } a { id, nombreCompleto }
+  private transformAtletaResponse(atleta: any) {
+    if (!atleta) return atleta;
+
+    return {
+      ...atleta,
+      entrenadorAsignado: atleta.entrenadorAsignado
+        ? {
+            id: atleta.entrenadorAsignado.id,
+            nombreCompleto: atleta.entrenadorAsignado.usuario?.nombreCompleto || null,
+          }
+        : null,
+    };
+  }
+
   // Crear un nuevo atleta (incluye crear usuario con rol ATLETA)
   async create(createAtletaDto: CreateAtletaDto) {
     // Verificar que el email no exista
@@ -120,7 +136,7 @@ export class AtletasService {
       return atleta;
     });
 
-    return result;
+    return this.transformAtletaResponse(result);
   }
 
   // Listar atletas con filtros y paginacion
@@ -223,7 +239,7 @@ export class AtletasService {
     ]);
 
     return {
-      data: atletas,
+      data: atletas.map((atleta) => this.transformAtletaResponse(atleta)),
       meta: {
         total,
         page,
@@ -295,7 +311,7 @@ export class AtletasService {
       }
     }
 
-    return atleta;
+    return this.transformAtletaResponse(atleta);
   }
 
   // Actualizar un atleta
@@ -362,7 +378,7 @@ export class AtletasService {
       },
     });
 
-    return updatedAtleta;
+    return this.transformAtletaResponse(updatedAtleta);
   }
 
   // Eliminar un atleta (hard delete - elimina usuario + atleta por cascade)

@@ -243,7 +243,7 @@ export class AsignacionesService {
     return this.formatResponse(asignacion);
   }
 
-  // Eliminar (desactivar) una asignacion
+  // Eliminar una asignacion permanentemente (hard delete)
   @Transactional()
   async remove(id: string) {
     const asignacion = await this.prisma.asignacionAtletaMicrociclo.findUnique({
@@ -254,13 +254,12 @@ export class AsignacionesService {
       throw new NotFoundException('Asignacion no encontrada');
     }
 
-    // Desactivar en lugar de eliminar (soft delete)
-    await this.prisma.asignacionAtletaMicrociclo.update({
+    // Eliminar permanentemente (hard delete)
+    await this.prisma.asignacionAtletaMicrociclo.delete({
       where: { id: BigInt(id) },
-      data: { activa: false },
     });
 
-    return { message: 'Asignacion desactivada exitosamente' };
+    return { message: 'Asignacion eliminada permanentemente' };
   }
 
   // Metodo auxiliar para formatear respuesta

@@ -21,9 +21,9 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 export class AtletasController {
   constructor(private readonly atletasService: AtletasService) {}
 
-  // POST /api/atletas - Crear atleta (solo ADMINISTRADOR)
+  // POST /api/atletas - Crear atleta (ADMINISTRADOR y COMITE_TECNICO)
   @Post()
-  @Roles('ADMINISTRADOR')
+  @Roles('ADMINISTRADOR', 'COMITE_TECNICO')
   create(@Body() createAtletaDto: CreateAtletaDto) {
     return this.atletasService.create(createAtletaDto);
   }
@@ -55,9 +55,9 @@ export class AtletasController {
   }
 
   // DELETE /api/atletas/:id - Eliminar atleta permanentemente
-  // Solo ADMINISTRADOR puede eliminar atletas
+  // ADMINISTRADOR y COMITE_TECNICO pueden eliminar atletas
   @Delete(':id')
-  @Roles('ADMINISTRADOR')
+  @Roles('ADMINISTRADOR', 'COMITE_TECNICO')
   remove(@Param('id') id: string) {
     return this.atletasService.remove(id);
   }

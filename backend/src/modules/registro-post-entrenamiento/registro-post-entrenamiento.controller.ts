@@ -23,9 +23,10 @@ export class RegistroPostEntrenamientoController {
     private readonly registroPostEntrenamientoService: RegistroPostEntrenamientoService,
   ) {}
 
-  // POST /api/registros-post-entrenamiento - Crear registro (ENTRENADOR, COMITE_TECNICO)
+  // POST /api/registros-post-entrenamiento - Crear registro (solo ENTRENADOR)
+  // COMITE_TECNICO no puede crear porque el servicio requiere entrenadorId
   @Post()
-  @Roles('ENTRENADOR', 'COMITE_TECNICO')
+  @Roles('ENTRENADOR')
   @UseGuards(RolesGuard, AtletaOwnershipGuard)
   create(
     @Body() createDto: CreateRegistroPostEntrenamientoDto,

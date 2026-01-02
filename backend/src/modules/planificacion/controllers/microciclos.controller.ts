@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
   ParseIntPipe,
+  DefaultValuePipe,
 } from '@nestjs/common';
 import { MicrociclosService } from '../services/microciclos.service';
 import { CreateMicrocicloDto, UpdateMicrocicloDto } from '../dto';
@@ -36,8 +37,8 @@ export class MicrociclosController {
   findAll(
     @CurrentUser() user: any,
     @Query('mesocicloId') mesocicloId?: string,
-    @Query('page', ParseIntPipe) page = 1,
-    @Query('limit', ParseIntPipe) limit = 10,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number,
   ) {
     return this.microciclosService.findAll(
       BigInt(user.id),

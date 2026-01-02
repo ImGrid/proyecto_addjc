@@ -17,7 +17,10 @@ export interface EntrenadorResponseDto {
     estado: boolean;
   };
 
-  // Atletas asignados (opcional, solo cuando se solicite)
+  // Conteo de atletas asignados (incluido en findAll y findOne)
+  atletasAsignadosCount?: number;
+
+  // Atletas asignados (opcional, solo cuando se solicite con getAtletas)
   atletasAsignados?: Array<{
     id: bigint;
     nombreCompleto: string;

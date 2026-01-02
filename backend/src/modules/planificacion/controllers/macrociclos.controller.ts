@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
   ParseIntPipe,
+  DefaultValuePipe,
 } from '@nestjs/common';
 import { MacrociclosService } from '../services/macrociclos.service';
 import { CreateMacrocicloDto, UpdateMacrocicloDto } from '../dto';
@@ -37,8 +38,8 @@ export class MacrociclosController {
   @Roles('COMITE_TECNICO', 'ENTRENADOR', 'ATLETA')
   findAll(
     @CurrentUser() user: any,
-    @Query('page', ParseIntPipe) page = 1,
-    @Query('limit', ParseIntPipe) limit = 10,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
   ) {
     return this.macrociclosService.findAll(BigInt(user.id), user.rol, page, limit);
   }

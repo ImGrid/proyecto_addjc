@@ -23,9 +23,10 @@ export class TestsFisicosController {
     private readonly testsFisicosService: TestsFisicosService,
   ) {}
 
-  // POST /api/tests-fisicos - Crear test fisico (ENTRENADOR, COMITE_TECNICO)
+  // POST /api/tests-fisicos - Crear test fisico (solo ENTRENADOR)
+  // COMITE_TECNICO no puede crear porque el servicio requiere entrenadorId
   @Post()
-  @Roles('ENTRENADOR', 'COMITE_TECNICO')
+  @Roles('ENTRENADOR')
   @UseGuards(RolesGuard, AtletaOwnershipGuard)
   create(
     @Body() createDto: CreateTestFisicoDto,
