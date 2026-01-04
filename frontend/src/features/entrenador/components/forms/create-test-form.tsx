@@ -1,15 +1,17 @@
 'use client';
 
-import { useActionState, useState, useEffect } from 'react';
+import { useActionState, useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { SelectAtleta } from './select-atleta';
 import { SubmitButton } from './submit-button';
 import { createTestFisico } from '../../actions/create-test-fisico';
 import { initialActionState } from '@/types/action-result';
-import { Dumbbell, Timer, FileText, AlertCircle } from 'lucide-react';
+import { Dumbbell, Timer, FileText } from 'lucide-react';
+import { ENTRENADOR_ROUTES } from '@/lib/routes';
 
 interface Atleta {
   id: string;
@@ -22,11 +24,33 @@ interface CreateTestFormProps {
 
 // Formulario para crear un test fisico
 export function CreateTestForm({ atletas }: CreateTestFormProps) {
+  const router = useRouter();
+  const hasShownToast = useRef(false);
   const [state, formAction] = useActionState(createTestFisico, initialActionState);
   const [selectedAtleta, setSelectedAtleta] = useState('');
 
   // Obtener fecha actual en formato YYYY-MM-DD
   const today = new Date().toISOString().split('T')[0];
+
+  // Mostrar toast y redirigir en caso de exito
+  useEffect(() => {
+    if (state.success && state.message && !hasShownToast.current) {
+      hasShownToast.current = true;
+      toast.success('Test fisico registrado', {
+        description: state.message,
+      });
+      router.push(ENTRENADOR_ROUTES.testsFisicos.list);
+    }
+  }, [state, router]);
+
+  // Mostrar toast en caso de error
+  useEffect(() => {
+    if (!state.success && state.error) {
+      toast.error('Error', {
+        description: state.error,
+      });
+    }
+  }, [state]);
 
   // Obtener error de un campo especifico
   const getFieldError = (field: string): string | undefined => {
@@ -36,16 +60,24 @@ export function CreateTestForm({ atletas }: CreateTestFormProps) {
     return undefined;
   };
 
+  // Obtener valor previo de un campo (para preservar datos al haber error)
+  const getPreviousValue = (field: string): string => {
+    if (!state.success && state.submittedData) {
+      const value = state.submittedData[field];
+      return value !== undefined && value !== null ? String(value) : '';
+    }
+    return '';
+  };
+
+  // Restaurar atleta seleccionado si hay error
+  useEffect(() => {
+    if (!state.success && state.submittedData?.atletaId) {
+      setSelectedAtleta(String(state.submittedData.atletaId));
+    }
+  }, [state]);
+
   return (
     <form action={formAction} className="space-y-6">
-      {/* Error general */}
-      {!state.success && state.error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{state.error}</AlertDescription>
-        </Alert>
-      )}
-
       {/* Seccion: Atleta y Fecha */}
       <Card>
         <CardHeader>
@@ -67,7 +99,7 @@ export function CreateTestForm({ atletas }: CreateTestFormProps) {
               type="date"
               id="fechaTest"
               name="fechaTest"
-              defaultValue={today}
+              defaultValue={getPreviousValue('fechaTest') || today}
               max={today}
               className={getFieldError('fechaTest') ? 'border-destructive' : ''}
             />
@@ -98,6 +130,7 @@ export function CreateTestForm({ atletas }: CreateTestFormProps) {
               min="0"
               max="300"
               step="0.5"
+              defaultValue={getPreviousValue('pressBanca')}
               className={getFieldError('pressBanca') ? 'border-destructive' : ''}
             />
             {getFieldError('pressBanca') && (
@@ -115,6 +148,7 @@ export function CreateTestForm({ atletas }: CreateTestFormProps) {
               min="0"
               max="400"
               step="0.5"
+              defaultValue={getPreviousValue('tiron')}
               className={getFieldError('tiron') ? 'border-destructive' : ''}
             />
             {getFieldError('tiron') && (
@@ -132,6 +166,7 @@ export function CreateTestForm({ atletas }: CreateTestFormProps) {
               min="0"
               max="400"
               step="0.5"
+              defaultValue={getPreviousValue('sentadilla')}
               className={getFieldError('sentadilla') ? 'border-destructive' : ''}
             />
             {getFieldError('sentadilla') && (
@@ -161,6 +196,7 @@ export function CreateTestForm({ atletas }: CreateTestFormProps) {
               min="0"
               max="100"
               step="1"
+              defaultValue={getPreviousValue('barraFija')}
               className={getFieldError('barraFija') ? 'border-destructive' : ''}
             />
             {getFieldError('barraFija') && (
@@ -178,6 +214,7 @@ export function CreateTestForm({ atletas }: CreateTestFormProps) {
               min="0"
               max="100"
               step="1"
+              defaultValue={getPreviousValue('paralelas')}
               className={getFieldError('paralelas') ? 'border-destructive' : ''}
             />
             {getFieldError('paralelas') && (
@@ -207,6 +244,7 @@ export function CreateTestForm({ atletas }: CreateTestFormProps) {
               min="0"
               max="20"
               step="0.5"
+              defaultValue={getPreviousValue('navettePalier')}
               className={getFieldError('navettePalier') ? 'border-destructive' : ''}
             />
             {getFieldError('navettePalier') && (
@@ -225,6 +263,7 @@ export function CreateTestForm({ atletas }: CreateTestFormProps) {
               name="test1500m"
               placeholder="05:30"
               maxLength={10}
+              defaultValue={getPreviousValue('test1500m')}
               className={getFieldError('test1500m') ? 'border-destructive' : ''}
             />
             {getFieldError('test1500m') && (
@@ -252,6 +291,7 @@ export function CreateTestForm({ atletas }: CreateTestFormProps) {
               rows={2}
               maxLength={500}
               placeholder="Ej: Atleta descansado, buena hidratacion..."
+              defaultValue={getPreviousValue('condicionesTest')}
               className="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
@@ -264,6 +304,7 @@ export function CreateTestForm({ atletas }: CreateTestFormProps) {
               rows={3}
               maxLength={1000}
               placeholder="Notas sobre el desempeno, areas a mejorar..."
+              defaultValue={getPreviousValue('observaciones')}
               className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>

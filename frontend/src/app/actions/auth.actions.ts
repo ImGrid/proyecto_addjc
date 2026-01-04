@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth.schema';
 import type { LoginResponse } from '@/types/auth';
+import { AUTH_ROUTES } from '@/lib/routes';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
@@ -97,11 +98,11 @@ export async function logoutAction() {
     cookieStore.delete('accessToken');
 
     // Redirect a la pagina de login
-    redirect('/login');
+    redirect(AUTH_ROUTES.login);
   } catch (error) {
     console.error('Error en logoutAction:', error);
     // Si falla, igual intentar redirect
-    redirect('/login');
+    redirect(AUTH_ROUTES.login);
   }
 }
 

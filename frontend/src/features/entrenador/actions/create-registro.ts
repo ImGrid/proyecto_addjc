@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createRegistroSchema, CreateRegistroPayload } from '../schemas/create-registro.schema';
 import { ActionResult } from '@/types/action-result';
+import { ENTRENADOR_ROUTES } from '@/lib/routes';
 
 // Server Action para crear un registro post-entrenamiento
 // Endpoint: POST /registros-post-entrenamiento
@@ -61,6 +62,7 @@ export async function createRegistro(
         success: false,
         error: 'Por favor corrige los errores del formulario',
         fieldErrors,
+        submittedData: rawData as Record<string, unknown>,
       };
     }
 
@@ -121,24 +123,28 @@ export async function createRegistro(
         return {
           success: false,
           error: 'No tienes permiso para registrar datos de este atleta',
+          submittedData: rawData as Record<string, unknown>,
         };
       }
       if (response.status === 404) {
         return {
           success: false,
           error: 'Atleta o sesion no encontrada',
+          submittedData: rawData as Record<string, unknown>,
         };
       }
       if (response.status === 409) {
         return {
           success: false,
           error: 'Ya existe un registro para esta sesion y atleta',
+          submittedData: rawData as Record<string, unknown>,
         };
       }
 
       return {
         success: false,
         error: errorData?.message || 'Error al crear el registro',
+        submittedData: rawData as Record<string, unknown>,
       };
     }
 
@@ -156,9 +162,10 @@ export async function createRegistro(
     return {
       success: false,
       error: 'Error de conexion. Intenta nuevamente.',
+      submittedData: {},
     };
   }
 
   // Redirigir fuera del try-catch (Next.js requirement)
-  redirect('/entrenador/post-entrenamiento');
+  redirect(ENTRENADOR_ROUTES.postEntrenamiento.list);
 }

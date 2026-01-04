@@ -6,13 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Activity, Plus, Calendar, AlertTriangle } from 'lucide-react';
+import { AUTH_ROUTES } from '@/lib/routes';
 
 export default async function PostEntrenamientoPage() {
   // Verificar autenticacion
   const authResult = await getCurrentUserAction();
 
   if (!authResult.success || !authResult.user) {
-    redirect('/login');
+    redirect(AUTH_ROUTES.login);
   }
 
   // Cargar registros

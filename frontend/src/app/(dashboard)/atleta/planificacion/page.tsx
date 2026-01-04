@@ -1,6 +1,7 @@
 import { fetchPlanificacion } from '@/features/entrenamientos/actions/fetch-planificacion';
 import { MicrociclosGrid } from '@/features/entrenamientos/components/microciclos-grid';
 import { redirect } from 'next/navigation';
+import { AUTH_ROUTES } from '@/lib/routes';
 
 // Pagina de planificacion del atleta
 export default async function PlanificacionPage() {
@@ -9,7 +10,7 @@ export default async function PlanificacionPage() {
 
   // Si no hay datos, redirigir al login
   if (!data) {
-    redirect('/login');
+    redirect(AUTH_ROUTES.login);
   }
 
   return (

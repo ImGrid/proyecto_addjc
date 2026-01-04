@@ -1,16 +1,17 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SubmitButton } from './submit-button';
 import { updateMesociclo } from '../../actions/mesociclo.actions';
 import { initialActionState } from '@/types/action-result';
-import { AlertCircle, Target, CheckCircle, Layers, Save } from 'lucide-react';
+import { Target, Layers, Save } from 'lucide-react';
 import { EtapaMesocicloValues } from '@/types/enums';
 import type { Mesociclo } from '../../types/planificacion.types';
 
@@ -20,10 +21,33 @@ interface EditMesocicloFormProps {
 
 // Formulario para editar un mesociclo existente
 export function EditMesocicloForm({ mesociclo }: EditMesocicloFormProps) {
+  const router = useRouter();
+  const hasShownToast = useRef(false);
+
   // Bind del action con el ID del mesociclo
   const updateWithId = updateMesociclo.bind(null, mesociclo.id);
   const [state, formAction] = useActionState(updateWithId, initialActionState);
   const [selectedEtapa, setSelectedEtapa] = useState(mesociclo.etapa);
+
+  // Mostrar toast y redirigir en caso de exito
+  useEffect(() => {
+    if (state.success && state.message && !hasShownToast.current) {
+      hasShownToast.current = true;
+      toast.success('Mesociclo actualizado', {
+        description: state.message,
+      });
+      router.back();
+    }
+  }, [state, router]);
+
+  // Mostrar toast en caso de error
+  useEffect(() => {
+    if (!state.success && state.error) {
+      toast.error('Error', {
+        description: state.error,
+      });
+    }
+  }, [state]);
 
   // Obtener error de un campo especifico
   const getFieldError = (field: string): string | undefined => {
@@ -33,6 +57,24 @@ export function EditMesocicloForm({ mesociclo }: EditMesocicloFormProps) {
     return undefined;
   };
 
+  // Obtener valor previo de un campo (para preservar datos al haber error)
+  const getPreviousValue = (field: string, originalValue: string): string => {
+    if (!state.success && state.submittedData) {
+      const value = state.submittedData[field];
+      return value !== undefined && value !== null ? String(value) : originalValue;
+    }
+    return originalValue;
+  };
+
+  // Restaurar valores de selects controlados si hay error
+  useEffect(() => {
+    if (!state.success && state.submittedData) {
+      if (state.submittedData.etapa) {
+        setSelectedEtapa(String(state.submittedData.etapa));
+      }
+    }
+  }, [state]);
+
   // Formatear fecha para input date
   const formatDateForInput = (date: Date | string) => {
     const d = new Date(date);
@@ -41,22 +83,6 @@ export function EditMesocicloForm({ mesociclo }: EditMesocicloFormProps) {
 
   return (
     <form action={formAction} className="space-y-6">
-      {/* Mensaje de exito */}
-      {state.success && state.message && (
-        <Alert className="border-green-500 bg-green-50">
-          <CheckCircle className="h-4 w-4 text-green-500" />
-          <AlertDescription className="text-green-700">{state.message}</AlertDescription>
-        </Alert>
-      )}
-
-      {/* Error general */}
-      {!state.success && state.error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{state.error}</AlertDescription>
-        </Alert>
-      )}
-
       {/* Datos Generales */}
       <Card>
         <CardHeader>
@@ -73,7 +99,7 @@ export function EditMesocicloForm({ mesociclo }: EditMesocicloFormProps) {
               type="text"
               id="nombre"
               name="nombre"
-              defaultValue={mesociclo.nombre}
+              defaultValue={getPreviousValue('nombre', mesociclo.nombre)}
               placeholder="Ej: Preparacion General 1"
               className={getFieldError('nombre') ? 'border-destructive' : ''}
             />
@@ -89,7 +115,7 @@ export function EditMesocicloForm({ mesociclo }: EditMesocicloFormProps) {
               id="numeroMesociclo"
               name="numeroMesociclo"
               min="1"
-              defaultValue={mesociclo.numeroMesociclo}
+              defaultValue={getPreviousValue('numeroMesociclo', String(mesociclo.numeroMesociclo))}
               className={getFieldError('numeroMesociclo') ? 'border-destructive' : ''}
             />
             {getFieldError('numeroMesociclo') && (
@@ -137,7 +163,7 @@ export function EditMesocicloForm({ mesociclo }: EditMesocicloFormProps) {
               type="date"
               id="fechaInicio"
               name="fechaInicio"
-              defaultValue={formatDateForInput(mesociclo.fechaInicio)}
+              defaultValue={getPreviousValue('fechaInicio', formatDateForInput(mesociclo.fechaInicio))}
               className={getFieldError('fechaInicio') ? 'border-destructive' : ''}
             />
             {getFieldError('fechaInicio') && (
@@ -151,7 +177,7 @@ export function EditMesocicloForm({ mesociclo }: EditMesocicloFormProps) {
               type="date"
               id="fechaFin"
               name="fechaFin"
-              defaultValue={formatDateForInput(mesociclo.fechaFin)}
+              defaultValue={getPreviousValue('fechaFin', formatDateForInput(mesociclo.fechaFin))}
               className={getFieldError('fechaFin') ? 'border-destructive' : ''}
             />
             {getFieldError('fechaFin') && (
@@ -176,7 +202,7 @@ export function EditMesocicloForm({ mesociclo }: EditMesocicloFormProps) {
             <Textarea
               id="objetivoFisico"
               name="objetivoFisico"
-              defaultValue={mesociclo.objetivoFisico}
+              defaultValue={getPreviousValue('objetivoFisico', mesociclo.objetivoFisico)}
               rows={2}
               className={getFieldError('objetivoFisico') ? 'border-destructive' : ''}
             />
@@ -190,7 +216,7 @@ export function EditMesocicloForm({ mesociclo }: EditMesocicloFormProps) {
             <Textarea
               id="objetivoTecnico"
               name="objetivoTecnico"
-              defaultValue={mesociclo.objetivoTecnico}
+              defaultValue={getPreviousValue('objetivoTecnico', mesociclo.objetivoTecnico)}
               rows={2}
               className={getFieldError('objetivoTecnico') ? 'border-destructive' : ''}
             />
@@ -204,7 +230,7 @@ export function EditMesocicloForm({ mesociclo }: EditMesocicloFormProps) {
             <Textarea
               id="objetivoTactico"
               name="objetivoTactico"
-              defaultValue={mesociclo.objetivoTactico}
+              defaultValue={getPreviousValue('objetivoTactico', mesociclo.objetivoTactico)}
               rows={2}
               className={getFieldError('objetivoTactico') ? 'border-destructive' : ''}
             />

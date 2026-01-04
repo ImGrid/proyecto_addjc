@@ -41,7 +41,7 @@ export function AtletaCardCT({ atleta }: AtletaCardCTProps) {
           </div>
           <div>
             <span className="text-muted-foreground">Peso:</span>{' '}
-            <span className="font-medium">{atleta.categoriaPeso?.replace(/_/g, ' ') || atleta.peso}</span>
+            <span className="font-medium">{atleta.categoriaPeso?.replace(/_/g, ' ') || 'Sin categoria'}</span>
           </div>
         </div>
 

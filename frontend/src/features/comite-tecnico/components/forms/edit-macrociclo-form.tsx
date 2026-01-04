@@ -1,16 +1,17 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SubmitButton } from './submit-button';
 import { updateMacrociclo } from '../../actions/macrociclo.actions';
 import { initialActionState } from '@/types/action-result';
-import { AlertCircle, Calendar, Target, CheckCircle, Save } from 'lucide-react';
+import { Calendar, Target, Save } from 'lucide-react';
 import { EstadoMacrocicloValues } from '@/types/enums';
 import type { Macrociclo } from '../../types/planificacion.types';
 
@@ -20,9 +21,33 @@ interface EditMacrocicloFormProps {
 
 // Formulario para editar un macrociclo existente
 export function EditMacrocicloForm({ macrociclo }: EditMacrocicloFormProps) {
+  const router = useRouter();
+  const hasShownToast = useRef(false);
+
   // Bind del action con el ID del macrociclo
   const updateWithId = updateMacrociclo.bind(null, macrociclo.id);
   const [state, formAction] = useActionState(updateWithId, initialActionState);
+  const [selectedEstado, setSelectedEstado] = useState(macrociclo.estado);
+
+  // Mostrar toast y redirigir en caso de exito
+  useEffect(() => {
+    if (state.success && state.message && !hasShownToast.current) {
+      hasShownToast.current = true;
+      toast.success('Macrociclo actualizado', {
+        description: state.message,
+      });
+      router.back();
+    }
+  }, [state, router]);
+
+  // Mostrar toast en caso de error
+  useEffect(() => {
+    if (!state.success && state.error) {
+      toast.error('Error', {
+        description: state.error,
+      });
+    }
+  }, [state]);
 
   // Obtener error de un campo especifico
   const getFieldError = (field: string): string | undefined => {
@@ -32,6 +57,24 @@ export function EditMacrocicloForm({ macrociclo }: EditMacrocicloFormProps) {
     return undefined;
   };
 
+  // Obtener valor previo de un campo (para preservar datos al haber error)
+  const getPreviousValue = (field: string, originalValue: string): string => {
+    if (!state.success && state.submittedData) {
+      const value = state.submittedData[field];
+      return value !== undefined && value !== null ? String(value) : originalValue;
+    }
+    return originalValue;
+  };
+
+  // Restaurar valores de selects controlados si hay error
+  useEffect(() => {
+    if (!state.success && state.submittedData) {
+      if (state.submittedData.estado) {
+        setSelectedEstado(String(state.submittedData.estado));
+      }
+    }
+  }, [state]);
+
   // Formatear fecha para input date
   const formatDateForInput = (date: Date | string) => {
     const d = new Date(date);
@@ -40,22 +83,6 @@ export function EditMacrocicloForm({ macrociclo }: EditMacrocicloFormProps) {
 
   return (
     <form action={formAction} className="space-y-6">
-      {/* Mensaje de exito */}
-      {state.success && state.message && (
-        <Alert className="border-green-500 bg-green-50">
-          <CheckCircle className="h-4 w-4 text-green-500" />
-          <AlertDescription className="text-green-700">{state.message}</AlertDescription>
-        </Alert>
-      )}
-
-      {/* Error general */}
-      {!state.success && state.error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{state.error}</AlertDescription>
-        </Alert>
-      )}
-
       {/* Datos Generales */}
       <Card>
         <CardHeader>
@@ -72,7 +99,7 @@ export function EditMacrocicloForm({ macrociclo }: EditMacrocicloFormProps) {
               type="text"
               id="nombre"
               name="nombre"
-              defaultValue={macrociclo.nombre}
+              defaultValue={getPreviousValue('nombre', macrociclo.nombre)}
               placeholder="Ej: Macrociclo 2026"
               className={getFieldError('nombre') ? 'border-destructive' : ''}
             />
@@ -87,7 +114,7 @@ export function EditMacrocicloForm({ macrociclo }: EditMacrocicloFormProps) {
               type="text"
               id="temporada"
               name="temporada"
-              defaultValue={macrociclo.temporada}
+              defaultValue={getPreviousValue('temporada', macrociclo.temporada)}
               placeholder="Ej: 2026"
               className={getFieldError('temporada') ? 'border-destructive' : ''}
             />
@@ -102,7 +129,7 @@ export function EditMacrocicloForm({ macrociclo }: EditMacrocicloFormProps) {
               type="text"
               id="equipo"
               name="equipo"
-              defaultValue={macrociclo.equipo}
+              defaultValue={getPreviousValue('equipo', macrociclo.equipo)}
               placeholder="Ej: Seleccion Cochabamba"
               className={getFieldError('equipo') ? 'border-destructive' : ''}
             />
@@ -117,7 +144,7 @@ export function EditMacrocicloForm({ macrociclo }: EditMacrocicloFormProps) {
               type="text"
               id="categoriaObjetivo"
               name="categoriaObjetivo"
-              defaultValue={macrociclo.categoriaObjetivo}
+              defaultValue={getPreviousValue('categoriaObjetivo', macrociclo.categoriaObjetivo)}
               placeholder="Ej: Senior"
               className={getFieldError('categoriaObjetivo') ? 'border-destructive' : ''}
             />
@@ -132,7 +159,7 @@ export function EditMacrocicloForm({ macrociclo }: EditMacrocicloFormProps) {
               type="date"
               id="fechaInicio"
               name="fechaInicio"
-              defaultValue={formatDateForInput(macrociclo.fechaInicio)}
+              defaultValue={getPreviousValue('fechaInicio', formatDateForInput(macrociclo.fechaInicio))}
               className={getFieldError('fechaInicio') ? 'border-destructive' : ''}
             />
             {getFieldError('fechaInicio') && (
@@ -146,7 +173,7 @@ export function EditMacrocicloForm({ macrociclo }: EditMacrocicloFormProps) {
               type="date"
               id="fechaFin"
               name="fechaFin"
-              defaultValue={formatDateForInput(macrociclo.fechaFin)}
+              defaultValue={getPreviousValue('fechaFin', formatDateForInput(macrociclo.fechaFin))}
               className={getFieldError('fechaFin') ? 'border-destructive' : ''}
             />
             {getFieldError('fechaFin') && (
@@ -156,7 +183,7 @@ export function EditMacrocicloForm({ macrociclo }: EditMacrocicloFormProps) {
 
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="estado">Estado</Label>
-            <Select name="estado" defaultValue={macrociclo.estado}>
+            <Select value={selectedEstado} onValueChange={setSelectedEstado}>
               <SelectTrigger className={getFieldError('estado') ? 'border-destructive' : ''}>
                 <SelectValue placeholder="Selecciona un estado" />
               </SelectTrigger>
@@ -168,6 +195,7 @@ export function EditMacrocicloForm({ macrociclo }: EditMacrocicloFormProps) {
                 ))}
               </SelectContent>
             </Select>
+            <input type="hidden" name="estado" value={selectedEstado} />
             {getFieldError('estado') && (
               <p className="text-sm text-destructive">{getFieldError('estado')}</p>
             )}
@@ -190,7 +218,7 @@ export function EditMacrocicloForm({ macrociclo }: EditMacrocicloFormProps) {
             <Textarea
               id="objetivo1"
               name="objetivo1"
-              defaultValue={macrociclo.objetivo1}
+              defaultValue={getPreviousValue('objetivo1', macrociclo.objetivo1)}
               placeholder="Objetivo principal del macrociclo"
               rows={2}
               className={getFieldError('objetivo1') ? 'border-destructive' : ''}
@@ -205,7 +233,7 @@ export function EditMacrocicloForm({ macrociclo }: EditMacrocicloFormProps) {
             <Textarea
               id="objetivo2"
               name="objetivo2"
-              defaultValue={macrociclo.objetivo2}
+              defaultValue={getPreviousValue('objetivo2', macrociclo.objetivo2)}
               placeholder="Segundo objetivo del macrociclo"
               rows={2}
               className={getFieldError('objetivo2') ? 'border-destructive' : ''}
@@ -220,7 +248,7 @@ export function EditMacrocicloForm({ macrociclo }: EditMacrocicloFormProps) {
             <Textarea
               id="objetivo3"
               name="objetivo3"
-              defaultValue={macrociclo.objetivo3}
+              defaultValue={getPreviousValue('objetivo3', macrociclo.objetivo3)}
               placeholder="Tercer objetivo del macrociclo"
               rows={2}
               className={getFieldError('objetivo3') ? 'border-destructive' : ''}

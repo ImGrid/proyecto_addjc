@@ -7,13 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Calendar, User, CheckCircle } from 'lucide-react';
+import { AUTH_ROUTES } from '@/lib/routes';
 
 export default async function DolenciasPage() {
   // Verificar autenticacion
   const authResult = await getCurrentUserAction();
 
   if (!authResult.success || !authResult.user) {
-    redirect('/login');
+    redirect(AUTH_ROUTES.login);
   }
 
   // Cargar dolencias

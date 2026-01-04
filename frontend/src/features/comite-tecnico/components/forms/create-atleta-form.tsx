@@ -1,16 +1,18 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SubmitButton } from './submit-button';
 import { createAtleta } from '../../actions/atleta.actions';
 import { initialActionState } from '@/types/action-result';
-import { AlertCircle, User, MapPin, Scale, UserCog, UserPlus } from 'lucide-react';
+import { User, MapPin, Scale, UserCog, UserPlus } from 'lucide-react';
 import { CategoriaPesoValues } from '@/types/enums';
+import { COMITE_TECNICO_ROUTES } from '@/lib/routes';
 
 interface Entrenador {
   id: string;
@@ -23,7 +25,29 @@ interface CreateAtletaFormProps {
 
 // Formulario para crear un atleta
 export function CreateAtletaForm({ entrenadores }: CreateAtletaFormProps) {
+  const router = useRouter();
+  const hasShownToast = useRef(false);
   const [state, formAction] = useActionState(createAtleta, initialActionState);
+
+  // Mostrar toast y redirigir en caso de exito
+  useEffect(() => {
+    if (state.success && state.message && !hasShownToast.current) {
+      hasShownToast.current = true;
+      toast.success('Atleta creado', {
+        description: state.message,
+      });
+      router.push(COMITE_TECNICO_ROUTES.atletas.list);
+    }
+  }, [state, router]);
+
+  // Mostrar toast en caso de error
+  useEffect(() => {
+    if (!state.success && state.error) {
+      toast.error('Error', {
+        description: state.error,
+      });
+    }
+  }, [state]);
 
   // Obtener error de un campo especifico
   const getFieldError = (field: string): string | undefined => {
@@ -33,16 +57,17 @@ export function CreateAtletaForm({ entrenadores }: CreateAtletaFormProps) {
     return undefined;
   };
 
+  // Obtener valor previo de un campo (para preservar datos al haber error)
+  const getPreviousValue = (field: string): string => {
+    if (!state.success && state.submittedData) {
+      const value = state.submittedData[field];
+      return value !== undefined && value !== null ? String(value) : '';
+    }
+    return '';
+  };
+
   return (
     <form action={formAction} className="space-y-6">
-      {/* Error general */}
-      {!state.success && state.error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{state.error}</AlertDescription>
-        </Alert>
-      )}
-
       {/* Seccion: Datos de Usuario */}
       <Card>
         <CardHeader>
@@ -60,6 +85,7 @@ export function CreateAtletaForm({ entrenadores }: CreateAtletaFormProps) {
               id="ci"
               name="ci"
               placeholder="Ej: 12345678"
+              defaultValue={getPreviousValue('ci')}
               className={getFieldError('ci') ? 'border-destructive' : ''}
             />
             {getFieldError('ci') && (
@@ -74,6 +100,7 @@ export function CreateAtletaForm({ entrenadores }: CreateAtletaFormProps) {
               id="nombreCompleto"
               name="nombreCompleto"
               placeholder="Ej: Juan Perez Garcia"
+              defaultValue={getPreviousValue('nombreCompleto')}
               className={getFieldError('nombreCompleto') ? 'border-destructive' : ''}
             />
             {getFieldError('nombreCompleto') && (
@@ -88,6 +115,7 @@ export function CreateAtletaForm({ entrenadores }: CreateAtletaFormProps) {
               id="email"
               name="email"
               placeholder="Ej: juan.perez@email.com"
+              defaultValue={getPreviousValue('email')}
               className={getFieldError('email') ? 'border-destructive' : ''}
             />
             {getFieldError('email') && (
@@ -102,6 +130,7 @@ export function CreateAtletaForm({ entrenadores }: CreateAtletaFormProps) {
               id="contrasena"
               name="contrasena"
               placeholder="Minimo 8 caracteres"
+              defaultValue={getPreviousValue('contrasena')}
               className={getFieldError('contrasena') ? 'border-destructive' : ''}
             />
             {getFieldError('contrasena') && (
@@ -127,6 +156,7 @@ export function CreateAtletaForm({ entrenadores }: CreateAtletaFormProps) {
               type="date"
               id="fechaNacimiento"
               name="fechaNacimiento"
+              defaultValue={getPreviousValue('fechaNacimiento')}
               className={getFieldError('fechaNacimiento') ? 'border-destructive' : ''}
             />
             {getFieldError('fechaNacimiento') && (
@@ -142,6 +172,7 @@ export function CreateAtletaForm({ entrenadores }: CreateAtletaFormProps) {
               name="edad"
               placeholder="Ej: 18"
               min={5}
+              defaultValue={getPreviousValue('edad')}
               className={getFieldError('edad') ? 'border-destructive' : ''}
             />
             {getFieldError('edad') && (
@@ -156,6 +187,7 @@ export function CreateAtletaForm({ entrenadores }: CreateAtletaFormProps) {
               id="municipio"
               name="municipio"
               placeholder="Ej: Cochabamba"
+              defaultValue={getPreviousValue('municipio')}
               className={getFieldError('municipio') ? 'border-destructive' : ''}
             />
             {getFieldError('municipio') && (
@@ -170,6 +202,7 @@ export function CreateAtletaForm({ entrenadores }: CreateAtletaFormProps) {
               id="telefono"
               name="telefono"
               placeholder="Ej: 70012345"
+              defaultValue={getPreviousValue('telefono')}
             />
           </div>
 
@@ -180,6 +213,7 @@ export function CreateAtletaForm({ entrenadores }: CreateAtletaFormProps) {
               id="direccion"
               name="direccion"
               placeholder="Ej: Av. America 123"
+              defaultValue={getPreviousValue('direccion')}
             />
           </div>
         </CardContent>
@@ -202,6 +236,7 @@ export function CreateAtletaForm({ entrenadores }: CreateAtletaFormProps) {
               id="club"
               name="club"
               placeholder="Ej: Club ADDJC"
+              defaultValue={getPreviousValue('club')}
               className={getFieldError('club') ? 'border-destructive' : ''}
             />
             {getFieldError('club') && (
@@ -216,6 +251,7 @@ export function CreateAtletaForm({ entrenadores }: CreateAtletaFormProps) {
               id="categoria"
               name="categoria"
               placeholder="Ej: Senior, Juvenil, Cadete"
+              defaultValue={getPreviousValue('categoria')}
               className={getFieldError('categoria') ? 'border-destructive' : ''}
             />
             {getFieldError('categoria') && (
@@ -224,23 +260,9 @@ export function CreateAtletaForm({ entrenadores }: CreateAtletaFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="peso">Peso (categoria) *</Label>
-            <Input
-              type="text"
-              id="peso"
-              name="peso"
-              placeholder="Ej: -73kg"
-              className={getFieldError('peso') ? 'border-destructive' : ''}
-            />
-            {getFieldError('peso') && (
-              <p className="text-sm text-destructive">{getFieldError('peso')}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="categoriaPeso">Categoria de Peso</Label>
-            <Select name="categoriaPeso">
-              <SelectTrigger>
+            <Label htmlFor="categoriaPeso">Categoria de Peso *</Label>
+            <Select name="categoriaPeso" defaultValue={getPreviousValue('categoriaPeso') || undefined}>
+              <SelectTrigger className={getFieldError('categoriaPeso') ? 'border-destructive' : ''}>
                 <SelectValue placeholder="Selecciona categoria" />
               </SelectTrigger>
               <SelectContent>
@@ -251,6 +273,9 @@ export function CreateAtletaForm({ entrenadores }: CreateAtletaFormProps) {
                 ))}
               </SelectContent>
             </Select>
+            {getFieldError('categoriaPeso') && (
+              <p className="text-sm text-destructive">{getFieldError('categoriaPeso')}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -261,6 +286,7 @@ export function CreateAtletaForm({ entrenadores }: CreateAtletaFormProps) {
               name="pesoActual"
               placeholder="Ej: 72.5"
               step="0.1"
+              defaultValue={getPreviousValue('pesoActual')}
             />
           </div>
 
@@ -271,6 +297,7 @@ export function CreateAtletaForm({ entrenadores }: CreateAtletaFormProps) {
               id="fcReposo"
               name="fcReposo"
               placeholder="Ej: 60"
+              defaultValue={getPreviousValue('fcReposo')}
             />
           </div>
         </CardContent>
@@ -288,7 +315,7 @@ export function CreateAtletaForm({ entrenadores }: CreateAtletaFormProps) {
         <CardContent>
           <div className="space-y-2">
             <Label htmlFor="entrenadorAsignadoId">Entrenador</Label>
-            <Select name="entrenadorAsignadoId">
+            <Select name="entrenadorAsignadoId" defaultValue={getPreviousValue('entrenadorAsignadoId') || undefined}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecciona un entrenador" />
               </SelectTrigger>

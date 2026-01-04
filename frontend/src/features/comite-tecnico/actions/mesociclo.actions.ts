@@ -54,6 +54,7 @@ export async function createMesociclo(
         success: false,
         error: 'Por favor corrige los errores del formulario',
         fieldErrors,
+        submittedData: rawData as Record<string, unknown>,
       };
     }
 
@@ -73,6 +74,7 @@ export async function createMesociclo(
       return {
         success: false,
         error: errorData?.message || 'Error al crear el mesociclo',
+        submittedData: rawData as Record<string, unknown>,
       };
     }
 
@@ -92,6 +94,7 @@ export async function createMesociclo(
     return {
       success: false,
       error: 'Error de conexion. Intenta nuevamente.',
+      submittedData: {},
     };
   }
 }
@@ -152,6 +155,7 @@ export async function updateMesociclo(
         success: false,
         error: 'Por favor corrige los errores del formulario',
         fieldErrors,
+        submittedData: rawData as Record<string, unknown>,
       };
     }
 

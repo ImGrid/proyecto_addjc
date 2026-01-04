@@ -2,6 +2,7 @@ import { HydrationBoundary, QueryClient, dehydrate } from '@tanstack/react-query
 import { fetchDashboardData } from '@/features/atleta/actions/fetch-dashboard-data';
 import { DashboardContent } from './dashboard-content';
 import { redirect } from 'next/navigation';
+import { AUTH_ROUTES } from '@/lib/routes';
 
 // Pagina del dashboard del atleta con prefetch de datos
 export default async function AtletaDashboardPage() {
@@ -17,7 +18,7 @@ export default async function AtletaDashboardPage() {
 
   // Si no hay datos, redirigir al login
   if (!data) {
-    redirect('/login');
+    redirect(AUTH_ROUTES.login);
   }
 
   // Deshidratar el estado del QueryClient para pasarlo al cliente

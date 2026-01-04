@@ -6,13 +6,14 @@ import { fetchSesionesParaSelector } from '@/features/entrenador/actions/fetch-s
 import { CreateRegistroForm } from '@/features/entrenador/components/forms/create-registro-form';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { AUTH_ROUTES, ENTRENADOR_ROUTES } from '@/lib/routes';
 
 export default async function NuevoRegistroPage() {
   // Verificar autenticacion
   const authResult = await getCurrentUserAction();
 
   if (!authResult.success || !authResult.user) {
-    redirect('/login');
+    redirect(AUTH_ROUTES.login);
   }
 
   // Cargar atletas y sesiones en paralelo
@@ -22,7 +23,7 @@ export default async function NuevoRegistroPage() {
   ]);
 
   if (!atletas) {
-    redirect('/entrenador');
+    redirect(ENTRENADOR_ROUTES.dashboard);
   }
 
   return (

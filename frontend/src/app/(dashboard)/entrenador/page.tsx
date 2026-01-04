@@ -5,13 +5,14 @@ import { fetchMisAtletas } from '@/features/entrenador/actions/fetch-mis-atletas
 import { EntrenadorStatsGrid } from '@/features/entrenador/components/dashboard/entrenador-stats-grid';
 import { AtletasResumenCard } from '@/features/entrenador/components/dashboard/atletas-resumen-card';
 import { AccionesRapidas } from '@/features/entrenador/components/dashboard/acciones-rapidas';
+import { AUTH_ROUTES } from '@/lib/routes';
 
 export default async function EntrenadorDashboardPage() {
   // Verificar autenticacion
   const authResult = await getCurrentUserAction();
 
   if (!authResult.success || !authResult.user) {
-    redirect('/login');
+    redirect(AUTH_ROUTES.login);
   }
 
   const { user } = authResult;

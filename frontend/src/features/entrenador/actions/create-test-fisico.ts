@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createTestSchema, CreateTestPayload } from '../schemas/create-test.schema';
 import { ActionResult } from '@/types/action-result';
+import { ENTRENADOR_ROUTES } from '@/lib/routes';
 
 // Server Action para crear un test fisico
 // Endpoint: POST /tests-fisicos
@@ -59,6 +60,7 @@ export async function createTestFisico(
           success: false,
           error: formError[0],
           fieldErrors,
+          submittedData: rawData as Record<string, unknown>,
         };
       }
 
@@ -66,6 +68,7 @@ export async function createTestFisico(
         success: false,
         error: 'Por favor corrige los errores del formulario',
         fieldErrors,
+        submittedData: rawData as Record<string, unknown>,
       };
     }
 
@@ -124,18 +127,21 @@ export async function createTestFisico(
         return {
           success: false,
           error: 'No tienes permiso para registrar tests de este atleta',
+          submittedData: rawData as Record<string, unknown>,
         };
       }
       if (response.status === 404) {
         return {
           success: false,
           error: 'Atleta no encontrado',
+          submittedData: rawData as Record<string, unknown>,
         };
       }
 
       return {
         success: false,
         error: errorData?.message || 'Error al crear el test fisico',
+        submittedData: rawData as Record<string, unknown>,
       };
     }
 
@@ -152,9 +158,10 @@ export async function createTestFisico(
     return {
       success: false,
       error: 'Error de conexion. Intenta nuevamente.',
+      submittedData: {},
     };
   }
 
   // Redirigir fuera del try-catch (Next.js requirement)
-  redirect('/entrenador/tests-fisicos');
+  redirect(ENTRENADOR_ROUTES.testsFisicos.list);
 }

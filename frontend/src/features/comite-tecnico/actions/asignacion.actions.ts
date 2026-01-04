@@ -48,6 +48,7 @@ export async function createAsignacion(
         success: false,
         error: 'Por favor corrige los errores del formulario',
         fieldErrors,
+        submittedData: rawData as Record<string, unknown>,
       };
     }
 
@@ -68,12 +69,14 @@ export async function createAsignacion(
         return {
           success: false,
           error: errorData?.message || 'El atleta ya esta asignado a este microciclo',
+          submittedData: rawData as Record<string, unknown>,
         };
       }
 
       return {
         success: false,
         error: errorData?.message || 'Error al crear la asignacion',
+        submittedData: rawData as Record<string, unknown>,
       };
     }
 
@@ -93,6 +96,7 @@ export async function createAsignacion(
     return {
       success: false,
       error: 'Error de conexion. Intenta nuevamente.',
+      submittedData: {},
     };
   }
 }

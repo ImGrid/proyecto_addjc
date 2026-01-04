@@ -1,15 +1,17 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { SubmitButton } from './submit-button';
 import { createAsignacion } from '../../actions/asignacion.actions';
 import { initialActionState } from '@/types/action-result';
-import { AlertCircle, Link as LinkIcon, CheckCircle } from 'lucide-react';
+import { Link as LinkIcon } from 'lucide-react';
+import { COMITE_TECNICO_ROUTES } from '@/lib/routes';
 
 interface Atleta {
   id: string;
@@ -30,9 +32,31 @@ interface CreateAsignacionFormProps {
 
 // Formulario para crear una asignacion atleta-microciclo
 export function CreateAsignacionForm({ atletas, microciclos }: CreateAsignacionFormProps) {
+  const router = useRouter();
+  const hasShownToast = useRef(false);
   const [state, formAction] = useActionState(createAsignacion, initialActionState);
   const [selectedAtleta, setSelectedAtleta] = useState('');
   const [selectedMicrociclo, setSelectedMicrociclo] = useState('');
+
+  // Mostrar toast y redirigir en caso de exito
+  useEffect(() => {
+    if (state.success && state.message && !hasShownToast.current) {
+      hasShownToast.current = true;
+      toast.success('Asignacion creada', {
+        description: state.message,
+      });
+      router.push(COMITE_TECNICO_ROUTES.asignaciones.list);
+    }
+  }, [state, router]);
+
+  // Mostrar toast en caso de error
+  useEffect(() => {
+    if (!state.success && state.error) {
+      toast.error('Error', {
+        description: state.error,
+      });
+    }
+  }, [state]);
 
   // Obtener error de un campo especifico
   const getFieldError = (field: string): string | undefined => {
@@ -41,6 +65,27 @@ export function CreateAsignacionForm({ atletas, microciclos }: CreateAsignacionF
     }
     return undefined;
   };
+
+  // Obtener valor previo de un campo (para preservar datos al haber error)
+  const getPreviousValue = (field: string): string => {
+    if (!state.success && state.submittedData) {
+      const value = state.submittedData[field];
+      return value !== undefined && value !== null ? String(value) : '';
+    }
+    return '';
+  };
+
+  // Restaurar valores de selects si hay error
+  useEffect(() => {
+    if (!state.success && state.submittedData) {
+      if (state.submittedData.atletaId) {
+        setSelectedAtleta(String(state.submittedData.atletaId));
+      }
+      if (state.submittedData.microcicloId) {
+        setSelectedMicrociclo(String(state.submittedData.microcicloId));
+      }
+    }
+  }, [state]);
 
   // Formatear fecha para mostrar
   const formatDate = (date: Date) => {
@@ -52,22 +97,6 @@ export function CreateAsignacionForm({ atletas, microciclos }: CreateAsignacionF
 
   return (
     <form action={formAction} className="space-y-6">
-      {/* Mensaje de exito */}
-      {state.success && state.message && (
-        <Alert className="border-green-500 bg-green-50">
-          <CheckCircle className="h-4 w-4 text-green-500" />
-          <AlertDescription className="text-green-700">{state.message}</AlertDescription>
-        </Alert>
-      )}
-
-      {/* Error general */}
-      {!state.success && state.error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{state.error}</AlertDescription>
-        </Alert>
-      )}
-
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
@@ -131,6 +160,7 @@ export function CreateAsignacionForm({ atletas, microciclos }: CreateAsignacionF
               name="observaciones"
               placeholder="Notas adicionales sobre la asignacion"
               maxLength={500}
+              defaultValue={getPreviousValue('observaciones')}
             />
           </div>
         </CardContent>

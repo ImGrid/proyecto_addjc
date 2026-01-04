@@ -1,12 +1,13 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { SelectAtleta } from './select-atleta';
 import { SelectSesion } from './select-sesion';
 import { DolenciasFieldArray, FormWithDolencias } from './dolencias-field-array';
@@ -19,10 +20,10 @@ import {
   Moon,
   Smile,
   FileText,
-  AlertCircle,
   CheckCircle,
   XCircle,
 } from 'lucide-react';
+import { ENTRENADOR_ROUTES } from '@/lib/routes';
 
 interface Atleta {
   id: string;
@@ -35,6 +36,8 @@ interface CreateRegistroFormProps {
 }
 
 export function CreateRegistroForm({ atletas, sesiones }: CreateRegistroFormProps) {
+  const router = useRouter();
+  const hasShownToast = useRef(false);
   const [state, formAction] = useActionState(createRegistro, initialActionState);
   const [selectedAtleta, setSelectedAtleta] = useState('');
   const [selectedSesion, setSelectedSesion] = useState('');
@@ -47,6 +50,26 @@ export function CreateRegistroForm({ atletas, sesiones }: CreateRegistroFormProp
     },
   });
 
+  // Mostrar toast y redirigir en caso de exito
+  useEffect(() => {
+    if (state.success && state.message && !hasShownToast.current) {
+      hasShownToast.current = true;
+      toast.success('Registro guardado', {
+        description: state.message,
+      });
+      router.push(ENTRENADOR_ROUTES.postEntrenamiento.list);
+    }
+  }, [state, router]);
+
+  // Mostrar toast en caso de error
+  useEffect(() => {
+    if (!state.success && state.error) {
+      toast.error('Error', {
+        description: state.error,
+      });
+    }
+  }, [state]);
+
   // Obtener error de un campo especifico (del servidor)
   const getFieldError = (field: string): string | undefined => {
     if (!state.success && state.fieldErrors) {
@@ -54,6 +77,30 @@ export function CreateRegistroForm({ atletas, sesiones }: CreateRegistroFormProp
     }
     return undefined;
   };
+
+  // Obtener valor previo de un campo (para preservar datos al haber error)
+  const getPreviousValue = (field: string): string => {
+    if (!state.success && state.submittedData) {
+      const value = state.submittedData[field];
+      return value !== undefined && value !== null ? String(value) : '';
+    }
+    return '';
+  };
+
+  // Restaurar valores de selects controlados si hay error
+  useEffect(() => {
+    if (!state.success && state.submittedData) {
+      if (state.submittedData.atletaId) {
+        setSelectedAtleta(String(state.submittedData.atletaId));
+      }
+      if (state.submittedData.sesionId) {
+        setSelectedSesion(String(state.submittedData.sesionId));
+      }
+      if (state.submittedData.asistio !== undefined) {
+        setAsistio(state.submittedData.asistio === true || state.submittedData.asistio === 'true');
+      }
+    }
+  }, [state]);
 
   // Manejar submit del formulario
   const handleFormAction = async (formData: FormData) => {
@@ -74,14 +121,6 @@ export function CreateRegistroForm({ atletas, sesiones }: CreateRegistroFormProp
 
   return (
     <form action={handleFormAction} className="space-y-6">
-      {/* Error general */}
-      {!state.success && state.error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{state.error}</AlertDescription>
-        </Alert>
-      )}
-
       {/* Seccion: Atleta y Sesion */}
       <Card>
         <CardHeader>
@@ -143,6 +182,7 @@ export function CreateRegistroForm({ atletas, sesiones }: CreateRegistroFormProp
                 maxLength={500}
                 placeholder="Explica el motivo de la inasistencia..."
                 required={!asistio}
+                defaultValue={getPreviousValue('motivoInasistencia')}
                 className="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
               />
               {getFieldError('motivoInasistencia') && (
@@ -172,7 +212,7 @@ export function CreateRegistroForm({ atletas, sesiones }: CreateRegistroFormProp
                   type="number"
                   id="ejerciciosCompletados"
                   name="ejerciciosCompletados"
-                  defaultValue={100}
+                  defaultValue={getPreviousValue('ejerciciosCompletados') || 100}
                   min={0}
                   max={100}
                   className={getFieldError('ejerciciosCompletados') ? 'border-destructive' : ''}
@@ -188,7 +228,7 @@ export function CreateRegistroForm({ atletas, sesiones }: CreateRegistroFormProp
                   type="number"
                   id="intensidadAlcanzada"
                   name="intensidadAlcanzada"
-                  defaultValue={100}
+                  defaultValue={getPreviousValue('intensidadAlcanzada') || 100}
                   min={0}
                   max={100}
                   className={getFieldError('intensidadAlcanzada') ? 'border-destructive' : ''}
@@ -204,7 +244,7 @@ export function CreateRegistroForm({ atletas, sesiones }: CreateRegistroFormProp
                   type="number"
                   id="duracionReal"
                   name="duracionReal"
-                  defaultValue={90}
+                  defaultValue={getPreviousValue('duracionReal') || 90}
                   min={1}
                   max={480}
                   className={getFieldError('duracionReal') ? 'border-destructive' : ''}
@@ -232,7 +272,7 @@ export function CreateRegistroForm({ atletas, sesiones }: CreateRegistroFormProp
                   type="number"
                   id="rpe"
                   name="rpe"
-                  defaultValue={5}
+                  defaultValue={getPreviousValue('rpe') || 5}
                   min={1}
                   max={10}
                   className={getFieldError('rpe') ? 'border-destructive' : ''}
@@ -263,7 +303,7 @@ export function CreateRegistroForm({ atletas, sesiones }: CreateRegistroFormProp
                   type="number"
                   id="calidadSueno"
                   name="calidadSueno"
-                  defaultValue={7}
+                  defaultValue={getPreviousValue('calidadSueno') || 7}
                   min={1}
                   max={10}
                   className={getFieldError('calidadSueno') ? 'border-destructive' : ''}
@@ -286,6 +326,7 @@ export function CreateRegistroForm({ atletas, sesiones }: CreateRegistroFormProp
                   min={0}
                   max={24}
                   step={0.5}
+                  defaultValue={getPreviousValue('horasSueno')}
                   className={getFieldError('horasSueno') ? 'border-destructive' : ''}
                 />
                 {getFieldError('horasSueno') && (
@@ -302,7 +343,7 @@ export function CreateRegistroForm({ atletas, sesiones }: CreateRegistroFormProp
                   type="number"
                   id="estadoAnimico"
                   name="estadoAnimico"
-                  defaultValue={7}
+                  defaultValue={getPreviousValue('estadoAnimico') || 7}
                   min={1}
                   max={10}
                   className={getFieldError('estadoAnimico') ? 'border-destructive' : ''}
@@ -343,6 +384,7 @@ export function CreateRegistroForm({ atletas, sesiones }: CreateRegistroFormProp
               rows={3}
               maxLength={1000}
               placeholder="Notas sobre el desempeno, areas a mejorar, comentarios del atleta..."
+              defaultValue={getPreviousValue('observaciones')}
               className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>

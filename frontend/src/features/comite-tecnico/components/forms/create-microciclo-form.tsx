@@ -1,18 +1,20 @@
 'use client';
 
-import { useActionState, useState, useEffect } from 'react';
+import { useActionState, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SubmitButton } from './submit-button';
 import { createMicrociclo } from '../../actions/microciclo.actions';
 import { initialActionState } from '@/types/action-result';
-import { AlertCircle, Calendar, Target, CheckCircle, Activity, Gauge, Info } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Calendar, Target, Activity, Info } from 'lucide-react';
 import { TipoMicrocicloValues } from '@/types/enums';
+import { COMITE_TECNICO_ROUTES } from '@/lib/routes';
 import type { Mesociclo } from '../../types/planificacion.types';
 
 interface CreateMicrocicloFormProps {
@@ -24,18 +26,32 @@ interface CreateMicrocicloFormProps {
 // NOTA: El backend genera automaticamente 7 sesiones al crear el microciclo
 export function CreateMicrocicloForm({ mesociclos, preselectedMesocicloId }: CreateMicrocicloFormProps) {
   const router = useRouter();
+  const hasShownToast = useRef(false);
   const [state, formAction] = useActionState(createMicrociclo, initialActionState);
   const [selectedMesociclo, setSelectedMesociclo] = useState(preselectedMesocicloId || '');
   const [selectedTipo, setSelectedTipo] = useState('');
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
 
-  // Redirigir si se crea exitosamente
+  // Mostrar toast y redirigir en caso de exito
   useEffect(() => {
-    if (state.success) {
-      router.push('/comite-tecnico/planificacion/microciclos');
+    if (state.success && state.message && !hasShownToast.current) {
+      hasShownToast.current = true;
+      toast.success('Microciclo creado', {
+        description: state.message,
+      });
+      router.push(COMITE_TECNICO_ROUTES.planificacion.microciclos.list);
     }
-  }, [state.success, router]);
+  }, [state, router]);
+
+  // Mostrar toast en caso de error
+  useEffect(() => {
+    if (!state.success && state.error) {
+      toast.error('Error', {
+        description: state.error,
+      });
+    }
+  }, [state]);
 
   // Calcular fechaFin automaticamente (fechaInicio + 6 dias = 7 dias totales)
   useEffect(() => {
@@ -55,24 +71,32 @@ export function CreateMicrocicloForm({ mesociclos, preselectedMesocicloId }: Cre
     return undefined;
   };
 
+  // Obtener valor previo de un campo (para preservar datos al haber error)
+  const getPreviousValue = (field: string): string => {
+    if (!state.success && state.submittedData) {
+      const value = state.submittedData[field];
+      return value !== undefined && value !== null ? String(value) : '';
+    }
+    return '';
+  };
+
+  // Restaurar valores de selects y fechas si hay error
+  useEffect(() => {
+    if (!state.success && state.submittedData) {
+      if (state.submittedData.mesocicloId) {
+        setSelectedMesociclo(String(state.submittedData.mesocicloId));
+      }
+      if (state.submittedData.tipoMicrociclo) {
+        setSelectedTipo(String(state.submittedData.tipoMicrociclo));
+      }
+      if (state.submittedData.fechaInicio) {
+        setFechaInicio(String(state.submittedData.fechaInicio));
+      }
+    }
+  }, [state]);
+
   return (
     <form action={formAction} className="space-y-6">
-      {/* Mensaje de exito */}
-      {state.success && state.message && (
-        <Alert className="border-green-500 bg-green-50">
-          <CheckCircle className="h-4 w-4 text-green-500" />
-          <AlertDescription className="text-green-700">{state.message}</AlertDescription>
-        </Alert>
-      )}
-
-      {/* Error general */}
-      {!state.success && state.error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{state.error}</AlertDescription>
-        </Alert>
-      )}
-
       {/* Informacion importante */}
       <Alert>
         <Info className="h-4 w-4" />
@@ -123,6 +147,7 @@ export function CreateMicrocicloForm({ mesociclos, preselectedMesocicloId }: Cre
               name="numeroGlobalMicrociclo"
               min="1"
               placeholder="1"
+              defaultValue={getPreviousValue('numeroGlobalMicrociclo')}
               className={getFieldError('numeroGlobalMicrociclo') ? 'border-destructive' : ''}
             />
             {getFieldError('numeroGlobalMicrociclo') && (
@@ -140,6 +165,7 @@ export function CreateMicrocicloForm({ mesociclos, preselectedMesocicloId }: Cre
                 name="numeroMicrociclo"
                 min="1"
                 placeholder="1"
+                defaultValue={getPreviousValue('numeroMicrociclo')}
                 className={getFieldError('numeroMicrociclo') ? 'border-destructive' : ''}
               />
               {getFieldError('numeroMicrociclo') && (
@@ -224,6 +250,7 @@ export function CreateMicrocicloForm({ mesociclos, preselectedMesocicloId }: Cre
               min="0"
               step="0.01"
               placeholder="100"
+              defaultValue={getPreviousValue('volumenTotal')}
               className={getFieldError('volumenTotal') ? 'border-destructive' : ''}
             />
             {getFieldError('volumenTotal') && (
@@ -242,6 +269,7 @@ export function CreateMicrocicloForm({ mesociclos, preselectedMesocicloId }: Cre
               max="100"
               step="0.01"
               placeholder="75"
+              defaultValue={getPreviousValue('intensidadPromedio')}
               className={getFieldError('intensidadPromedio') ? 'border-destructive' : ''}
             />
             {getFieldError('intensidadPromedio') && (
@@ -269,6 +297,7 @@ export function CreateMicrocicloForm({ mesociclos, preselectedMesocicloId }: Cre
               name="objetivoSemanal"
               placeholder="Desarrollo de la resistencia especifica, trabajo de nage-komi..."
               rows={3}
+              defaultValue={getPreviousValue('objetivoSemanal')}
               className={getFieldError('objetivoSemanal') ? 'border-destructive' : ''}
             />
             {getFieldError('objetivoSemanal') && (
@@ -283,6 +312,7 @@ export function CreateMicrocicloForm({ mesociclos, preselectedMesocicloId }: Cre
               name="observaciones"
               placeholder="Notas adicionales sobre el microciclo..."
               rows={2}
+              defaultValue={getPreviousValue('observaciones')}
             />
           </div>
         </CardContent>

@@ -9,6 +9,7 @@ import { TestsComparisonChart } from '@/features/progreso/components/tests-compa
 import { SleepQualityChart } from '@/features/progreso/components/sleep-quality-chart';
 import { ProgresoStatsGrid } from '@/features/progreso/components/progreso-stats-grid';
 import type { ProgresoStats } from '@/features/progreso/types/progreso.types';
+import { AUTH_ROUTES } from '@/lib/routes';
 
 // Página de progreso del atleta
 // Server Component que hace fetch de todos los datos y los pasa a componentes cliente
@@ -23,7 +24,7 @@ export default async function ProgresoPage() {
 
   // Si algún fetch falla (usuario no autenticado), redirigir a login
   if (vo2maxData === null || rpeData === null || testsComparison === null || sleepData === null) {
-    redirect('/login');
+    redirect(AUTH_ROUTES.login);
   }
 
   // Calcular estadísticas para el grid de KPIs

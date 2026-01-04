@@ -1,6 +1,7 @@
 import { fetchTestsHistory } from '@/features/tests-fisicos/actions/fetch-tests-history';
 import { TestsHistoryList } from '@/features/tests-fisicos/components/tests-history-list';
 import { redirect } from 'next/navigation';
+import { AUTH_ROUTES } from '@/lib/routes';
 
 // Pagina de tests fisicos del atleta
 export default async function TestsPage() {
@@ -9,7 +10,7 @@ export default async function TestsPage() {
 
   // Si no hay datos, redirigir al login
   if (!data) {
-    redirect('/login');
+    redirect(AUTH_ROUTES.login);
   }
 
   return (

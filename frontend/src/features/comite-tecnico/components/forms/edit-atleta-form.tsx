@@ -1,15 +1,16 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SubmitButton } from './submit-button';
 import { updateAtleta } from '../../actions/atleta.actions';
 import { initialActionState } from '@/types/action-result';
-import { AlertCircle, CheckCircle, MapPin, Scale, UserCog, Save } from 'lucide-react';
+import { MapPin, Scale, UserCog, Save } from 'lucide-react';
 import { CategoriaPesoValues } from '@/types/enums';
 import type { AtletaDetalle } from '@/features/entrenador/types/entrenador.types';
 
@@ -25,9 +26,34 @@ interface EditAtletaFormProps {
 
 // Formulario para editar un atleta existente
 export function EditAtletaForm({ atleta, entrenadores }: EditAtletaFormProps) {
+  const router = useRouter();
+  const hasShownToast = useRef(false);
+
   // Bind del action con el ID del atleta
   const updateWithId = updateAtleta.bind(null, atleta.id);
   const [state, formAction] = useActionState(updateWithId, initialActionState);
+  const [selectedCategoriaPeso, setSelectedCategoriaPeso] = useState(atleta.categoriaPeso || '');
+  const [selectedEntrenador, setSelectedEntrenador] = useState(atleta.entrenadorAsignado?.id || '');
+
+  // Mostrar toast y redirigir en caso de exito
+  useEffect(() => {
+    if (state.success && state.message && !hasShownToast.current) {
+      hasShownToast.current = true;
+      toast.success('Atleta actualizado', {
+        description: state.message,
+      });
+      router.back();
+    }
+  }, [state, router]);
+
+  // Mostrar toast en caso de error
+  useEffect(() => {
+    if (!state.success && state.error) {
+      toast.error('Error', {
+        description: state.error,
+      });
+    }
+  }, [state]);
 
   // Obtener error de un campo especifico
   const getFieldError = (field: string): string | undefined => {
@@ -37,6 +63,27 @@ export function EditAtletaForm({ atleta, entrenadores }: EditAtletaFormProps) {
     return undefined;
   };
 
+  // Obtener valor previo de un campo (para preservar datos al haber error)
+  const getPreviousValue = (field: string, originalValue: string): string => {
+    if (!state.success && state.submittedData) {
+      const value = state.submittedData[field];
+      return value !== undefined && value !== null ? String(value) : originalValue;
+    }
+    return originalValue;
+  };
+
+  // Restaurar valores de selects controlados si hay error
+  useEffect(() => {
+    if (!state.success && state.submittedData) {
+      if (state.submittedData.categoriaPeso) {
+        setSelectedCategoriaPeso(String(state.submittedData.categoriaPeso));
+      }
+      if (state.submittedData.entrenadorAsignadoId) {
+        setSelectedEntrenador(String(state.submittedData.entrenadorAsignadoId));
+      }
+    }
+  }, [state]);
+
   // Formatear fecha para input date
   const formatDateForInput = (date: Date | string) => {
     const d = new Date(date);
@@ -45,22 +92,6 @@ export function EditAtletaForm({ atleta, entrenadores }: EditAtletaFormProps) {
 
   return (
     <form action={formAction} className="space-y-6">
-      {/* Mensaje de exito */}
-      {state.success && state.message && (
-        <Alert className="border-green-500 bg-green-50">
-          <CheckCircle className="h-4 w-4 text-green-500" />
-          <AlertDescription className="text-green-700">{state.message}</AlertDescription>
-        </Alert>
-      )}
-
-      {/* Error general */}
-      {!state.success && state.error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{state.error}</AlertDescription>
-        </Alert>
-      )}
-
       {/* Seccion: Datos Personales */}
       <Card>
         <CardHeader>
@@ -77,7 +108,7 @@ export function EditAtletaForm({ atleta, entrenadores }: EditAtletaFormProps) {
               type="date"
               id="fechaNacimiento"
               name="fechaNacimiento"
-              defaultValue={formatDateForInput(atleta.fechaNacimiento)}
+              defaultValue={getPreviousValue('fechaNacimiento', formatDateForInput(atleta.fechaNacimiento))}
               className={getFieldError('fechaNacimiento') ? 'border-destructive' : ''}
             />
             {getFieldError('fechaNacimiento') && (
@@ -91,7 +122,7 @@ export function EditAtletaForm({ atleta, entrenadores }: EditAtletaFormProps) {
               type="number"
               id="edad"
               name="edad"
-              defaultValue={atleta.edad}
+              defaultValue={getPreviousValue('edad', String(atleta.edad))}
               min={5}
               className={getFieldError('edad') ? 'border-destructive' : ''}
             />
@@ -106,7 +137,7 @@ export function EditAtletaForm({ atleta, entrenadores }: EditAtletaFormProps) {
               type="text"
               id="municipio"
               name="municipio"
-              defaultValue={atleta.municipio}
+              defaultValue={getPreviousValue('municipio', atleta.municipio)}
               className={getFieldError('municipio') ? 'border-destructive' : ''}
             />
             {getFieldError('municipio') && (
@@ -120,7 +151,7 @@ export function EditAtletaForm({ atleta, entrenadores }: EditAtletaFormProps) {
               type="tel"
               id="telefono"
               name="telefono"
-              defaultValue={atleta.telefono || ''}
+              defaultValue={getPreviousValue('telefono', atleta.telefono || '')}
             />
           </div>
 
@@ -130,7 +161,7 @@ export function EditAtletaForm({ atleta, entrenadores }: EditAtletaFormProps) {
               type="text"
               id="direccion"
               name="direccion"
-              defaultValue={atleta.direccion || ''}
+              defaultValue={getPreviousValue('direccion', atleta.direccion || '')}
             />
           </div>
         </CardContent>
@@ -152,7 +183,7 @@ export function EditAtletaForm({ atleta, entrenadores }: EditAtletaFormProps) {
               type="text"
               id="club"
               name="club"
-              defaultValue={atleta.club}
+              defaultValue={getPreviousValue('club', atleta.club)}
               className={getFieldError('club') ? 'border-destructive' : ''}
             />
             {getFieldError('club') && (
@@ -166,7 +197,7 @@ export function EditAtletaForm({ atleta, entrenadores }: EditAtletaFormProps) {
               type="text"
               id="categoria"
               name="categoria"
-              defaultValue={atleta.categoria}
+              defaultValue={getPreviousValue('categoria', atleta.categoria)}
               className={getFieldError('categoria') ? 'border-destructive' : ''}
             />
             {getFieldError('categoria') && (
@@ -175,23 +206,9 @@ export function EditAtletaForm({ atleta, entrenadores }: EditAtletaFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="peso">Peso (categoria)</Label>
-            <Input
-              type="text"
-              id="peso"
-              name="peso"
-              defaultValue={atleta.peso}
-              className={getFieldError('peso') ? 'border-destructive' : ''}
-            />
-            {getFieldError('peso') && (
-              <p className="text-sm text-destructive">{getFieldError('peso')}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="categoriaPeso">Categoria de Peso</Label>
-            <Select name="categoriaPeso" defaultValue={atleta.categoriaPeso || undefined}>
-              <SelectTrigger>
+            <Label htmlFor="categoriaPeso">Categoria de Peso *</Label>
+            <Select value={selectedCategoriaPeso} onValueChange={setSelectedCategoriaPeso}>
+              <SelectTrigger className={getFieldError('categoriaPeso') ? 'border-destructive' : ''}>
                 <SelectValue placeholder="Selecciona categoria" />
               </SelectTrigger>
               <SelectContent>
@@ -202,6 +219,10 @@ export function EditAtletaForm({ atleta, entrenadores }: EditAtletaFormProps) {
                 ))}
               </SelectContent>
             </Select>
+            <input type="hidden" name="categoriaPeso" value={selectedCategoriaPeso} />
+            {getFieldError('categoriaPeso') && (
+              <p className="text-sm text-destructive">{getFieldError('categoriaPeso')}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -210,7 +231,7 @@ export function EditAtletaForm({ atleta, entrenadores }: EditAtletaFormProps) {
               type="number"
               id="pesoActual"
               name="pesoActual"
-              defaultValue={atleta.pesoActual || ''}
+              defaultValue={getPreviousValue('pesoActual', atleta.pesoActual ? String(atleta.pesoActual) : '')}
               step="0.1"
             />
           </div>
@@ -221,7 +242,7 @@ export function EditAtletaForm({ atleta, entrenadores }: EditAtletaFormProps) {
               type="number"
               id="fcReposo"
               name="fcReposo"
-              defaultValue={atleta.fcReposo || ''}
+              defaultValue={getPreviousValue('fcReposo', atleta.fcReposo ? String(atleta.fcReposo) : '')}
             />
           </div>
         </CardContent>
@@ -240,8 +261,8 @@ export function EditAtletaForm({ atleta, entrenadores }: EditAtletaFormProps) {
           <div className="space-y-2">
             <Label htmlFor="entrenadorAsignadoId">Entrenador</Label>
             <Select
-              name="entrenadorAsignadoId"
-              defaultValue={atleta.entrenadorAsignado?.id || undefined}
+              value={selectedEntrenador}
+              onValueChange={setSelectedEntrenador}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecciona un entrenador" />
@@ -254,6 +275,7 @@ export function EditAtletaForm({ atleta, entrenadores }: EditAtletaFormProps) {
                 ))}
               </SelectContent>
             </Select>
+            <input type="hidden" name="entrenadorAsignadoId" value={selectedEntrenador} />
           </div>
         </CardContent>
       </Card>

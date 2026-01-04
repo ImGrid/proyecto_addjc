@@ -27,13 +27,11 @@ export const createAtletaSchema = z.object({
     .max(100, 'Contrasena no puede exceder 100 caracteres'),
 
   // Datos del atleta
-  municipio: z.string().max(100, 'Municipio no puede exceder 100 caracteres'),
+  municipio: z.string().min(1, 'Municipio es requerido').max(100, 'Municipio no puede exceder 100 caracteres'),
 
-  club: z.string().max(100, 'Club no puede exceder 100 caracteres'),
+  club: z.string().min(1, 'Club es requerido').max(100, 'Club no puede exceder 100 caracteres'),
 
-  categoria: z.string().max(50, 'Categoria no puede exceder 50 caracteres'),
-
-  peso: z.string().max(20, 'Peso no puede exceder 20 caracteres'),
+  categoria: z.string().min(1, 'Categoria es requerida').max(50, 'Categoria no puede exceder 50 caracteres'),
 
   fechaNacimiento: z.string().min(1, 'Fecha de nacimiento es requerida'),
 
@@ -46,7 +44,9 @@ export const createAtletaSchema = z.object({
 
   entrenadorAsignadoId: z.string().optional(),
 
-  categoriaPeso: z.enum(CategoriaPesoValues as [string, ...string[]]).optional(),
+  categoriaPeso: z.enum(CategoriaPesoValues as [string, ...string[]], {
+    message: 'Categoria de peso es requerida'
+  }),
 
   pesoActual: z.coerce.number().positive('Peso actual debe ser positivo').optional(),
 
@@ -55,7 +55,26 @@ export const createAtletaSchema = z.object({
 
 export type CreateAtletaInput = z.infer<typeof createAtletaSchema>;
 
-// Schema para actualizar atleta (todos los campos opcionales excepto contrasena que se omite)
-export const updateAtletaSchema = createAtletaSchema.partial().omit({ contrasena: true });
+// Schema para actualizar atleta
+// Los campos club, categoria y categoriaPeso son OBLIGATORIOS
+// Los demas campos son opcionales
+export const updateAtletaSchema = z.object({
+  // Campos obligatorios (siempre se envian desde el form de edicion)
+  municipio: z.string().min(1, 'Municipio es requerido').max(100, 'Municipio no puede exceder 100 caracteres'),
+  club: z.string().min(1, 'Club es requerido').max(100, 'Club no puede exceder 100 caracteres'),
+  categoria: z.string().min(1, 'Categoria es requerida').max(50, 'Categoria no puede exceder 50 caracteres'),
+  fechaNacimiento: z.string().min(1, 'Fecha de nacimiento es requerida'),
+  edad: z.coerce.number().int().min(5, 'Edad minima es 5 anios'),
+  categoriaPeso: z.enum(CategoriaPesoValues as [string, ...string[]], {
+    message: 'Categoria de peso es requerida'
+  }),
+
+  // Campos opcionales
+  direccion: z.string().optional(),
+  telefono: z.string().max(50, 'Telefono no puede exceder 50 caracteres').optional(),
+  entrenadorAsignadoId: z.string().optional(),
+  pesoActual: z.coerce.number().positive('Peso actual debe ser positivo').optional(),
+  fcReposo: z.coerce.number().int().positive('FC reposo debe ser positivo').optional(),
+});
 
 export type UpdateAtletaInput = z.infer<typeof updateAtletaSchema>;

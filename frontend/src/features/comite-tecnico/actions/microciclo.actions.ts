@@ -56,6 +56,7 @@ export async function createMicrociclo(
         success: false,
         error: 'Por favor corrige los errores del formulario',
         fieldErrors,
+        submittedData: rawData as Record<string, unknown>,
       };
     }
 
@@ -75,6 +76,7 @@ export async function createMicrociclo(
       return {
         success: false,
         error: errorData?.message || 'Error al crear el microciclo',
+        submittedData: rawData as Record<string, unknown>,
       };
     }
 
@@ -94,6 +96,7 @@ export async function createMicrociclo(
     return {
       success: false,
       error: 'Error de conexion. Intenta nuevamente.',
+      submittedData: {},
     };
   }
 }
@@ -156,6 +159,7 @@ export async function updateMicrociclo(
         success: false,
         error: 'Por favor corrige los errores del formulario',
         fieldErrors,
+        submittedData: rawData as Record<string, unknown>,
       };
     }
 

@@ -9,6 +9,7 @@ import {
   IsOptional,
   IsNumber,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { TipoMicrociclo, CreadoPor, SentidoCarga } from '@prisma/client';
 
 export class CreateMicrocicloDto {
@@ -37,11 +38,13 @@ export class CreateMicrocicloDto {
   @IsNotEmpty()
   tipoMicrociclo!: TipoMicrociclo;
 
-  @IsNumber()
+  @Transform(({ value }) => (value ? parseFloat(value) : null))
+  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'Volumen total debe ser un numero' })
   @Min(0)
   volumenTotal!: number;
 
-  @IsNumber()
+  @Transform(({ value }) => (value ? parseFloat(value) : null))
+  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'Intensidad promedio debe ser un numero' })
   @Min(0)
   @Max(100)
   intensidadPromedio!: number;
@@ -59,11 +62,13 @@ export class CreateMicrocicloDto {
   creadoPor?: CreadoPor; // Default: COMITE_TECNICO
 
   // Campos de carga (opcionales - calculados automáticamente)
-  @IsNumber()
+  @Transform(({ value }) => (value ? parseFloat(value) : null))
+  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'Media volumen debe ser un numero' })
   @IsOptional()
   mediaVolumen?: number;
 
-  @IsNumber()
+  @Transform(({ value }) => (value ? parseFloat(value) : null))
+  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'Media intensidad debe ser un numero' })
   @IsOptional()
   mediaIntensidad?: number;
 
@@ -76,7 +81,8 @@ export class CreateMicrocicloDto {
   sentidoIntensidad?: SentidoCarga;
 
   // Cargas semanales (opcionales)
-  @IsNumber()
+  @Transform(({ value }) => (value ? parseFloat(value) : null))
+  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'vCarga1 debe ser un numero' })
   @IsOptional()
   vCarga1?: number;
 
@@ -84,7 +90,8 @@ export class CreateMicrocicloDto {
   @IsOptional()
   vCarga1Nivel?: number;
 
-  @IsNumber()
+  @Transform(({ value }) => (value ? parseFloat(value) : null))
+  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'iCarga1 debe ser un numero' })
   @IsOptional()
   iCarga1?: number;
 
@@ -92,7 +99,8 @@ export class CreateMicrocicloDto {
   @IsOptional()
   iCarga1Nivel?: number;
 
-  @IsNumber()
+  @Transform(({ value }) => (value ? parseFloat(value) : null))
+  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'vCarga2 debe ser un numero' })
   @IsOptional()
   vCarga2?: number;
 
@@ -100,7 +108,8 @@ export class CreateMicrocicloDto {
   @IsOptional()
   vCarga2Nivel?: number;
 
-  @IsNumber()
+  @Transform(({ value }) => (value ? parseFloat(value) : null))
+  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'iCarga2 debe ser un numero' })
   @IsOptional()
   iCarga2?: number;
 

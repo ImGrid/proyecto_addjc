@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { getCurrentUserAction } from '@/app/actions/auth.actions';
 import { fetchAtletaDetalle } from '@/features/entrenador/actions/fetch-atleta-detalle';
 import { AtletaDetalleTabs } from '@/features/entrenador/components/atletas/atleta-detalle-tabs';
+import { AUTH_ROUTES, ENTRENADOR_ROUTES } from '@/lib/routes';
 
 interface AtletaDetallePageProps {
   params: Promise<{
@@ -16,14 +17,14 @@ export default async function AtletaDetallePage({ params }: AtletaDetallePagePro
   const authResult = await getCurrentUserAction();
 
   if (!authResult.success || !authResult.user) {
-    redirect('/login');
+    redirect(AUTH_ROUTES.login);
   }
 
   // Cargar datos del atleta
   const detalle = await fetchAtletaDetalle(atletaId);
 
   if (!detalle) {
-    redirect('/entrenador/mis-atletas');
+    redirect(ENTRENADOR_ROUTES.misAtletas.list);
   }
 
   return (

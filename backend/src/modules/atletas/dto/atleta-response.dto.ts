@@ -7,13 +7,12 @@ export interface AtletaResponseDto {
   municipio: string;
   club: string;
   categoria: string;
-  peso: string;
   fechaNacimiento: Date;
   edad: number;
   direccion: string | null;
   telefono: string | null;
   entrenadorAsignadoId: string | null;
-  categoriaPeso: CategoriaPeso | null;
+  categoriaPeso: CategoriaPeso;
   pesoActual: number | null;
   fcReposo: number | null;
   createdAt: Date;

@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createAtletaSchema, updateAtletaSchema } from '../schemas/atleta.schema';
 import type { ActionResult } from '@/types/action-result';
+import { COMITE_TECNICO_ROUTES } from '@/lib/routes';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
@@ -34,7 +35,6 @@ export async function createAtleta(
       municipio: formData.get('municipio'),
       club: formData.get('club'),
       categoria: formData.get('categoria'),
-      peso: formData.get('peso'),
       fechaNacimiento: formData.get('fechaNacimiento'),
       edad: formData.get('edad'),
       direccion: formData.get('direccion') || undefined,
@@ -62,6 +62,7 @@ export async function createAtleta(
         success: false,
         error: 'Por favor corrige los errores del formulario',
         fieldErrors,
+        submittedData: rawData as Record<string, unknown>,
       };
     }
 
@@ -82,6 +83,7 @@ export async function createAtleta(
         return {
           success: false,
           error: 'No tienes permiso para crear atletas',
+          submittedData: rawData as Record<string, unknown>,
         };
       }
 
@@ -89,12 +91,14 @@ export async function createAtleta(
         return {
           success: false,
           error: errorData?.message || 'El email o CI ya estan registrados',
+          submittedData: rawData as Record<string, unknown>,
         };
       }
 
       return {
         success: false,
         error: errorData?.message || 'Error al crear el atleta',
+        submittedData: rawData as Record<string, unknown>,
       };
     }
 
@@ -108,10 +112,11 @@ export async function createAtleta(
     return {
       success: false,
       error: 'Error de conexion. Intenta nuevamente.',
+      submittedData: {},
     };
   }
 
-  redirect('/comite-tecnico/atletas');
+  redirect(COMITE_TECNICO_ROUTES.atletas.list);
 }
 
 // Server Action para actualizar un atleta
@@ -132,24 +137,22 @@ export async function updateAtleta(
       };
     }
 
-    // Extraer datos del FormData (solo campos con valor)
-    const rawData: Record<string, unknown> = {};
-    const fields = [
-      'municipio',
-      'club',
-      'categoria',
-      'peso',
-      'fechaNacimiento',
-      'edad',
-      'direccion',
-      'telefono',
-      'entrenadorAsignadoId',
-      'categoriaPeso',
-      'pesoActual',
-      'fcReposo',
-    ];
+    // Extraer datos del FormData
+    // Campos obligatorios siempre se incluyen (para validacion)
+    const requiredFields = ['municipio', 'club', 'categoria', 'fechaNacimiento', 'edad', 'categoriaPeso'];
+    // Campos opcionales solo si tienen valor
+    const optionalFields = ['direccion', 'telefono', 'entrenadorAsignadoId', 'pesoActual', 'fcReposo'];
 
-    for (const field of fields) {
+    const rawData: Record<string, unknown> = {};
+
+    // Incluir campos obligatorios siempre
+    for (const field of requiredFields) {
+      const value = formData.get(field);
+      rawData[field] = value !== null ? value : '';
+    }
+
+    // Incluir campos opcionales solo si tienen valor
+    for (const field of optionalFields) {
       const value = formData.get(field);
       if (value !== null && value !== '') {
         rawData[field] = value;
@@ -173,6 +176,7 @@ export async function updateAtleta(
         success: false,
         error: 'Por favor corrige los errores del formulario',
         fieldErrors,
+        submittedData: rawData as Record<string, unknown>,
       };
     }
 

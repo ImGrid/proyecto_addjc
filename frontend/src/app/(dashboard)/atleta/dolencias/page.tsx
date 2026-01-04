@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { fetchDolencias } from '@/features/dolencias/actions/fetch-dolencias';
 import { DolenciasList } from '@/features/dolencias/components/dolencias-list';
+import { AUTH_ROUTES } from '@/lib/routes';
 
 // Pagina de dolencias del atleta
 export default async function DolenciasPage() {
@@ -9,7 +10,7 @@ export default async function DolenciasPage() {
 
   // Si no hay datos (usuario no autenticado), redirigir al login
   if (!data) {
-    redirect('/login');
+    redirect(AUTH_ROUTES.login);
   }
 
   // Separar dolencias activas de las recuperadas

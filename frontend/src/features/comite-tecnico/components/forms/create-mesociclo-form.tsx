@@ -1,20 +1,20 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SubmitButton } from './submit-button';
 import { createMesociclo } from '../../actions/mesociclo.actions';
 import { initialActionState } from '@/types/action-result';
-import { AlertCircle, Calendar, Target, CheckCircle, Layers } from 'lucide-react';
+import { Calendar, Target, Layers } from 'lucide-react';
 import { EtapaMesocicloValues } from '@/types/enums';
+import { COMITE_TECNICO_ROUTES } from '@/lib/routes';
 import type { Macrociclo } from '../../types/planificacion.types';
-import { useEffect } from 'react';
 
 interface CreateMesocicloFormProps {
   macrociclos: Pick<Macrociclo, 'id' | 'nombre' | 'temporada'>[];
@@ -24,16 +24,30 @@ interface CreateMesocicloFormProps {
 // Formulario para crear un nuevo mesociclo
 export function CreateMesocicloForm({ macrociclos, preselectedMacrocicloId }: CreateMesocicloFormProps) {
   const router = useRouter();
+  const hasShownToast = useRef(false);
   const [state, formAction] = useActionState(createMesociclo, initialActionState);
   const [selectedMacrociclo, setSelectedMacrociclo] = useState(preselectedMacrocicloId || '');
   const [selectedEtapa, setSelectedEtapa] = useState('');
 
-  // Redirigir si se crea exitosamente
+  // Mostrar toast y redirigir en caso de exito
   useEffect(() => {
-    if (state.success) {
-      router.push('/comite-tecnico/planificacion/mesociclos');
+    if (state.success && state.message && !hasShownToast.current) {
+      hasShownToast.current = true;
+      toast.success('Mesociclo creado', {
+        description: state.message,
+      });
+      router.push(COMITE_TECNICO_ROUTES.planificacion.mesociclos.list);
     }
-  }, [state.success, router]);
+  }, [state, router]);
+
+  // Mostrar toast en caso de error
+  useEffect(() => {
+    if (!state.success && state.error) {
+      toast.error('Error', {
+        description: state.error,
+      });
+    }
+  }, [state]);
 
   // Obtener error de un campo especifico
   const getFieldError = (field: string): string | undefined => {
@@ -43,24 +57,29 @@ export function CreateMesocicloForm({ macrociclos, preselectedMacrocicloId }: Cr
     return undefined;
   };
 
+  // Obtener valor previo de un campo (para preservar datos al haber error)
+  const getPreviousValue = (field: string): string => {
+    if (!state.success && state.submittedData) {
+      const value = state.submittedData[field];
+      return value !== undefined && value !== null ? String(value) : '';
+    }
+    return '';
+  };
+
+  // Restaurar valores de selects si hay error
+  useEffect(() => {
+    if (!state.success && state.submittedData) {
+      if (state.submittedData.macrocicloId) {
+        setSelectedMacrociclo(String(state.submittedData.macrocicloId));
+      }
+      if (state.submittedData.etapa) {
+        setSelectedEtapa(String(state.submittedData.etapa));
+      }
+    }
+  }, [state]);
+
   return (
     <form action={formAction} className="space-y-6">
-      {/* Mensaje de exito */}
-      {state.success && state.message && (
-        <Alert className="border-green-500 bg-green-50">
-          <CheckCircle className="h-4 w-4 text-green-500" />
-          <AlertDescription className="text-green-700">{state.message}</AlertDescription>
-        </Alert>
-      )}
-
-      {/* Error general */}
-      {!state.success && state.error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{state.error}</AlertDescription>
-        </Alert>
-      )}
-
       {/* Datos Generales */}
       <Card>
         <CardHeader>
@@ -101,6 +120,7 @@ export function CreateMesocicloForm({ macrociclos, preselectedMacrocicloId }: Cr
               id="nombre"
               name="nombre"
               placeholder="Ej: Preparacion General 1"
+              defaultValue={getPreviousValue('nombre')}
               className={getFieldError('nombre') ? 'border-destructive' : ''}
             />
             {getFieldError('nombre') && (
@@ -116,6 +136,7 @@ export function CreateMesocicloForm({ macrociclos, preselectedMacrocicloId }: Cr
               name="numeroMesociclo"
               min="1"
               placeholder="1"
+              defaultValue={getPreviousValue('numeroMesociclo')}
               className={getFieldError('numeroMesociclo') ? 'border-destructive' : ''}
             />
             {getFieldError('numeroMesociclo') && (
@@ -152,6 +173,7 @@ export function CreateMesocicloForm({ macrociclos, preselectedMacrocicloId }: Cr
               type="date"
               id="fechaInicio"
               name="fechaInicio"
+              defaultValue={getPreviousValue('fechaInicio')}
               className={getFieldError('fechaInicio') ? 'border-destructive' : ''}
             />
             {getFieldError('fechaInicio') && (
@@ -165,6 +187,7 @@ export function CreateMesocicloForm({ macrociclos, preselectedMacrocicloId }: Cr
               type="date"
               id="fechaFin"
               name="fechaFin"
+              defaultValue={getPreviousValue('fechaFin')}
               className={getFieldError('fechaFin') ? 'border-destructive' : ''}
             />
             {getFieldError('fechaFin') && (
@@ -191,6 +214,7 @@ export function CreateMesocicloForm({ macrociclos, preselectedMacrocicloId }: Cr
               name="objetivoFisico"
               placeholder="Desarrollo de la resistencia aerobica..."
               rows={2}
+              defaultValue={getPreviousValue('objetivoFisico')}
               className={getFieldError('objetivoFisico') ? 'border-destructive' : ''}
             />
             {getFieldError('objetivoFisico') && (
@@ -205,6 +229,7 @@ export function CreateMesocicloForm({ macrociclos, preselectedMacrocicloId }: Cr
               name="objetivoTecnico"
               placeholder="Perfeccionar las tecnicas de proyeccion..."
               rows={2}
+              defaultValue={getPreviousValue('objetivoTecnico')}
               className={getFieldError('objetivoTecnico') ? 'border-destructive' : ''}
             />
             {getFieldError('objetivoTecnico') && (
@@ -219,6 +244,7 @@ export function CreateMesocicloForm({ macrociclos, preselectedMacrocicloId }: Cr
               name="objetivoTactico"
               placeholder="Desarrollar estrategias de combate..."
               rows={2}
+              defaultValue={getPreviousValue('objetivoTactico')}
               className={getFieldError('objetivoTactico') ? 'border-destructive' : ''}
             />
             {getFieldError('objetivoTactico') && (

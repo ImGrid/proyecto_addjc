@@ -40,10 +40,9 @@ export const atletaResumenSchema = z.object({
   municipio: z.string(),
   club: z.string(),
   categoria: z.string(),
-  peso: z.string(),
   fechaNacimiento: z.coerce.date(),
   edad: z.number().int(),
-  categoriaPeso: z.enum(CategoriaPesoValues as [string, ...string[]]).nullable(),
+  categoriaPeso: z.enum(CategoriaPesoValues as [string, ...string[]]),
   pesoActual: z.number().nullable(),
 
   // Datos del usuario asociado

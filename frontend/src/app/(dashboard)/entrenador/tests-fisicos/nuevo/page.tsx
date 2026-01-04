@@ -5,20 +5,21 @@ import { fetchAtletasParaSelector } from '@/features/entrenador/actions/fetch-mi
 import { CreateTestForm } from '@/features/entrenador/components/forms/create-test-form';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { AUTH_ROUTES, ENTRENADOR_ROUTES } from '@/lib/routes';
 
 export default async function NuevoTestPage() {
   // Verificar autenticacion
   const authResult = await getCurrentUserAction();
 
   if (!authResult.success || !authResult.user) {
-    redirect('/login');
+    redirect(AUTH_ROUTES.login);
   }
 
   // Cargar atletas para el selector
   const atletas = await fetchAtletasParaSelector();
 
   if (!atletas) {
-    redirect('/entrenador');
+    redirect(ENTRENADOR_ROUTES.dashboard);
   }
 
   return (

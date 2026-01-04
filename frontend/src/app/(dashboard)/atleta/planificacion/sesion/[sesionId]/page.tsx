@@ -3,6 +3,7 @@ import { SesionDetalleCard } from '@/features/entrenamientos/components/sesion-d
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { AUTH_ROUTES } from '@/lib/routes';
 
 // Pagina de detalle de sesion
 export default async function SesionDetallePage({
@@ -17,7 +18,7 @@ export default async function SesionDetallePage({
 
   // Si no hay sesion, redirigir al login
   if (!sesion) {
-    redirect('/login');
+    redirect(AUTH_ROUTES.login);
   }
 
   return (

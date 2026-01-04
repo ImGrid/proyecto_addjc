@@ -211,7 +211,6 @@ model Atleta {
   municipio            String   @db.VarChar(100)
   club                 String   @db.VarChar(100)
   categoria            String   @db.VarChar(50)
-  peso                 String   @db.VarChar(20)
   fechaNacimiento      DateTime @db.Date
   edad                 Int
   direccion            String?  @db.Text
@@ -219,7 +218,7 @@ model Atleta {
   entrenadorAsignadoId BigInt?
 
   // Nuevos campos (excel27-29, audio.txt)
-  categoriaPeso CategoriaPeso?
+  categoriaPeso CategoriaPeso
   pesoActual    Decimal?       @db.Decimal(5, 2)
   fcReposo      Int?
 

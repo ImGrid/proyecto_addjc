@@ -146,16 +146,12 @@ export default async function AtletaDetallePage({ params }: AtletaDetallePagePro
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Peso Categoria</p>
-                <p className="font-medium">{atleta.peso}</p>
-              </div>
-              {atleta.categoriaPeso && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Categoria Peso</p>
-                  <Badge variant="outline">{atleta.categoriaPeso.replace(/_/g, ' ')}</Badge>
-                </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Categoria de Peso</p>
+              {atleta.categoriaPeso ? (
+                <Badge variant="outline">{atleta.categoriaPeso.replace(/_/g, ' ')}</Badge>
+              ) : (
+                <p className="font-medium text-muted-foreground">Sin asignar</p>
               )}
             </div>
 

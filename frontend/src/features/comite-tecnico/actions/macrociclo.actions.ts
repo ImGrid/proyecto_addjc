@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createMacrocicloSchema, updateMacrocicloSchema } from '../schemas/macrociclo.schema';
 import type { ActionResult } from '@/types/action-result';
+import { COMITE_TECNICO_ROUTES } from '@/lib/routes';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
@@ -56,6 +57,7 @@ export async function createMacrociclo(
         success: false,
         error: 'Por favor corrige los errores del formulario',
         fieldErrors,
+        submittedData: rawData as Record<string, unknown>,
       };
     }
 
@@ -76,12 +78,14 @@ export async function createMacrociclo(
         return {
           success: false,
           error: 'No tienes permiso para crear macrociclos',
+          submittedData: rawData as Record<string, unknown>,
         };
       }
 
       return {
         success: false,
         error: errorData?.message || 'Error al crear el macrociclo',
+        submittedData: rawData as Record<string, unknown>,
       };
     }
 
@@ -95,10 +99,11 @@ export async function createMacrociclo(
     return {
       success: false,
       error: 'Error de conexion. Intenta nuevamente.',
+      submittedData: {},
     };
   }
 
-  redirect('/comite-tecnico/planificacion');
+  redirect(COMITE_TECNICO_ROUTES.planificacion.macrociclos.list);
 }
 
 // Server Action para actualizar un macrociclo
@@ -158,6 +163,7 @@ export async function updateMacrociclo(
         success: false,
         error: 'Por favor corrige los errores del formulario',
         fieldErrors,
+        submittedData: rawData as Record<string, unknown>,
       };
     }
 

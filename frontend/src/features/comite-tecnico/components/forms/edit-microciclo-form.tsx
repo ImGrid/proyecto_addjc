@@ -1,16 +1,17 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SubmitButton } from './submit-button';
 import { updateMicrociclo } from '../../actions/microciclo.actions';
 import { initialActionState } from '@/types/action-result';
-import { AlertCircle, Calendar, Target, CheckCircle, Activity, Save } from 'lucide-react';
+import { Calendar, Target, Activity, Save } from 'lucide-react';
 import { TipoMicrocicloValues } from '@/types/enums';
 import type { MicrocicloType } from '../../types/planificacion.types';
 
@@ -20,10 +21,33 @@ interface EditMicrocicloFormProps {
 
 // Formulario para editar un microciclo existente
 export function EditMicrocicloForm({ microciclo }: EditMicrocicloFormProps) {
+  const router = useRouter();
+  const hasShownToast = useRef(false);
+
   // Bind del action con el ID del microciclo
   const updateWithId = updateMicrociclo.bind(null, microciclo.id);
   const [state, formAction] = useActionState(updateWithId, initialActionState);
   const [selectedTipo, setSelectedTipo] = useState(microciclo.tipoMicrociclo);
+
+  // Mostrar toast y redirigir en caso de exito
+  useEffect(() => {
+    if (state.success && state.message && !hasShownToast.current) {
+      hasShownToast.current = true;
+      toast.success('Microciclo actualizado', {
+        description: state.message,
+      });
+      router.back();
+    }
+  }, [state, router]);
+
+  // Mostrar toast en caso de error
+  useEffect(() => {
+    if (!state.success && state.error) {
+      toast.error('Error', {
+        description: state.error,
+      });
+    }
+  }, [state]);
 
   // Obtener error de un campo especifico
   const getFieldError = (field: string): string | undefined => {
@@ -33,6 +57,24 @@ export function EditMicrocicloForm({ microciclo }: EditMicrocicloFormProps) {
     return undefined;
   };
 
+  // Obtener valor previo de un campo (para preservar datos al haber error)
+  const getPreviousValue = (field: string, originalValue: string): string => {
+    if (!state.success && state.submittedData) {
+      const value = state.submittedData[field];
+      return value !== undefined && value !== null ? String(value) : originalValue;
+    }
+    return originalValue;
+  };
+
+  // Restaurar valores de selects controlados si hay error
+  useEffect(() => {
+    if (!state.success && state.submittedData) {
+      if (state.submittedData.tipoMicrociclo) {
+        setSelectedTipo(String(state.submittedData.tipoMicrociclo));
+      }
+    }
+  }, [state]);
+
   // Formatear fecha para input date
   const formatDateForInput = (date: Date | string) => {
     const d = new Date(date);
@@ -41,22 +83,6 @@ export function EditMicrocicloForm({ microciclo }: EditMicrocicloFormProps) {
 
   return (
     <form action={formAction} className="space-y-6">
-      {/* Mensaje de exito */}
-      {state.success && state.message && (
-        <Alert className="border-green-500 bg-green-50">
-          <CheckCircle className="h-4 w-4 text-green-500" />
-          <AlertDescription className="text-green-700">{state.message}</AlertDescription>
-        </Alert>
-      )}
-
-      {/* Error general */}
-      {!state.success && state.error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{state.error}</AlertDescription>
-        </Alert>
-      )}
-
       {/* Datos Generales */}
       <Card>
         <CardHeader>
@@ -87,7 +113,7 @@ export function EditMicrocicloForm({ microciclo }: EditMicrocicloFormProps) {
               id="numeroGlobalMicrociclo"
               name="numeroGlobalMicrociclo"
               min="1"
-              defaultValue={microciclo.numeroGlobalMicrociclo}
+              defaultValue={getPreviousValue('numeroGlobalMicrociclo', String(microciclo.numeroGlobalMicrociclo))}
               className={getFieldError('numeroGlobalMicrociclo') ? 'border-destructive' : ''}
             />
             {getFieldError('numeroGlobalMicrociclo') && (
@@ -103,7 +129,7 @@ export function EditMicrocicloForm({ microciclo }: EditMicrocicloFormProps) {
                 id="numeroMicrociclo"
                 name="numeroMicrociclo"
                 min="1"
-                defaultValue={microciclo.numeroMicrociclo || ''}
+                defaultValue={getPreviousValue('numeroMicrociclo', microciclo.numeroMicrociclo ? String(microciclo.numeroMicrociclo) : '')}
                 className={getFieldError('numeroMicrociclo') ? 'border-destructive' : ''}
               />
               {getFieldError('numeroMicrociclo') && (
@@ -141,7 +167,7 @@ export function EditMicrocicloForm({ microciclo }: EditMicrocicloFormProps) {
               type="date"
               id="fechaInicio"
               name="fechaInicio"
-              defaultValue={formatDateForInput(microciclo.fechaInicio)}
+              defaultValue={getPreviousValue('fechaInicio', formatDateForInput(microciclo.fechaInicio))}
               className={getFieldError('fechaInicio') ? 'border-destructive' : ''}
             />
             {getFieldError('fechaInicio') && (
@@ -155,7 +181,7 @@ export function EditMicrocicloForm({ microciclo }: EditMicrocicloFormProps) {
               type="date"
               id="fechaFin"
               name="fechaFin"
-              defaultValue={formatDateForInput(microciclo.fechaFin)}
+              defaultValue={getPreviousValue('fechaFin', formatDateForInput(microciclo.fechaFin))}
               className={getFieldError('fechaFin') ? 'border-destructive' : ''}
             />
             {getFieldError('fechaFin') && (
@@ -184,7 +210,7 @@ export function EditMicrocicloForm({ microciclo }: EditMicrocicloFormProps) {
               name="volumenTotal"
               min="0"
               step="0.01"
-              defaultValue={microciclo.volumenTotal}
+              defaultValue={getPreviousValue('volumenTotal', String(microciclo.volumenTotal))}
               className={getFieldError('volumenTotal') ? 'border-destructive' : ''}
             />
             {getFieldError('volumenTotal') && (
@@ -201,7 +227,7 @@ export function EditMicrocicloForm({ microciclo }: EditMicrocicloFormProps) {
               min="0"
               max="100"
               step="0.01"
-              defaultValue={microciclo.intensidadPromedio}
+              defaultValue={getPreviousValue('intensidadPromedio', String(microciclo.intensidadPromedio))}
               className={getFieldError('intensidadPromedio') ? 'border-destructive' : ''}
             />
             {getFieldError('intensidadPromedio') && (
@@ -226,7 +252,7 @@ export function EditMicrocicloForm({ microciclo }: EditMicrocicloFormProps) {
             <Textarea
               id="objetivoSemanal"
               name="objetivoSemanal"
-              defaultValue={microciclo.objetivoSemanal}
+              defaultValue={getPreviousValue('objetivoSemanal', microciclo.objetivoSemanal)}
               rows={3}
               className={getFieldError('objetivoSemanal') ? 'border-destructive' : ''}
             />
@@ -240,7 +266,7 @@ export function EditMicrocicloForm({ microciclo }: EditMicrocicloFormProps) {
             <Textarea
               id="observaciones"
               name="observaciones"
-              defaultValue={microciclo.observaciones || ''}
+              defaultValue={getPreviousValue('observaciones', microciclo.observaciones || '')}
               rows={2}
             />
           </div>

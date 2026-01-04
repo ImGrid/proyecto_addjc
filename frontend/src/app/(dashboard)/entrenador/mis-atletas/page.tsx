@@ -4,13 +4,14 @@ import { fetchMisAtletas } from '@/features/entrenador/actions/fetch-mis-atletas
 import { AtletasList } from '@/features/entrenador/components/atletas/atletas-list';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Users } from 'lucide-react';
+import { AUTH_ROUTES } from '@/lib/routes';
 
 export default async function MisAtletasPage() {
   // Verificar autenticacion
   const authResult = await getCurrentUserAction();
 
   if (!authResult.success || !authResult.user) {
-    redirect('/login');
+    redirect(AUTH_ROUTES.login);
   }
 
   // Cargar atletas

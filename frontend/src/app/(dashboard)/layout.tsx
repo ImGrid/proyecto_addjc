@@ -3,6 +3,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/layout/AppSidebar';
 import { Header } from '@/components/layout/Header';
 import { getCurrentUserAction } from '@/app/actions/auth.actions';
+import { AUTH_ROUTES } from '@/lib/routes';
 
 export default async function DashboardLayout({
   children,
@@ -13,7 +14,7 @@ export default async function DashboardLayout({
   const result = await getCurrentUserAction();
 
   if (!result.success || !result.user) {
-    redirect('/login');
+    redirect(AUTH_ROUTES.login);
   }
 
   const { user } = result;
