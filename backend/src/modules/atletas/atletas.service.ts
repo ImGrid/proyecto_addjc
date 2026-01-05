@@ -230,13 +230,78 @@ export class AtletasService {
               },
             },
           },
+          // Incluir el ultimo test fisico (ordenado por fecha, solo 1)
+          testsFisicos: {
+            select: {
+              id: true,
+              fechaTest: true,
+            },
+            orderBy: { fechaTest: 'desc' },
+            take: 1,
+          },
         },
       }),
       this.prisma.atleta.count({ where }),
     ]);
 
+    // Obtener IDs de atletas para consultar dolencias activas
+    const atletaIds = atletas.map((a) => a.id);
+
+    // Contar dolencias activas por atleta (recuperado = false)
+    // La relacion es: atleta -> registrosPostEntrenamiento -> dolencias
+    const dolenciasCount = await this.prisma.dolencia.groupBy({
+      by: ['registroPostEntrenamientoId'],
+      where: {
+        recuperado: false,
+        registroPostEntrenamiento: {
+          atletaId: { in: atletaIds },
+        },
+      },
+      _count: true,
+    });
+
+    // Obtener el atletaId de cada registro para mapear los conteos
+    const registrosConAtleta = await this.prisma.registroPostEntrenamiento.findMany({
+      where: {
+        id: { in: dolenciasCount.map((d) => d.registroPostEntrenamientoId) },
+      },
+      select: {
+        id: true,
+        atletaId: true,
+      },
+    });
+
+    // Crear mapa de atletaId -> conteo de dolencias activas
+    const dolenciasMap = new Map<bigint, number>();
+    for (const registro of registrosConAtleta) {
+      const count = dolenciasCount.find(
+        (d) => d.registroPostEntrenamientoId === registro.id,
+      )?._count || 0;
+      const currentCount = dolenciasMap.get(registro.atletaId) || 0;
+      dolenciasMap.set(registro.atletaId, currentCount + count);
+    }
+
+    // Transformar respuesta incluyendo ultimoTest y dolenciasActivasCount
+    const transformedData = atletas.map((atleta) => {
+      const baseResponse = this.transformAtletaResponse(atleta);
+      const ultimoTest = atleta.testsFisicos[0] || null;
+
+      return {
+        ...baseResponse,
+        // Remover el array testsFisicos y agregar ultimoTest como objeto
+        testsFisicos: undefined,
+        ultimoTest: ultimoTest
+          ? {
+              id: ultimoTest.id.toString(),
+              fechaTest: ultimoTest.fechaTest,
+            }
+          : null,
+        dolenciasActivasCount: dolenciasMap.get(atleta.id) || 0,
+      };
+    });
+
     return {
-      data: atletas.map((atleta) => this.transformAtletaResponse(atleta)),
+      data: transformedData,
       meta: {
         total,
         page,
