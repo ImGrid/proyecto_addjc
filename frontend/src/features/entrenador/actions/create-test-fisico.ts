@@ -25,9 +25,12 @@ export async function createTestFisico(
     }
 
     // Extraer datos del FormData
+    // NOTA: fechaTest y microcicloId se derivan de la sesion en el backend
     const rawData = {
       atletaId: formData.get('atletaId'),
-      fechaTest: formData.get('fechaTest'),
+      sesionId: formData.get('sesionId'),
+      asistio: formData.get('asistio'),
+      motivoInasistencia: formData.get('motivoInasistencia'),
       pressBanca: formData.get('pressBanca'),
       tiron: formData.get('tiron'),
       sentadilla: formData.get('sentadilla'),
@@ -73,12 +76,19 @@ export async function createTestFisico(
     }
 
     // Limpiar payload (eliminar strings vacios y convertir a tipos correctos)
+    // NOTA: fechaTest y microcicloId se derivan de la sesion en el backend
     const payload: CreateTestPayload = {
       atletaId: validation.data.atletaId,
-      fechaTest: validation.data.fechaTest,
+      sesionId: validation.data.sesionId,
+      asistio: validation.data.asistio,
     };
 
-    // Solo agregar campos que tengan valor
+    // Agregar motivo de inasistencia si no asistio
+    if (!validation.data.asistio && validation.data.motivoInasistencia) {
+      payload.motivoInasistencia = validation.data.motivoInasistencia.trim();
+    }
+
+    // Solo agregar campos de tests si asistio
     if (validation.data.pressBanca !== undefined && validation.data.pressBanca !== '') {
       payload.pressBanca = Number(validation.data.pressBanca);
     }
@@ -133,7 +143,21 @@ export async function createTestFisico(
       if (response.status === 404) {
         return {
           success: false,
-          error: 'Atleta no encontrado',
+          error: errorData?.message || 'Atleta o sesion no encontrada',
+          submittedData: rawData as Record<string, unknown>,
+        };
+      }
+      if (response.status === 409) {
+        return {
+          success: false,
+          error: 'Ya existe un test fisico para este atleta en esta sesion',
+          submittedData: rawData as Record<string, unknown>,
+        };
+      }
+      if (response.status === 400) {
+        return {
+          success: false,
+          error: errorData?.message || 'El atleta no esta asignado al microciclo de esta sesion',
           submittedData: rawData as Record<string, unknown>,
         };
       }

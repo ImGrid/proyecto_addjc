@@ -20,6 +20,8 @@ export type DolenciaInput = z.infer<typeof dolenciaSchema>;
 
 // Schema para crear un registro post-entrenamiento
 // Basado en: backend/src/modules/registro-post-entrenamiento/dto/create-registro-post-entrenamiento.dto.ts
+// NOTA: Para sesiones tipo COMPETENCIA, los campos de entrenamiento son opcionales
+// El backend usa valores por defecto cuando no se proporcionan
 export const createRegistroSchema = z.object({
   // IDs de relaciones (requeridos)
   atletaId: z.coerce.number().int().positive('El ID del atleta debe ser positivo'),
@@ -32,31 +34,34 @@ export const createRegistroSchema = z.object({
   motivoInasistencia: z.string().max(500, 'El motivo no puede exceder 500 caracteres').optional(),
 
   // Ejecucion de sesion (porcentajes: 0-100)
-  ejerciciosCompletados: z.coerce.number()
-    .min(0, 'Ejercicios completados no puede ser menor a 0%')
-    .max(100, 'Ejercicios completados no puede exceder 100%'),
+  // NOTA: Opcionales para COMPETENCIA - backend usa valores por defecto
+  ejerciciosCompletados: z.union([
+    z.coerce.number().min(0, 'Ejercicios completados no puede ser menor a 0%').max(100, 'Ejercicios completados no puede exceder 100%'),
+    z.literal(''),
+  ]).optional(),
 
-  intensidadAlcanzada: z.coerce.number()
-    .min(0, 'Intensidad alcanzada no puede ser menor a 0%')
-    .max(100, 'Intensidad alcanzada no puede exceder 100%'),
+  intensidadAlcanzada: z.union([
+    z.coerce.number().min(0, 'Intensidad alcanzada no puede ser menor a 0%').max(100, 'Intensidad alcanzada no puede exceder 100%'),
+    z.literal(''),
+  ]).optional(),
 
   // Duracion real en minutos
-  duracionReal: z.coerce.number()
-    .int('Duracion debe ser un numero entero (minutos)')
-    .min(1, 'La duracion debe ser al menos 1 minuto')
-    .max(480, 'La duracion no puede exceder 8 horas (480 minutos)'),
+  duracionReal: z.union([
+    z.coerce.number().int('Duracion debe ser un numero entero (minutos)').min(1, 'La duracion debe ser al menos 1 minuto').max(480, 'La duracion no puede exceder 8 horas (480 minutos)'),
+    z.literal(''),
+  ]).optional(),
 
   // RPE (Rate of Perceived Exertion): 1-10
-  rpe: z.coerce.number()
-    .int('RPE debe ser un numero entero')
-    .min(1, 'RPE debe ser minimo 1 (esfuerzo muy ligero)')
-    .max(10, 'RPE debe ser maximo 10 (esfuerzo maximo)'),
+  rpe: z.union([
+    z.coerce.number().int('RPE debe ser un numero entero').min(1, 'RPE debe ser minimo 1 (esfuerzo muy ligero)').max(10, 'RPE debe ser maximo 10 (esfuerzo maximo)'),
+    z.literal(''),
+  ]).optional(),
 
   // Calidad de sueno: 1-10
-  calidadSueno: z.coerce.number()
-    .int('Calidad de sueno debe ser un numero entero')
-    .min(1, 'Calidad de sueno debe ser minimo 1 (muy mala)')
-    .max(10, 'Calidad de sueno debe ser maximo 10 (excelente)'),
+  calidadSueno: z.union([
+    z.coerce.number().int('Calidad de sueno debe ser un numero entero').min(1, 'Calidad de sueno debe ser minimo 1 (muy mala)').max(10, 'Calidad de sueno debe ser maximo 10 (excelente)'),
+    z.literal(''),
+  ]).optional(),
 
   // Horas de sueno (opcional)
   horasSueno: z.union([
@@ -65,10 +70,10 @@ export const createRegistroSchema = z.object({
   ]).optional(),
 
   // Estado animico: 1-10
-  estadoAnimico: z.coerce.number()
-    .int('Estado animico debe ser un numero entero')
-    .min(1, 'Estado animico debe ser minimo 1 (muy mal)')
-    .max(10, 'Estado animico debe ser maximo 10 (excelente)'),
+  estadoAnimico: z.union([
+    z.coerce.number().int('Estado animico debe ser un numero entero').min(1, 'Estado animico debe ser minimo 1 (muy mal)').max(10, 'Estado animico debe ser maximo 10 (excelente)'),
+    z.literal(''),
+  ]).optional(),
 
   // Dolencias (array opcional)
   dolencias: z.array(dolenciaSchema).optional(),
@@ -92,18 +97,20 @@ export const createRegistroSchema = z.object({
 export type CreateRegistroInput = z.infer<typeof createRegistroSchema>;
 
 // Tipo para enviar al backend
+// NOTA: Los campos de entrenamiento son opcionales para sesiones tipo COMPETENCIA
 export type CreateRegistroPayload = {
   atletaId: number;
   sesionId: number;
   asistio: boolean;
   motivoInasistencia?: string;
-  ejerciciosCompletados: number;
-  intensidadAlcanzada: number;
-  duracionReal: number;
-  rpe: number;
-  calidadSueno: number;
+  // Campos de entrenamiento (opcionales para COMPETENCIA)
+  ejerciciosCompletados?: number;
+  intensidadAlcanzada?: number;
+  duracionReal?: number;
+  rpe?: number;
+  calidadSueno?: number;
   horasSueno?: number;
-  estadoAnimico: number;
+  estadoAnimico?: number;
   dolencias?: {
     zona: string;
     nivel: number;

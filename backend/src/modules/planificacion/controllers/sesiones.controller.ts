@@ -22,9 +22,9 @@ import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 export class SesionesController {
   constructor(private readonly sesionesService: SesionesService) {}
 
-  // POST /api/sesiones - Crear sesión (solo COMITE_TECNICO)
+  // POST /api/sesiones - Crear sesión (COMITE_TECNICO y ENTRENADOR)
   @Post()
-  @Roles('COMITE_TECNICO')
+  @Roles('COMITE_TECNICO', 'ENTRENADOR')
   create(@Body() createSesionDto: CreateSesionDto) {
     return this.sesionesService.create(createSesionDto);
   }
@@ -49,6 +49,19 @@ export class SesionesController {
     );
   }
 
+  // GET /api/sesiones/by-atleta/:atletaId - Obtener sesiones de microciclos asignados a un atleta
+  // Usado para filtrar sesiones al registrar post-entrenamiento o test fisico
+  // Query param tipoSesion: Filtro opcional (ej: TEST o ENTRENAMIENTO,RECUPERACION,COMPETENCIA)
+  @Get('by-atleta/:atletaId')
+  @Roles('COMITE_TECNICO', 'ENTRENADOR')
+  findByAtleta(
+    @Param('atletaId') atletaId: string,
+    @Query('tipoSesion') tipoSesion: string | undefined,
+    @CurrentUser() user: any,
+  ) {
+    return this.sesionesService.findByAtleta(atletaId, BigInt(user.id), user.rol, tipoSesion);
+  }
+
   // GET /api/sesiones/:id - Obtener sesión por ID (validando ownership)
   @Get(':id')
   @Roles('COMITE_TECNICO', 'ENTRENADOR', 'ATLETA')
@@ -56,9 +69,9 @@ export class SesionesController {
     return this.sesionesService.findOne(id, BigInt(user.id), user.rol);
   }
 
-  // PATCH /api/sesiones/:id - Actualizar sesión (solo COMITE_TECNICO)
+  // PATCH /api/sesiones/:id - Actualizar sesión (COMITE_TECNICO y ENTRENADOR)
   @Patch(':id')
-  @Roles('COMITE_TECNICO')
+  @Roles('COMITE_TECNICO', 'ENTRENADOR')
   update(
     @Param('id') id: string,
     @Body() updateSesionDto: UpdateSesionDto,
@@ -66,9 +79,9 @@ export class SesionesController {
     return this.sesionesService.update(id, updateSesionDto);
   }
 
-  // DELETE /api/sesiones/:id - Eliminar sesión (solo COMITE_TECNICO)
+  // DELETE /api/sesiones/:id - Eliminar sesión (COMITE_TECNICO y ENTRENADOR) - HARD DELETE
   @Delete(':id')
-  @Roles('COMITE_TECNICO')
+  @Roles('COMITE_TECNICO', 'ENTRENADOR')
   remove(@Param('id') id: string) {
     return this.sesionesService.remove(id);
   }

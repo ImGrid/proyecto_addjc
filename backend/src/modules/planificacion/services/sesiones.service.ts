@@ -330,6 +330,99 @@ export class SesionesService {
     return { message: 'Sesión eliminada permanentemente' };
   }
 
+  // Obtener sesiones de microciclos asignados a un atleta especifico
+  // Usado para filtrar sesiones al registrar post-entrenamiento o test fisico
+  // tipoSesion: Filtro opcional por tipo de sesion (puede ser un valor o array separado por comas)
+  async findByAtleta(
+    atletaId: string,
+    userId: bigint,
+    rol: string,
+    tipoSesion?: string,
+  ) {
+    const atletaIdBigInt = BigInt(atletaId);
+
+    // Si es ENTRENADOR, verificar que el atleta le pertenece
+    if (rol === 'ENTRENADOR') {
+      const entrenadorId = await this.accessControl.getEntrenadorId(userId);
+
+      if (!entrenadorId) {
+        throw new NotFoundException('Entrenador no encontrado');
+      }
+
+      // Verificar que el atleta esta asignado a este entrenador
+      const atleta = await this.prisma.atleta.findUnique({
+        where: { id: atletaIdBigInt },
+        select: { entrenadorAsignadoId: true },
+      });
+
+      if (!atleta || atleta.entrenadorAsignadoId !== entrenadorId) {
+        throw new ForbiddenException('No tienes permiso para ver sesiones de este atleta');
+      }
+    }
+
+    // Buscar microciclos donde el atleta esta asignado
+    const asignaciones = await this.prisma.asignacionAtletaMicrociclo.findMany({
+      where: {
+        atletaId: atletaIdBigInt,
+        activa: true,
+      },
+      select: {
+        microcicloId: true,
+      },
+    });
+
+    if (asignaciones.length === 0) {
+      return {
+        data: [],
+        meta: {
+          atletaId,
+          message: 'El atleta no tiene microciclos asignados',
+        },
+      };
+    }
+
+    const microcicloIds = asignaciones.map((a) => a.microcicloId);
+
+    // Construir filtro de tipo de sesion (soporta valor unico o array separado por comas)
+    let tipoSesionFilter: any = undefined;
+    if (tipoSesion) {
+      const tipos = tipoSesion.split(',').map((t) => t.trim());
+      if (tipos.length === 1) {
+        tipoSesionFilter = tipos[0];
+      } else {
+        tipoSesionFilter = { in: tipos };
+      }
+    }
+
+    // Buscar sesiones de esos microciclos con filtro opcional de tipo
+    const sesiones = await this.prisma.sesion.findMany({
+      where: {
+        microcicloId: { in: microcicloIds },
+        ...(tipoSesionFilter && { tipoSesion: tipoSesionFilter }),
+      },
+      orderBy: [{ fecha: 'asc' }, { numeroSesion: 'asc' }],
+      include: {
+        microciclo: {
+          select: {
+            id: true,
+            numeroGlobalMicrociclo: true,
+            fechaInicio: true,
+            fechaFin: true,
+          },
+        },
+      },
+    });
+
+    return {
+      data: sesiones.map((s) => this.formatSesionResponse(s)),
+      meta: {
+        atletaId,
+        microciclosAsignados: microcicloIds.map((id) => id.toString()),
+        totalSesiones: sesiones.length,
+      },
+    };
+  }
+
   // Método auxiliar para formatear respuesta
   private formatSesionResponse(sesion: any): SesionResponseDto {
     return {

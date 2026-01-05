@@ -375,12 +375,12 @@ model Sesion {
   sesionBaseId      BigInt?
   creadoPor         CreadoPor         @default(COMITE_TECNICO)
 
-  // Planificación
+  // Planificación (algunos opcionales para COMPETENCIA/DESCANSO)
   duracionPlanificada   Int
-  volumenPlanificado    Int
-  intensidadPlanificada Int
+  volumenPlanificado    Int?
+  intensidadPlanificada Int?
   fcObjetivo            Int?
-  relacionVI            String @db.VarChar(20)
+  relacionVI            String? @db.VarChar(20)
 
   // Zona de esfuerzo (planBD.txt - nuevo descubrimiento)
   zonaEsfuerzo String? @db.VarChar(50)
@@ -390,10 +390,10 @@ model Sesion {
   volumenReal    Int?
   intensidadReal Int?
 
-  // Contenidos
-  contenidoFisico  String @db.Text
-  contenidoTecnico String @db.Text
-  contenidoTactico String @db.Text
+  // Contenidos (opcionales para COMPETENCIA/DESCANSO)
+  contenidoFisico  String? @db.Text
+  contenidoTecnico String? @db.Text
+  contenidoTactico String? @db.Text
 
   // Estructura de sesión
   calentamiento  String? @db.Text
@@ -429,9 +429,13 @@ model TestFisico {
   id                   BigInt   @id @default(autoincrement())
   atletaId             BigInt
   entrenadorRegistroId BigInt
-  sesionId             BigInt?
+  sesionId             BigInt
   fechaTest            DateTime @db.Date
-  microcicloId         BigInt?
+  microcicloId         BigInt
+
+  // Asistencia (para registrar si el atleta asistio al test programado)
+  asistio            Boolean  @default(true)
+  motivoInasistencia String?  @db.Text
 
   // Tests de fuerza máxima (1RM)
   pressBanca           Decimal? @db.Decimal(5, 2)
@@ -461,8 +465,8 @@ model TestFisico {
   // Relaciones
   atleta          Atleta          @relation(fields: [atletaId], references: [id], onDelete: Cascade)
   entrenador      Entrenador      @relation(fields: [entrenadorRegistroId], references: [id])
-  sesion          Sesion?         @relation(fields: [sesionId], references: [id])
-  microciclo      Microciclo?     @relation(fields: [microcicloId], references: [id])
+  sesion          Sesion          @relation(fields: [sesionId], references: [id])
+  microciclo      Microciclo      @relation(fields: [microcicloId], references: [id])
   recomendaciones Recomendacion[]
 
   @@index([atletaId])

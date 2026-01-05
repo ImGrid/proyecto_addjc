@@ -1,16 +1,19 @@
 'use client';
 
-import { useActionState, useState, useEffect, useRef } from 'react';
+import { useActionState, useState, useEffect, useRef, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { SelectAtleta } from './select-atleta';
+import { SelectSesion } from './select-sesion';
 import { SubmitButton } from './submit-button';
 import { createTestFisico } from '../../actions/create-test-fisico';
+import { fetchSesionesByAtleta, SesionParaSelector } from '../../actions/fetch-sesiones';
 import { initialActionState } from '@/types/action-result';
-import { Dumbbell, Timer, FileText } from 'lucide-react';
+import { Dumbbell, Timer, FileText, UserX } from 'lucide-react';
 import { ENTRENADOR_ROUTES } from '@/lib/routes';
 
 interface Atleta {
@@ -28,9 +31,31 @@ export function CreateTestForm({ atletas }: CreateTestFormProps) {
   const hasShownToast = useRef(false);
   const [state, formAction] = useActionState(createTestFisico, initialActionState);
   const [selectedAtleta, setSelectedAtleta] = useState('');
+  const [selectedSesion, setSelectedSesion] = useState('');
+  const [sesiones, setSesiones] = useState<SesionParaSelector[]>([]);
+  const [isPending, startTransition] = useTransition();
+  const [asistio, setAsistio] = useState(true);
 
-  // Obtener fecha actual en formato YYYY-MM-DD
-  const today = new Date().toISOString().split('T')[0];
+  // Cargar sesiones cuando cambia el atleta seleccionado
+  // Solo sesiones tipo TEST para tests fisicos
+  useEffect(() => {
+    if (selectedAtleta) {
+      // Limpiar sesion seleccionada al cambiar de atleta
+      setSelectedSesion('');
+      setSesiones([]);
+
+      // Cargar sesiones del atleta (solo tipo TEST)
+      startTransition(async () => {
+        const data = await fetchSesionesByAtleta(selectedAtleta, 'TEST');
+        if (data) {
+          setSesiones(data);
+        }
+      });
+    } else {
+      setSesiones([]);
+      setSelectedSesion('');
+    }
+  }, [selectedAtleta]);
 
   // Mostrar toast y redirigir en caso de exito
   useEffect(() => {
@@ -69,20 +94,28 @@ export function CreateTestForm({ atletas }: CreateTestFormProps) {
     return '';
   };
 
-  // Restaurar atleta seleccionado si hay error
+  // Restaurar atleta, sesion y asistencia seleccionados si hay error
   useEffect(() => {
-    if (!state.success && state.submittedData?.atletaId) {
-      setSelectedAtleta(String(state.submittedData.atletaId));
+    if (!state.success && state.submittedData) {
+      if (state.submittedData.atletaId) {
+        setSelectedAtleta(String(state.submittedData.atletaId));
+      }
+      if (state.submittedData.sesionId) {
+        setSelectedSesion(String(state.submittedData.sesionId));
+      }
+      if (state.submittedData.asistio !== undefined) {
+        setAsistio(state.submittedData.asistio === 'true' || state.submittedData.asistio === true);
+      }
     }
   }, [state]);
 
   return (
     <form action={formAction} className="space-y-6">
-      {/* Seccion: Atleta y Fecha */}
+      {/* Seccion: Atleta y Sesion */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Datos Generales</CardTitle>
-          <CardDescription>Selecciona el atleta y la fecha del test</CardDescription>
+          <CardDescription>Selecciona el atleta y la sesion del test</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           <SelectAtleta
@@ -93,185 +126,240 @@ export function CreateTestForm({ atletas }: CreateTestFormProps) {
           />
           <input type="hidden" name="atletaId" value={selectedAtleta} />
 
-          <div className="space-y-2">
-            <Label htmlFor="fechaTest">Fecha del Test *</Label>
-            <Input
-              type="date"
-              id="fechaTest"
-              name="fechaTest"
-              defaultValue={getPreviousValue('fechaTest') || today}
-              max={today}
-              className={getFieldError('fechaTest') ? 'border-destructive' : ''}
-            />
-            {getFieldError('fechaTest') && (
-              <p className="text-sm text-destructive">{getFieldError('fechaTest')}</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+          <SelectSesion
+            sesiones={sesiones}
+            value={selectedSesion}
+            onValueChange={setSelectedSesion}
+            error={getFieldError('sesionId')}
+            disabled={!selectedAtleta || isPending}
+          />
+          <input type="hidden" name="sesionId" value={selectedSesion} />
 
-      {/* Seccion: Fuerza Maxima */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Dumbbell className="h-5 w-5" />
-            Fuerza Maxima (1RM)
-          </CardTitle>
-          <CardDescription>Tests de fuerza maxima en kilogramos</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-3">
-          <div className="space-y-2">
-            <Label htmlFor="pressBanca">Press Banca (kg)</Label>
-            <Input
-              type="number"
-              id="pressBanca"
-              name="pressBanca"
-              placeholder="0"
-              min="0"
-              max="300"
-              step="0.5"
-              defaultValue={getPreviousValue('pressBanca')}
-              className={getFieldError('pressBanca') ? 'border-destructive' : ''}
-            />
-            {getFieldError('pressBanca') && (
-              <p className="text-sm text-destructive">{getFieldError('pressBanca')}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="tiron">Tiron (kg)</Label>
-            <Input
-              type="number"
-              id="tiron"
-              name="tiron"
-              placeholder="0"
-              min="0"
-              max="400"
-              step="0.5"
-              defaultValue={getPreviousValue('tiron')}
-              className={getFieldError('tiron') ? 'border-destructive' : ''}
-            />
-            {getFieldError('tiron') && (
-              <p className="text-sm text-destructive">{getFieldError('tiron')}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="sentadilla">Sentadilla (kg)</Label>
-            <Input
-              type="number"
-              id="sentadilla"
-              name="sentadilla"
-              placeholder="0"
-              min="0"
-              max="400"
-              step="0.5"
-              defaultValue={getPreviousValue('sentadilla')}
-              className={getFieldError('sentadilla') ? 'border-destructive' : ''}
-            />
-            {getFieldError('sentadilla') && (
-              <p className="text-sm text-destructive">{getFieldError('sentadilla')}</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Seccion: Fuerza Resistencia */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Dumbbell className="h-5 w-5" />
-            Fuerza Resistencia
-          </CardTitle>
-          <CardDescription>Tests de repeticiones maximas</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="barraFija">Barra Fija (repeticiones)</Label>
-            <Input
-              type="number"
-              id="barraFija"
-              name="barraFija"
-              placeholder="0"
-              min="0"
-              max="100"
-              step="1"
-              defaultValue={getPreviousValue('barraFija')}
-              className={getFieldError('barraFija') ? 'border-destructive' : ''}
-            />
-            {getFieldError('barraFija') && (
-              <p className="text-sm text-destructive">{getFieldError('barraFija')}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="paralelas">Paralelas (repeticiones)</Label>
-            <Input
-              type="number"
-              id="paralelas"
-              name="paralelas"
-              placeholder="0"
-              min="0"
-              max="100"
-              step="1"
-              defaultValue={getPreviousValue('paralelas')}
-              className={getFieldError('paralelas') ? 'border-destructive' : ''}
-            />
-            {getFieldError('paralelas') && (
-              <p className="text-sm text-destructive">{getFieldError('paralelas')}</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Seccion: Resistencia Aerobica */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Timer className="h-5 w-5" />
-            Resistencia Aerobica
-          </CardTitle>
-          <CardDescription>Tests de capacidad aerobica</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="navettePalier">Test Navette (Palier)</Label>
-            <Input
-              type="number"
-              id="navettePalier"
-              name="navettePalier"
-              placeholder="0"
-              min="0"
-              max="20"
-              step="0.5"
-              defaultValue={getPreviousValue('navettePalier')}
-              className={getFieldError('navettePalier') ? 'border-destructive' : ''}
-            />
-            {getFieldError('navettePalier') && (
-              <p className="text-sm text-destructive">{getFieldError('navettePalier')}</p>
-            )}
-            <p className="text-xs text-muted-foreground">
-              El VO2max se calculara automaticamente
+          {isPending && (
+            <p className="text-sm text-muted-foreground col-span-2">
+              Cargando sesiones del atleta...
             </p>
-          </div>
+          )}
 
-          <div className="space-y-2">
-            <Label htmlFor="test1500m">Test 1500m (MM:SS)</Label>
-            <Input
-              type="text"
-              id="test1500m"
-              name="test1500m"
-              placeholder="05:30"
-              maxLength={10}
-              defaultValue={getPreviousValue('test1500m')}
-              className={getFieldError('test1500m') ? 'border-destructive' : ''}
-            />
-            {getFieldError('test1500m') && (
-              <p className="text-sm text-destructive">{getFieldError('test1500m')}</p>
-            )}
-          </div>
+          {!isPending && selectedAtleta && sesiones.length === 0 && (
+            <p className="text-sm text-amber-600 col-span-2">
+              Este atleta no tiene sesiones de TEST asignadas. Verifique que el microciclo tenga sesiones tipo TEST.
+            </p>
+          )}
         </CardContent>
       </Card>
+
+      {/* Seccion: Asistencia */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <UserX className="h-5 w-5" />
+            Asistencia
+          </CardTitle>
+          <CardDescription>Registrar si el atleta asistio al test</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center space-x-3">
+            <Switch
+              id="asistio"
+              checked={asistio}
+              onCheckedChange={setAsistio}
+            />
+            <Label htmlFor="asistio" className="cursor-pointer">
+              El atleta asistio al test
+            </Label>
+          </div>
+          <input type="hidden" name="asistio" value={asistio.toString()} />
+
+          {!asistio && (
+            <div className="space-y-2">
+              <Label htmlFor="motivoInasistencia">
+                Motivo de Inasistencia <span className="text-destructive">*</span>
+              </Label>
+              <textarea
+                id="motivoInasistencia"
+                name="motivoInasistencia"
+                rows={2}
+                maxLength={500}
+                placeholder="Explique el motivo por el cual el atleta no asistio..."
+                defaultValue={getPreviousValue('motivoInasistencia')}
+                className={`flex min-h-[60px] w-full rounded-md border ${getFieldError('motivoInasistencia') ? 'border-destructive' : 'border-input'} bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50`}
+              />
+              {getFieldError('motivoInasistencia') && (
+                <p className="text-sm text-destructive">{getFieldError('motivoInasistencia')}</p>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Secciones de tests - solo si asistio */}
+      {asistio && (
+        <>
+          {/* Seccion: Fuerza Maxima */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Dumbbell className="h-5 w-5" />
+                Fuerza Maxima (1RM)
+              </CardTitle>
+              <CardDescription>Tests de fuerza maxima en kilogramos</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="pressBanca">Press Banca (kg)</Label>
+                <Input
+                  type="number"
+                  id="pressBanca"
+                  name="pressBanca"
+                  placeholder="0"
+                  min="0"
+                  max="300"
+                  step="0.5"
+                  defaultValue={getPreviousValue('pressBanca')}
+                  className={getFieldError('pressBanca') ? 'border-destructive' : ''}
+                />
+                {getFieldError('pressBanca') && (
+                  <p className="text-sm text-destructive">{getFieldError('pressBanca')}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="tiron">Tiron (kg)</Label>
+                <Input
+                  type="number"
+                  id="tiron"
+                  name="tiron"
+                  placeholder="0"
+                  min="0"
+                  max="400"
+                  step="0.5"
+                  defaultValue={getPreviousValue('tiron')}
+                  className={getFieldError('tiron') ? 'border-destructive' : ''}
+                />
+                {getFieldError('tiron') && (
+                  <p className="text-sm text-destructive">{getFieldError('tiron')}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="sentadilla">Sentadilla (kg)</Label>
+                <Input
+                  type="number"
+                  id="sentadilla"
+                  name="sentadilla"
+                  placeholder="0"
+                  min="0"
+                  max="400"
+                  step="0.5"
+                  defaultValue={getPreviousValue('sentadilla')}
+                  className={getFieldError('sentadilla') ? 'border-destructive' : ''}
+                />
+                {getFieldError('sentadilla') && (
+                  <p className="text-sm text-destructive">{getFieldError('sentadilla')}</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Seccion: Fuerza Resistencia */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Dumbbell className="h-5 w-5" />
+                Fuerza Resistencia
+              </CardTitle>
+              <CardDescription>Tests de repeticiones maximas</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="barraFija">Barra Fija (repeticiones)</Label>
+                <Input
+                  type="number"
+                  id="barraFija"
+                  name="barraFija"
+                  placeholder="0"
+                  min="0"
+                  max="100"
+                  step="1"
+                  defaultValue={getPreviousValue('barraFija')}
+                  className={getFieldError('barraFija') ? 'border-destructive' : ''}
+                />
+                {getFieldError('barraFija') && (
+                  <p className="text-sm text-destructive">{getFieldError('barraFija')}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="paralelas">Paralelas (repeticiones)</Label>
+                <Input
+                  type="number"
+                  id="paralelas"
+                  name="paralelas"
+                  placeholder="0"
+                  min="0"
+                  max="100"
+                  step="1"
+                  defaultValue={getPreviousValue('paralelas')}
+                  className={getFieldError('paralelas') ? 'border-destructive' : ''}
+                />
+                {getFieldError('paralelas') && (
+                  <p className="text-sm text-destructive">{getFieldError('paralelas')}</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Seccion: Resistencia Aerobica */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Timer className="h-5 w-5" />
+                Resistencia Aerobica
+              </CardTitle>
+              <CardDescription>Tests de capacidad aerobica</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="navettePalier">Test Navette (Palier)</Label>
+                <Input
+                  type="number"
+                  id="navettePalier"
+                  name="navettePalier"
+                  placeholder="0"
+                  min="0"
+                  max="20"
+                  step="0.5"
+                  defaultValue={getPreviousValue('navettePalier')}
+                  className={getFieldError('navettePalier') ? 'border-destructive' : ''}
+                />
+                {getFieldError('navettePalier') && (
+                  <p className="text-sm text-destructive">{getFieldError('navettePalier')}</p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  El VO2max se calculara automaticamente
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="test1500m">Test 1500m (MM:SS)</Label>
+                <Input
+                  type="text"
+                  id="test1500m"
+                  name="test1500m"
+                  placeholder="05:30"
+                  maxLength={10}
+                  defaultValue={getPreviousValue('test1500m')}
+                  className={getFieldError('test1500m') ? 'border-destructive' : ''}
+                />
+                {getFieldError('test1500m') && (
+                  <p className="text-sm text-destructive">{getFieldError('test1500m')}</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       {/* Seccion: Observaciones */}
       <Card>

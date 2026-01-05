@@ -34,42 +34,51 @@ export class CreateRegistroPostEntrenamientoDto {
   motivoInasistencia?: string;
 
   // Ejecucion de sesion (porcentajes: 0-100)
+  // NOTA: Para sesiones COMPETENCIA estos campos son opcionales (se usan valores por defecto)
   // NOTA: ejerciciosCompletados e intensidadAlcanzada son Decimal(5,2) en BD
-  @Transform(({ value }) => parseFloat(value))
+  @IsOptional()
+  @Transform(({ value }) => (value !== undefined && value !== null ? parseFloat(value) : undefined))
   @IsNumber(
     { maxDecimalPlaces: 2 },
     { message: 'Ejercicios completados debe ser un numero' },
   )
   @Min(0, { message: 'Ejercicios completados no puede ser menor a 0%' })
   @Max(100, { message: 'Ejercicios completados no puede exceder 100%' })
-  ejerciciosCompletados!: number;
+  ejerciciosCompletados?: number;
 
-  @Transform(({ value }) => parseFloat(value))
+  @IsOptional()
+  @Transform(({ value }) => (value !== undefined && value !== null ? parseFloat(value) : undefined))
   @IsNumber(
     { maxDecimalPlaces: 2 },
     { message: 'Intensidad alcanzada debe ser un numero' },
   )
   @Min(0, { message: 'Intensidad alcanzada no puede ser menor a 0%' })
   @Max(100, { message: 'Intensidad alcanzada no puede exceder 100%' })
-  intensidadAlcanzada!: number;
+  intensidadAlcanzada?: number;
 
   // Duracion real en minutos
+  // NOTA: Para sesiones COMPETENCIA es opcional
+  @IsOptional()
   @IsInt({ message: 'Duracion real debe ser un numero entero (minutos)' })
   @Min(1, { message: 'La duracion debe ser al menos 1 minuto' })
   @Max(480, { message: 'La duracion no puede exceder 8 horas (480 minutos)' })
-  duracionReal!: number;
+  duracionReal?: number;
 
   // RPE (Rate of Perceived Exertion): 1-10
+  // NOTA: Para sesiones COMPETENCIA es opcional
+  @IsOptional()
   @IsInt({ message: 'RPE debe ser un numero entero' })
   @Min(1, { message: 'RPE debe ser minimo 1 (esfuerzo muy ligero)' })
   @Max(10, { message: 'RPE debe ser maximo 10 (esfuerzo maximo)' })
-  rpe!: number;
+  rpe?: number;
 
   // Calidad de sueno: 1-10
+  // NOTA: Para sesiones COMPETENCIA es opcional
+  @IsOptional()
   @IsInt({ message: 'Calidad de sueno debe ser un numero entero' })
   @Min(1, { message: 'Calidad de sueno debe ser minimo 1 (muy mala)' })
   @Max(10, { message: 'Calidad de sueno debe ser maximo 10 (excelente)' })
-  calidadSueno!: number;
+  calidadSueno?: number;
 
   // Horas de sueno (Decimal 3,1 en BD - ejemplo: 7.5)
   @IsOptional()
@@ -83,10 +92,12 @@ export class CreateRegistroPostEntrenamientoDto {
   horasSueno?: number;
 
   // Estado animico: 1-10
+  // NOTA: Para sesiones COMPETENCIA es opcional
+  @IsOptional()
   @IsInt({ message: 'Estado animico debe ser un numero entero' })
   @Min(1, { message: 'Estado animico debe ser minimo 1 (muy mal)' })
   @Max(10, { message: 'Estado animico debe ser maximo 10 (excelente)' })
-  estadoAnimico!: number;
+  estadoAnimico?: number;
 
   // Dolencias (array de dolencias, opcional)
   @IsOptional()

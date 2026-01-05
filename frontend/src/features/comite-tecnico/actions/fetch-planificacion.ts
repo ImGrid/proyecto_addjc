@@ -288,3 +288,160 @@ export async function fetchAsignacion(id: string): Promise<Asignacion | null> {
     return null;
   }
 }
+
+// ===================================
+// SESIONES
+// Params segun backend sesiones.controller.ts
+// ===================================
+
+// Tipo para sesion completa (retorno del backend)
+export interface SesionCompleta {
+  id: string;
+  microcicloId: string;
+  fecha: string;
+  diaSemana: string;
+  numeroSesion: number;
+  tipoSesion: string;
+  turno: string;
+  tipoPlanificacion: string;
+  sesionBaseId: string | null;
+  creadoPor: string;
+  duracionPlanificada: number;
+  // Opcionales para COMPETENCIA/DESCANSO
+  volumenPlanificado: number | null;
+  intensidadPlanificada: number | null;
+  fcObjetivo: number | null;
+  relacionVI: string | null;
+  zonaEsfuerzo: string | null;
+  duracionReal: number | null;
+  volumenReal: number | null;
+  intensidadReal: number | null;
+  // Contenidos opcionales para COMPETENCIA/DESCANSO
+  contenidoFisico: string | null;
+  contenidoTecnico: string | null;
+  contenidoTactico: string | null;
+  calentamiento: string | null;
+  partePrincipal: string | null;
+  vueltaCalma: string | null;
+  observaciones: string | null;
+  materialNecesario: string | null;
+  createdAt: string;
+  updatedAt: string;
+  microciclo?: {
+    id: string;
+    numeroGlobalMicrociclo: number;
+    fechaInicio: string;
+    fechaFin: string;
+  };
+}
+
+export interface FetchSesionesParams {
+  page?: number;
+  limit?: number;
+  microcicloId?: string;
+  fecha?: string;
+}
+
+// Obtener lista paginada de sesiones
+export async function fetchSesiones(
+  params: FetchSesionesParams = {}
+): Promise<PaginatedResponse<SesionCompleta> | null> {
+  try {
+    const token = await getAuthToken();
+
+    if (!token) {
+      console.error('[fetchSesiones] No autenticado');
+      return null;
+    }
+
+    const searchParams = new URLSearchParams();
+    if (params.page) searchParams.set('page', params.page.toString());
+    if (params.limit) searchParams.set('limit', params.limit.toString());
+    if (params.microcicloId) searchParams.set('microcicloId', params.microcicloId);
+    if (params.fecha) searchParams.set('fecha', params.fecha);
+
+    const queryString = searchParams.toString();
+    const endpoint = `/sesiones${queryString ? `?${queryString}` : ''}`;
+
+    const response = await authFetch(endpoint);
+
+    if (!response.ok) {
+      console.error('[fetchSesiones] Error:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+    return data as PaginatedResponse<SesionCompleta>;
+  } catch (error) {
+    console.error('[fetchSesiones] Error:', error);
+    return null;
+  }
+}
+
+// Obtener detalle de una sesion por ID
+export async function fetchSesion(id: string): Promise<SesionCompleta | null> {
+  try {
+    const token = await getAuthToken();
+
+    if (!token) {
+      console.error('[fetchSesion] No autenticado');
+      return null;
+    }
+
+    const response = await authFetch(`/sesiones/${id}`);
+
+    if (!response.ok) {
+      console.error('[fetchSesion] Error:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+    return data as SesionCompleta;
+  } catch (error) {
+    console.error('[fetchSesion] Error:', error);
+    return null;
+  }
+}
+
+// Obtener microciclos para selector (formato simplificado)
+export interface MicrocicloParaSelector {
+  id: string;
+  label: string;
+  numeroGlobalMicrociclo: number;
+  fechaInicio: string;
+  fechaFin: string;
+}
+
+export async function fetchMicrociclosParaSelector(
+  limit: number = 100
+): Promise<MicrocicloParaSelector[] | null> {
+  try {
+    const token = await getAuthToken();
+
+    if (!token) {
+      console.error('[fetchMicrociclosParaSelector] No autenticado');
+      return null;
+    }
+
+    const response = await authFetch(`/microciclos?limit=${limit}`);
+
+    if (!response.ok) {
+      console.error('[fetchMicrociclosParaSelector] Error:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+    const microciclos = data.data as MicrocicloType[];
+
+    return microciclos.map((m) => ({
+      id: m.id,
+      label: `Micro #${m.numeroGlobalMicrociclo} (${new Date(m.fechaInicio).toLocaleDateString('es-BO')} - ${new Date(m.fechaFin).toLocaleDateString('es-BO')})`,
+      numeroGlobalMicrociclo: m.numeroGlobalMicrociclo,
+      fechaInicio: m.fechaInicio.toString(),
+      fechaFin: m.fechaFin.toString(),
+    }));
+  } catch (error) {
+    console.error('[fetchMicrociclosParaSelector] Error:', error);
+    return null;
+  }
+}

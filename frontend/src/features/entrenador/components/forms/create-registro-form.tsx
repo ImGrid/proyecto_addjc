@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useState, useEffect, useRef } from 'react';
+import { useActionState, useState, useEffect, useRef, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
@@ -14,7 +14,7 @@ import { DolenciasFieldArray, FormWithDolencias } from './dolencias-field-array'
 import { SubmitButton } from './submit-button';
 import { createRegistro } from '../../actions/create-registro';
 import { initialActionState } from '@/types/action-result';
-import { SesionParaSelector } from '../../actions/fetch-sesiones';
+import { fetchSesionesByAtleta, SesionParaSelector } from '../../actions/fetch-sesiones';
 import {
   Activity,
   Moon,
@@ -32,16 +32,24 @@ interface Atleta {
 
 interface CreateRegistroFormProps {
   atletas: Atleta[];
-  sesiones: SesionParaSelector[];
 }
 
-export function CreateRegistroForm({ atletas, sesiones }: CreateRegistroFormProps) {
+// Tipos de sesion permitidos para registro post-entrenamiento
+const TIPOS_SESION_PERMITIDOS = 'ENTRENAMIENTO,RECUPERACION,COMPETENCIA';
+
+export function CreateRegistroForm({ atletas }: CreateRegistroFormProps) {
   const router = useRouter();
   const hasShownToast = useRef(false);
   const [state, formAction] = useActionState(createRegistro, initialActionState);
   const [selectedAtleta, setSelectedAtleta] = useState('');
   const [selectedSesion, setSelectedSesion] = useState('');
+  const [sesiones, setSesiones] = useState<SesionParaSelector[]>([]);
+  const [isPending, startTransition] = useTransition();
   const [asistio, setAsistio] = useState(true);
+
+  // Detectar si la sesion seleccionada es tipo COMPETENCIA
+  const sesionSeleccionada = sesiones.find(s => s.id === selectedSesion);
+  const esCompetencia = sesionSeleccionada?.tipoSesion === 'COMPETENCIA';
 
   // React Hook Form para manejo del array de dolencias (sin resolver - validacion en servidor)
   const { control, register, getValues } = useForm<FormWithDolencias>({
@@ -49,6 +57,27 @@ export function CreateRegistroForm({ atletas, sesiones }: CreateRegistroFormProp
       dolencias: [],
     },
   });
+
+  // Cargar sesiones cuando cambia el atleta seleccionado
+  // Solo tipos ENTRENAMIENTO, RECUPERACION, COMPETENCIA
+  useEffect(() => {
+    if (selectedAtleta) {
+      // Limpiar sesion seleccionada al cambiar de atleta
+      setSelectedSesion('');
+      setSesiones([]);
+
+      // Cargar sesiones del atleta (solo tipos permitidos para post-entrenamiento)
+      startTransition(async () => {
+        const data = await fetchSesionesByAtleta(selectedAtleta, TIPOS_SESION_PERMITIDOS);
+        if (data) {
+          setSesiones(data);
+        }
+      });
+    } else {
+      setSesiones([]);
+      setSelectedSesion('');
+    }
+  }, [selectedAtleta]);
 
   // Mostrar toast y redirigir en caso de exito
   useEffect(() => {
@@ -140,7 +169,30 @@ export function CreateRegistroForm({ atletas, sesiones }: CreateRegistroFormProp
             value={selectedSesion}
             onValueChange={setSelectedSesion}
             error={getFieldError('sesionId')}
+            disabled={!selectedAtleta || isPending}
           />
+
+          {isPending && (
+            <p className="text-sm text-muted-foreground col-span-2">
+              Cargando sesiones del atleta...
+            </p>
+          )}
+
+          {!isPending && selectedAtleta && sesiones.length === 0 && (
+            <p className="text-sm text-amber-600 col-span-2">
+              Este atleta no tiene sesiones de entrenamiento, recuperacion o competencia asignadas.
+            </p>
+          )}
+
+          {/* Indicador de tipo de sesion seleccionada */}
+          {selectedSesion && sesionSeleccionada && (
+            <p className="text-sm text-muted-foreground col-span-2">
+              Tipo de sesion: <span className="font-medium">{sesionSeleccionada.tipoSesion.replace(/_/g, ' ')}</span>
+              {esCompetencia && (
+                <span className="ml-2 text-blue-600">(Formulario simplificado)</span>
+              )}
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -193,8 +245,8 @@ export function CreateRegistroForm({ atletas, sesiones }: CreateRegistroFormProp
         </CardContent>
       </Card>
 
-      {/* Solo mostrar secciones de ejecucion si asistio */}
-      {asistio && (
+      {/* Solo mostrar secciones de ejecucion si asistio Y NO es COMPETENCIA */}
+      {asistio && !esCompetencia && (
         <>
           {/* Seccion: Ejecucion */}
           <Card>
@@ -358,12 +410,15 @@ export function CreateRegistroForm({ atletas, sesiones }: CreateRegistroFormProp
             </CardContent>
           </Card>
 
-          {/* Seccion: Dolencias - usando useFieldArray */}
-          <DolenciasFieldArray
-            control={control}
-            register={register}
-          />
         </>
+      )}
+
+      {/* Seccion: Dolencias - se muestra siempre que asistio (incluido COMPETENCIA) */}
+      {asistio && (
+        <DolenciasFieldArray
+          control={control}
+          register={register}
+        />
       )}
 
       {/* Seccion: Observaciones */}

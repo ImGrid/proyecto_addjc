@@ -67,21 +67,36 @@ export async function createRegistro(
     }
 
     // Construir payload para el backend
+    // NOTA: Para sesiones tipo COMPETENCIA, los campos de entrenamiento pueden no estar presentes
     const payload: CreateRegistroPayload = {
       atletaId: validation.data.atletaId,
       sesionId: validation.data.sesionId,
       asistio: validation.data.asistio,
-      ejerciciosCompletados: validation.data.ejerciciosCompletados,
-      intensidadAlcanzada: validation.data.intensidadAlcanzada,
-      duracionReal: validation.data.duracionReal,
-      rpe: validation.data.rpe,
-      calidadSueno: validation.data.calidadSueno,
-      estadoAnimico: validation.data.estadoAnimico,
     };
 
     // Solo agregar campos opcionales que tengan valor
     if (validation.data.motivoInasistencia && validation.data.motivoInasistencia.trim() !== '') {
       payload.motivoInasistencia = validation.data.motivoInasistencia.trim();
+    }
+
+    // Campos de entrenamiento (opcionales para COMPETENCIA)
+    if (validation.data.ejerciciosCompletados !== undefined && validation.data.ejerciciosCompletados !== '') {
+      payload.ejerciciosCompletados = Number(validation.data.ejerciciosCompletados);
+    }
+    if (validation.data.intensidadAlcanzada !== undefined && validation.data.intensidadAlcanzada !== '') {
+      payload.intensidadAlcanzada = Number(validation.data.intensidadAlcanzada);
+    }
+    if (validation.data.duracionReal !== undefined && validation.data.duracionReal !== '') {
+      payload.duracionReal = Number(validation.data.duracionReal);
+    }
+    if (validation.data.rpe !== undefined && validation.data.rpe !== '') {
+      payload.rpe = Number(validation.data.rpe);
+    }
+    if (validation.data.calidadSueno !== undefined && validation.data.calidadSueno !== '') {
+      payload.calidadSueno = Number(validation.data.calidadSueno);
+    }
+    if (validation.data.estadoAnimico !== undefined && validation.data.estadoAnimico !== '') {
+      payload.estadoAnimico = Number(validation.data.estadoAnimico);
     }
 
     // Manejar horasSueno - puede ser numero o string vacio

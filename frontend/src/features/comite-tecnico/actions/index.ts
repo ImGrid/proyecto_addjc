@@ -14,7 +14,7 @@ export type { FetchAtletasParams } from './fetch-atletas';
 export { fetchEntrenadores, fetchEntrenador } from './fetch-entrenadores';
 export type { FetchEntrenadoresParams } from './fetch-entrenadores';
 
-// Planificacion (Macrociclos, Mesociclos, Microciclos, Asignaciones)
+// Planificacion (Macrociclos, Mesociclos, Microciclos, Asignaciones, Sesiones)
 export {
   fetchMacrociclos,
   fetchMacrociclo,
@@ -24,12 +24,18 @@ export {
   fetchMicrociclo,
   fetchAsignaciones,
   fetchAsignacion,
+  fetchSesiones,
+  fetchSesion,
+  fetchMicrociclosParaSelector,
 } from './fetch-planificacion';
 export type {
   FetchMacrociclosParams,
   FetchMesociclosParams,
   FetchMicrociclosParams,
   FetchAsignacionesParams,
+  FetchSesionesParams,
+  SesionCompleta,
+  MicrocicloParaSelector,
 } from './fetch-planificacion';
 
 // Tests Fisicos y Dolencias
@@ -54,6 +60,9 @@ export { createMicrociclo, updateMicrociclo, deleteMicrociclo } from './microcic
 
 // Acciones de escritura - Asignaciones
 export { createAsignacion, deleteAsignacion, toggleAsignacionActiva } from './asignacion.actions';
+
+// Acciones de escritura - Sesiones
+export { createSesion, updateSesion, deleteSesion } from './sesion.actions';
 
 // Acciones de escritura - Atletas
 export { createAtleta, updateAtleta, deleteAtleta } from './atleta.actions';

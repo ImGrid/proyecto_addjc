@@ -28,9 +28,11 @@ export interface SesionTemplate {
 export class SesionFactory {
   // Genera 7 sesiones para un microciclo basado en fechas
   // Patrón 3-1-2-1: 3 días carga + 1 recuperación + 2 carga + 1 recuperación
+  // esSemanaDeTeste: Si es true, el viernes sera sesion tipo TEST
   generateWeeklySessions(
     fechaInicio: Date,
     objetivoSemanal: string,
+    esSemanaDeTeste: boolean = false,
   ): SesionTemplate[] {
     const sessions: SesionTemplate[] = [];
     const diasSemana: DiaSemana[] = [
@@ -85,13 +87,29 @@ export class SesionFactory {
           break;
 
         case 'JUEVES':
-        case 'VIERNES':
-          // Días de carga moderada-alta
+          // Día de carga moderada-alta
           tipoSesion = 'ENTRENAMIENTO';
           duracionPlanificada = 100; // 1h 40min
           volumenPlanificado = 70;
           intensidadPlanificada = 70;
           relacionVI = 'MEDIO-MEDIO';
+          break;
+
+        case 'VIERNES':
+          // Si es semana de test, el viernes es sesion de evaluacion fisica
+          if (esSemanaDeTeste) {
+            tipoSesion = 'TEST';
+            duracionPlanificada = 90; // 1h 30min para evaluaciones
+            volumenPlanificado = 50;
+            intensidadPlanificada = 100; // Test al maximo esfuerzo
+            relacionVI = 'BAJO-ALTO';
+          } else {
+            tipoSesion = 'ENTRENAMIENTO';
+            duracionPlanificada = 100;
+            volumenPlanificado = 70;
+            intensidadPlanificada = 70;
+            relacionVI = 'MEDIO-MEDIO';
+          }
           break;
 
         case 'SABADO':

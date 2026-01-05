@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  ConflictException,
 } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { PrismaService } from '../../../database/prisma.service';
@@ -55,7 +56,67 @@ export class TestsFisicosService {
         );
       }
 
-      // 3. Calcular valores automaticos
+      // 3. Obtener la sesion y validar que existe
+      const sesionId = BigInt(dto.sesionId);
+      const sesion = await tx.sesion.findUnique({
+        where: { id: sesionId },
+        select: {
+          id: true,
+          fecha: true,
+          microcicloId: true,
+          tipoSesion: true,
+          microciclo: {
+            select: {
+              id: true,
+              numeroGlobalMicrociclo: true,
+            },
+          },
+        },
+      });
+
+      if (!sesion) {
+        throw new NotFoundException(
+          `La sesion con ID ${sesionId} no existe`,
+        );
+      }
+
+      // Validar que la sesion sea de tipo TEST
+      if (sesion.tipoSesion !== 'TEST') {
+        throw new BadRequestException(
+          `Solo se pueden registrar tests fisicos en sesiones de tipo TEST. La sesion ${sesionId} es de tipo ${sesion.tipoSesion}`,
+        );
+      }
+
+      // 4. Validar que el atleta esta asignado al microciclo de la sesion
+      const asignacion = await tx.asignacionAtletaMicrociclo.findFirst({
+        where: {
+          atletaId: atletaId,
+          microcicloId: sesion.microcicloId,
+          activa: true,
+        },
+      });
+
+      if (!asignacion) {
+        throw new BadRequestException(
+          `El atleta no esta asignado al microciclo ${sesion.microciclo?.numeroGlobalMicrociclo || sesion.microcicloId} de esta sesion`,
+        );
+      }
+
+      // 5. Validar relacion 1:1 - solo un test por sesion/atleta
+      const testExistente = await tx.testFisico.findFirst({
+        where: {
+          sesionId: sesion.id,
+          atletaId: atletaId,
+        },
+      });
+
+      if (testExistente) {
+        throw new ConflictException(
+          `Ya existe un test fisico para este atleta en la sesion ${sesion.id}`,
+        );
+      }
+
+      // 6. Calcular valores automaticos
 
       // VO2max desde Navette (Formula: 30 + palier × 2)
       const navetteVO2max = dto.navettePalier
@@ -98,14 +159,33 @@ export class TestsFisicosService {
             )
           : null;
 
-      // 4. Crear el test fisico
+      // Normalizar test1500m a formato ISO valido para PostgreSQL TIME
+      let test1500mDate: Date | null = null;
+      if (dto.test1500m) {
+        const segundos = this.calculations.parseTimeToSeconds(dto.test1500m);
+        if (segundos !== null) {
+          // Convertir segundos a formato HH:MM:SS con ceros
+          const horas = Math.floor(segundos / 3600);
+          const minutos = Math.floor((segundos % 3600) / 60);
+          const segs = segundos % 60;
+          const tiempoISO = `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:${segs.toString().padStart(2, '0')}`;
+          test1500mDate = new Date(`1970-01-01T${tiempoISO}`);
+        }
+      }
+
+      // 7. Crear el test fisico
+      // fechaTest y microcicloId se derivan de la sesion
       const test = await tx.testFisico.create({
         data: {
           atletaId,
           entrenadorRegistroId,
-          sesionId: dto.sesionId ? BigInt(dto.sesionId) : null,
-          microcicloId: dto.microcicloId ? BigInt(dto.microcicloId) : null,
-          fechaTest: new Date(dto.fechaTest),
+          sesionId: sesion.id,
+          microcicloId: sesion.microcicloId,
+          fechaTest: sesion.fecha,
+
+          // Asistencia (default true si no se proporciona)
+          asistio: dto.asistio ?? true,
+          motivoInasistencia: dto.motivoInasistencia,
 
           // Tests de fuerza maxima
           pressBanca: dto.pressBanca,
@@ -122,8 +202,8 @@ export class TestsFisicosService {
           // Tests de resistencia aerobica
           navettePalier: dto.navettePalier,
           navetteVO2max,
-          test1500m: dto.test1500m ? new Date(`1970-01-01T${dto.test1500m}`) : null,
-          test1500mVO2max: null, // TODO: implementar formula si se requiere
+          test1500m: test1500mDate,
+          test1500mVO2max: null,
 
           // Observaciones
           observaciones: dto.observaciones,
@@ -160,7 +240,7 @@ export class TestsFisicosService {
         },
       });
 
-      // 5. Formatear respuesta con clasificacion VO2max
+      // 8. Formatear respuesta con clasificacion VO2max
       return this.formatResponse(test);
     });
   }
@@ -712,6 +792,10 @@ export class TestsFisicosService {
       sesionId: test.sesionId?.toString() || null,
       microcicloId: test.microcicloId?.toString() || null,
       fechaTest: test.fechaTest,
+
+      // Asistencia
+      asistio: test.asistio,
+      motivoInasistencia: test.motivoInasistencia,
 
       // Tests de fuerza maxima
       pressBanca: test.pressBanca ? test.pressBanca.toString() : null,

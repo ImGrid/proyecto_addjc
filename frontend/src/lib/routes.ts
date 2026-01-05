@@ -41,6 +41,14 @@ export const COMITE_TECNICO_ROUTES = {
       editar: (id: string | number) => `/comite-tecnico/planificacion/microciclos/${id}/editar`,
     },
   },
+
+  // Sesiones
+  sesiones: {
+    list: '/comite-tecnico/sesiones',
+    nuevo: '/comite-tecnico/sesiones/nuevo',
+    detalle: (id: string | number) => `/comite-tecnico/sesiones/${id}`,
+    editar: (id: string | number) => `/comite-tecnico/sesiones/${id}/editar`,
+  },
 } as const;
 
 // Rutas del Entrenador
@@ -52,6 +60,14 @@ export const ENTRENADOR_ROUTES = {
   misAtletas: {
     list: '/entrenador/mis-atletas',
     detalle: (atletaId: string | number) => `/entrenador/mis-atletas/${atletaId}`,
+  },
+
+  // Sesiones
+  sesiones: {
+    list: '/entrenador/sesiones',
+    nuevo: '/entrenador/sesiones/nuevo',
+    detalle: (id: string | number) => `/entrenador/sesiones/${id}`,
+    editar: (id: string | number) => `/entrenador/sesiones/${id}/editar`,
   },
 
   // Tests Fisicos

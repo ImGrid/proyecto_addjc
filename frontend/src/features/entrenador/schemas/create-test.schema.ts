@@ -2,17 +2,18 @@ import { z } from 'zod';
 
 // Schema para crear un test fisico
 // Basado en: backend/src/modules/testing/dto/create-test-fisico.dto.ts
-// Nota: Zod 4 no soporta required_error/invalid_type_error como en Zod 3
+// IMPORTANTE: sesionId es REQUERIDO. fechaTest y microcicloId se derivan de la sesion en el backend
 export const createTestSchema = z.object({
   // IDs de relaciones
   atletaId: z.coerce.number().int().positive('El ID del atleta debe ser positivo'),
 
-  sesionId: z.coerce.number().int().positive().optional(),
+  // sesionId es REQUERIDO - la fecha y microciclo se derivan automaticamente de la sesion
+  sesionId: z.coerce.number().int().positive('Debes seleccionar una sesion'),
 
-  microcicloId: z.coerce.number().int().positive().optional(),
+  // Asistencia
+  asistio: z.coerce.boolean().default(true),
 
-  // Fecha del test (requerido por el backend)
-  fechaTest: z.string().min(1, 'La fecha del test es requerida'),
+  motivoInasistencia: z.string().max(500, 'El motivo no puede exceder 500 caracteres').optional(),
 
   // Tests de fuerza maxima (1RM) - kg
   pressBanca: z.union([
@@ -47,7 +48,13 @@ export const createTestSchema = z.object({
     z.literal(''),
   ]).optional(),
 
-  test1500m: z.string().max(10, 'Formato invalido para test 1500m').optional(),
+  test1500m: z.string()
+    .max(10, 'Formato invalido para test 1500m')
+    .regex(/^(\d{1,2}):([0-5]\d)(:([0-5]\d))?$/, {
+      message: 'Formato invalido. Usa MM:SS o HH:MM:SS (ej: 05:30)',
+    })
+    .optional()
+    .or(z.literal('')),
 
   // Observaciones
   observaciones: z.string().max(1000, 'Las observaciones no pueden exceder 1000 caracteres').optional(),
@@ -55,7 +62,12 @@ export const createTestSchema = z.object({
   condicionesTest: z.string().max(500, 'Las condiciones del test no pueden exceder 500 caracteres').optional(),
 }).refine(
   (data) => {
-    // Al menos un test debe tener valor
+    // Si no asistio, no se requieren tests
+    if (!data.asistio) {
+      return true;
+    }
+
+    // Si asistio, al menos un test debe tener valor
     const hasPressBanca = data.pressBanca !== undefined && data.pressBanca !== '';
     const hasTiron = data.tiron !== undefined && data.tiron !== '';
     const hasSentadilla = data.sentadilla !== undefined && data.sentadilla !== '';
@@ -71,16 +83,29 @@ export const createTestSchema = z.object({
     message: 'Debes completar al menos un tipo de test',
     path: ['_form'],
   }
+).refine(
+  (data) => {
+    // Si no asistio, motivoInasistencia es requerido
+    if (!data.asistio && (!data.motivoInasistencia || data.motivoInasistencia.trim() === '')) {
+      return false;
+    }
+    return true;
+  },
+  {
+    message: 'Debes indicar el motivo de inasistencia',
+    path: ['motivoInasistencia'],
+  }
 );
 
 export type CreateTestInput = z.infer<typeof createTestSchema>;
 
 // Tipo para enviar al backend (limpiando strings vacios)
+// NOTA: fechaTest y microcicloId se derivan de la sesion en el backend
 export type CreateTestPayload = {
   atletaId: number;
-  fechaTest: string;
-  sesionId?: number;
-  microcicloId?: number;
+  sesionId: number;
+  asistio: boolean;
+  motivoInasistencia?: string;
   pressBanca?: number;
   tiron?: number;
   sentadilla?: number;

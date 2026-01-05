@@ -41,7 +41,9 @@ export class RegistroPostEntrenamientoService {
       // 1. Verificar que la sesion existe
       const sesion = await tx.sesion.findUnique({
         where: { id: sesionId },
-        include: {
+        select: {
+          id: true,
+          tipoSesion: true,
           microciclo: {
             select: {
               id: true,
@@ -57,6 +59,41 @@ export class RegistroPostEntrenamientoService {
         throw new NotFoundException(
           `La sesion con ID ${sesionId} no existe`,
         );
+      }
+
+      // Validar que la sesion sea de tipo ENTRENAMIENTO, RECUPERACION o COMPETENCIA
+      const tiposPermitidos = ['ENTRENAMIENTO', 'RECUPERACION', 'COMPETENCIA'];
+      if (!tiposPermitidos.includes(sesion.tipoSesion)) {
+        throw new BadRequestException(
+          `Solo se pueden registrar post-entrenamientos en sesiones de tipo ENTRENAMIENTO, RECUPERACION o COMPETENCIA. La sesion ${sesionId} es de tipo ${sesion.tipoSesion}`,
+        );
+      }
+
+      // Validar campos requeridos segun tipo de sesion
+      // Para COMPETENCIA: solo asistio, motivoInasistencia, dolencias, observaciones
+      // Para ENTRENAMIENTO/RECUPERACION: todos los campos de entrenamiento son requeridos
+      const esCompetencia = sesion.tipoSesion === 'COMPETENCIA';
+
+      if (!esCompetencia && dto.asistio) {
+        // Si asistio y NO es competencia, validar campos de entrenamiento
+        if (dto.ejerciciosCompletados === undefined || dto.ejerciciosCompletados === null) {
+          throw new BadRequestException('ejerciciosCompletados es requerido para sesiones de entrenamiento');
+        }
+        if (dto.intensidadAlcanzada === undefined || dto.intensidadAlcanzada === null) {
+          throw new BadRequestException('intensidadAlcanzada es requerido para sesiones de entrenamiento');
+        }
+        if (dto.duracionReal === undefined || dto.duracionReal === null) {
+          throw new BadRequestException('duracionReal es requerido para sesiones de entrenamiento');
+        }
+        if (dto.rpe === undefined || dto.rpe === null) {
+          throw new BadRequestException('rpe es requerido para sesiones de entrenamiento');
+        }
+        if (dto.calidadSueno === undefined || dto.calidadSueno === null) {
+          throw new BadRequestException('calidadSueno es requerido para sesiones de entrenamiento');
+        }
+        if (dto.estadoAnimico === undefined || dto.estadoAnimico === null) {
+          throw new BadRequestException('estadoAnimico es requerido para sesiones de entrenamiento');
+        }
       }
 
       // 2. Validar que el atleta existe
@@ -75,7 +112,22 @@ export class RegistroPostEntrenamientoService {
         );
       }
 
-      // 3. Validar relacion 1:1 - solo un registro por sesion/atleta
+      // 3. Validar que el atleta esta asignado al microciclo de la sesion
+      const asignacion = await tx.asignacionAtletaMicrociclo.findFirst({
+        where: {
+          atletaId: atletaId,
+          microcicloId: sesion.microciclo?.id,
+          activa: true,
+        },
+      });
+
+      if (!asignacion) {
+        throw new BadRequestException(
+          `El atleta ${atleta.usuario.nombreCompleto} no esta asignado al microciclo ${sesion.microciclo?.numeroGlobalMicrociclo || 'desconocido'} de esta sesion`,
+        );
+      }
+
+      // 4. Validar relacion 1:1 - solo un registro por sesion/atleta
       const registroExistente = await tx.registroPostEntrenamiento.findFirst({
         where: {
           sesionId: sesionId,
@@ -89,7 +141,8 @@ export class RegistroPostEntrenamientoService {
         );
       }
 
-      // 4. Crear el registro con dolencias anidadas (si existen)
+      // 5. Crear el registro con dolencias anidadas (si existen)
+      // Para COMPETENCIA: usar valores por defecto en campos de entrenamiento
       const registro = await tx.registroPostEntrenamiento.create({
         data: {
           atletaId,
@@ -97,13 +150,16 @@ export class RegistroPostEntrenamientoService {
           entrenadorRegistroId,
           asistio: dto.asistio,
           motivoInasistencia: dto.motivoInasistencia,
-          ejerciciosCompletados: dto.ejerciciosCompletados,
-          intensidadAlcanzada: dto.intensidadAlcanzada,
-          duracionReal: dto.duracionReal,
-          rpe: dto.rpe,
-          calidadSueno: dto.calidadSueno,
+          // Campos de entrenamiento: usar valores del DTO o valores por defecto para COMPETENCIA
+          // Para COMPETENCIA: usar valores minimos validos (CHECK constraints requieren >= 1)
+          // Para ENTRENAMIENTO/RECUPERACION: ya validamos que existen
+          ejerciciosCompletados: esCompetencia ? (dto.ejerciciosCompletados ?? 0) : (dto.ejerciciosCompletados ?? 0),
+          intensidadAlcanzada: esCompetencia ? (dto.intensidadAlcanzada ?? 0) : (dto.intensidadAlcanzada ?? 0),
+          duracionReal: esCompetencia ? (dto.duracionReal ?? 1) : (dto.duracionReal ?? 1),
+          rpe: esCompetencia ? (dto.rpe ?? 1) : (dto.rpe ?? 1),
+          calidadSueno: esCompetencia ? (dto.calidadSueno ?? 1) : (dto.calidadSueno ?? 1),
           horasSueno: dto.horasSueno,
-          estadoAnimico: dto.estadoAnimico,
+          estadoAnimico: esCompetencia ? (dto.estadoAnimico ?? 1) : (dto.estadoAnimico ?? 1),
           observaciones: dto.observaciones,
           // Crear dolencias anidadas si existen
           dolencias: dto.dolencias
@@ -149,7 +205,7 @@ export class RegistroPostEntrenamientoService {
         },
       });
 
-      // 5. Formatear respuesta con BigInt convertidos a string
+      // 6. Formatear respuesta con BigInt convertidos a string
       return this.formatResponse(registro);
     });
   }

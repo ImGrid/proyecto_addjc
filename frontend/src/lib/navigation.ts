@@ -16,6 +16,7 @@ import {
   Layers,
   CalendarDays,
   CalendarRange,
+  CalendarClock,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { RolUsuario } from '@/types/auth';
@@ -97,6 +98,11 @@ export const navigationConfig: Record<RolUsuario, NavigationItem[]> = {
       icon: Link,
     },
     {
+      href: '/comite-tecnico/sesiones',
+      label: 'Sesiones',
+      icon: CalendarClock,
+    },
+    {
       href: '/comite-tecnico/tests-fisicos',
       label: 'Tests Fisicos',
       icon: Clipboard,
@@ -133,6 +139,11 @@ export const navigationConfig: Record<RolUsuario, NavigationItem[]> = {
       href: '/entrenador/mis-atletas',
       label: 'Mis Atletas',
       icon: Trophy,
+    },
+    {
+      href: '/entrenador/sesiones',
+      label: 'Sesiones',
+      icon: CalendarClock,
     },
     {
       href: '/entrenador/tests-fisicos',

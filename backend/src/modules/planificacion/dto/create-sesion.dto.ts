@@ -59,16 +59,19 @@ export class CreateSesionDto {
   // Planificación
   @IsInt()
   @Min(1)
-  duracionPlanificada!: number; // En minutos
+  duracionPlanificada!: number; // En minutos (requerido siempre)
 
+  // Opcionales para COMPETENCIA/DESCANSO
   @IsInt()
   @Min(0)
-  volumenPlanificado!: number;
+  @IsOptional()
+  volumenPlanificado?: number;
 
   @IsInt()
   @Min(0)
   @Max(100)
-  intensidadPlanificada!: number; // Porcentaje
+  @IsOptional()
+  intensidadPlanificada?: number; // Porcentaje
 
   @IsInt()
   @Min(40)
@@ -77,9 +80,9 @@ export class CreateSesionDto {
   fcObjetivo?: number; // Frecuencia cardíaca objetivo
 
   @IsString()
-  @IsNotEmpty()
   @MaxLength(20)
-  relacionVI!: string; // Relación volumen-intensidad
+  @IsOptional()
+  relacionVI?: string; // Relación volumen-intensidad
 
   @IsString()
   @MaxLength(50)
@@ -103,18 +106,18 @@ export class CreateSesionDto {
   @IsOptional()
   intensidadReal?: number;
 
-  // Contenidos
+  // Contenidos (opcionales para COMPETENCIA/DESCANSO)
   @IsString()
-  @IsNotEmpty()
-  contenidoFisico!: string;
+  @IsOptional()
+  contenidoFisico?: string;
 
   @IsString()
-  @IsNotEmpty()
-  contenidoTecnico!: string;
+  @IsOptional()
+  contenidoTecnico?: string;
 
   @IsString()
-  @IsNotEmpty()
-  contenidoTactico!: string;
+  @IsOptional()
+  contenidoTactico?: string;
 
   // Estructura de sesión (opcionales)
   @IsString()
