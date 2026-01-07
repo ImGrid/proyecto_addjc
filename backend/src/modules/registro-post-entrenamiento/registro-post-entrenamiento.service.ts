@@ -117,7 +117,6 @@ export class RegistroPostEntrenamientoService {
         where: {
           atletaId: atletaId,
           microcicloId: sesion.microciclo?.id,
-          activa: true,
         },
       });
 

@@ -92,7 +92,6 @@ export class TestsFisicosService {
         where: {
           atletaId: atletaId,
           microcicloId: sesion.microcicloId,
-          activa: true,
         },
       });
 
