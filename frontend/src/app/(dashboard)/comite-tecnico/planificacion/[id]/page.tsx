@@ -13,6 +13,8 @@ import {
   Edit,
   User,
 } from 'lucide-react';
+import { DeleteMacrocicloButton } from './delete-button';
+import { formatDateLocale, formatDateShort } from '@/lib/date-utils';
 
 // Mapeo de estados a variantes de badge
 const estadoVariants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
@@ -42,12 +44,12 @@ export default async function MacrocicloDetallePage({ params }: MacrocicloDetall
   const mesociclos = mesociclosResult?.data || [];
 
   // Formatear fechas
-  const fechaInicio = new Date(macrociclo.fechaInicio).toLocaleDateString('es-ES', {
+  const fechaInicio = formatDateLocale(macrociclo.fechaInicio, {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
   });
-  const fechaFin = new Date(macrociclo.fechaFin).toLocaleDateString('es-ES', {
+  const fechaFin = formatDateLocale(macrociclo.fechaFin, {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
@@ -74,12 +76,18 @@ export default async function MacrocicloDetallePage({ params }: MacrocicloDetall
             <p className="text-muted-foreground">{macrociclo.temporada} - {macrociclo.equipo}</p>
           </div>
         </div>
-        <Button asChild>
-          <Link href={`/comite-tecnico/planificacion/${id}/editar`}>
-            <Edit className="mr-2 h-4 w-4" />
-            Editar
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild>
+            <Link href={`/comite-tecnico/planificacion/${id}/editar`}>
+              <Edit className="mr-2 h-4 w-4" />
+              Editar
+            </Link>
+          </Button>
+          <DeleteMacrocicloButton
+            macrocicloId={id}
+            macrocicloNombre={macrociclo.nombre}
+          />
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -191,14 +199,8 @@ export default async function MacrocicloDetallePage({ params }: MacrocicloDetall
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {mesociclos.map((mesociclo) => {
-                const mesoInicio = new Date(mesociclo.fechaInicio).toLocaleDateString('es-ES', {
-                  day: '2-digit',
-                  month: 'short',
-                });
-                const mesoFin = new Date(mesociclo.fechaFin).toLocaleDateString('es-ES', {
-                  day: '2-digit',
-                  month: 'short',
-                });
+                const mesoInicio = formatDateShort(mesociclo.fechaInicio);
+                const mesoFin = formatDateShort(mesociclo.fechaFin);
 
                 return (
                   <Link

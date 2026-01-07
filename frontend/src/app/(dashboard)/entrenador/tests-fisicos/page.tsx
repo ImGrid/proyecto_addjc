@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ClipboardList, Plus, Calendar } from 'lucide-react';
 import { AUTH_ROUTES } from '@/lib/routes';
+import { formatDateFull } from '@/lib/date-utils';
 
 export default async function TestsFisicosPage() {
   // Verificar autenticacion
@@ -62,14 +63,7 @@ export default async function TestsFisicosPage() {
                 <CardTitle className="text-base flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span>
-                      {new Date(test.fechaTest).toLocaleDateString('es-ES', {
-                        weekday: 'long',
-                        day: '2-digit',
-                        month: 'long',
-                        year: 'numeric',
-                      })}
-                    </span>
+                    <span>{formatDateFull(test.fechaTest)}</span>
                   </div>
                   {test.atleta && (
                     <Badge variant="outline">{test.atleta.nombreCompleto}</Badge>

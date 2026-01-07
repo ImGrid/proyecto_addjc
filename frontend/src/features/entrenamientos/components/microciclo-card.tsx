@@ -2,16 +2,13 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Microciclo } from '../types/planificacion.types';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { formatDateShort, formatDateMedium } from '@/lib/date-utils';
 
 interface MicrocicloCardProps {
   microciclo: Microciclo;
 }
 
 export function MicrocicloCard({ microciclo }: MicrocicloCardProps) {
-  const fechaInicio = new Date(microciclo.fechaInicio);
-  const fechaFin = new Date(microciclo.fechaFin);
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -23,7 +20,7 @@ export function MicrocicloCard({ microciclo }: MicrocicloCardProps) {
           <Badge variant="outline">{microciclo.tipoMicrociclo}</Badge>
         </div>
         <p className="text-sm text-muted-foreground">
-          {format(fechaInicio, 'dd MMM', { locale: es })} - {format(fechaFin, 'dd MMM yyyy', { locale: es })}
+          {formatDateShort(microciclo.fechaInicio)} - {formatDateMedium(microciclo.fechaFin)}
         </p>
       </CardHeader>
 
@@ -61,7 +58,7 @@ export function MicrocicloCard({ microciclo }: MicrocicloCardProps) {
                     <div>
                       <p className="text-sm font-medium">{sesion.diaSemana}</p>
                       <p className="text-xs text-muted-foreground">
-                        {format(new Date(sesion.fecha), 'dd MMM', { locale: es })}
+                        {formatDateShort(sesion.fecha)}
                       </p>
                     </div>
                     <Badge variant="secondary" className="text-xs">

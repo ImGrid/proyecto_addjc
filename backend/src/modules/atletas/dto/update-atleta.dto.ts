@@ -1,4 +1,4 @@
-import { IsString, IsInt, IsEnum, IsOptional, IsDateString, MinLength, MaxLength, Min, IsNumber } from 'class-validator';
+import { IsString, IsInt, IsEnum, IsOptional, IsDateString, MinLength, MaxLength, Min, IsNumber, IsBoolean } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { CategoriaPeso } from '@prisma/client';
 
@@ -56,4 +56,10 @@ export class UpdateAtletaDto {
   @IsInt()
   @IsOptional()
   fcReposo?: number;
+
+  // Estado del atleta (para activar/desactivar)
+  // Este campo actualiza el estado del usuario asociado
+  @IsBoolean()
+  @IsOptional()
+  estado?: boolean;
 }

@@ -9,7 +9,6 @@ import {
   Query,
   UseGuards,
   ParseIntPipe,
-  ParseBoolPipe,
 } from '@nestjs/common';
 import { AsignacionesService } from './asignaciones.service';
 import { CreateAsignacionDto, UpdateAsignacionDto } from './dto';
@@ -36,17 +35,10 @@ export class AsignacionesController {
   findAll(
     @Query('atletaId') atletaId?: string,
     @Query('microcicloId') microcicloId?: string,
-    @Query('activa', new ParseBoolPipe({ optional: true })) activa?: boolean,
     @Query('page', new ParseIntPipe({ optional: true })) page = 1,
     @Query('limit', new ParseIntPipe({ optional: true })) limit = 10,
   ) {
-    return this.asignacionesService.findAll(
-      atletaId,
-      microcicloId,
-      activa,
-      page,
-      limit,
-    );
+    return this.asignacionesService.findAll(atletaId, microcicloId, page, limit);
   }
 
   // GET /api/asignaciones/:id - Obtener asignacion por ID (solo COMITE_TECNICO)
@@ -63,7 +55,7 @@ export class AsignacionesController {
     return this.asignacionesService.update(id, updateDto);
   }
 
-  // DELETE /api/asignaciones/:id - Desactivar asignacion (solo COMITE_TECNICO)
+  // DELETE /api/asignaciones/:id - Eliminar asignacion (solo COMITE_TECNICO)
   @Delete(':id')
   @Roles('COMITE_TECNICO')
   remove(@Param('id') id: string) {

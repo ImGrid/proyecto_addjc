@@ -149,9 +149,13 @@ export async function deleteAsignacion(id: string): Promise<ActionResult> {
   }
 }
 
-// Server Action para desactivar una asignacion (soft delete)
+// Server Action para actualizar una asignacion (solo observaciones)
 // Endpoint: PATCH /api/asignaciones/:id
-export async function toggleAsignacionActiva(id: string, activa: boolean): Promise<ActionResult> {
+export async function updateAsignacion(
+  id: string,
+  prevState: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('accessToken')?.value;
@@ -163,18 +167,20 @@ export async function toggleAsignacionActiva(id: string, activa: boolean): Promi
       };
     }
 
+    const observaciones = formData.get('observaciones') as string | null;
+
     const response = await fetch(`${API_URL}/asignaciones/${id}`, {
       method: 'PATCH',
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ activa }),
+      body: JSON.stringify({ observaciones: observaciones || null }),
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
-      console.error('[toggleAsignacionActiva] Error:', response.status, errorData);
+      console.error('[updateAsignacion] Error:', response.status, errorData);
 
       return {
         success: false,
@@ -182,15 +188,19 @@ export async function toggleAsignacionActiva(id: string, activa: boolean): Promi
       };
     }
 
+    const result = await response.json();
+    console.log('[updateAsignacion] Asignacion actualizada:', result.id);
+
     revalidatePath('/comite-tecnico/asignaciones');
+    revalidatePath(`/comite-tecnico/asignaciones/${id}`);
 
     return {
       success: true,
-      data: undefined,
-      message: activa ? 'Asignacion activada' : 'Asignacion desactivada',
+      data: result,
+      message: 'Asignacion actualizada correctamente',
     };
   } catch (error) {
-    console.error('[toggleAsignacionActiva] Error:', error);
+    console.error('[updateAsignacion] Error:', error);
     return {
       success: false,
       error: 'Error de conexion. Intenta nuevamente.',

@@ -4,6 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { MicrocicloType } from '../../types/planificacion.types';
 import { Calendar, Target, ArrowRight, Activity, Gauge } from 'lucide-react';
+import { formatDateLocale } from '@/lib/date-utils';
+import { COMITE_TECNICO_ROUTES } from '@/lib/routes';
 
 interface MicrocicloCardProps {
   microciclo: MicrocicloType;
@@ -20,16 +22,8 @@ const tipoVariants: Record<string, 'default' | 'secondary' | 'destructive' | 'ou
 
 // Card de microciclo para COMITE_TECNICO
 export function MicrocicloCard({ microciclo }: MicrocicloCardProps) {
-  const fechaInicio = new Date(microciclo.fechaInicio).toLocaleDateString('es-ES', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-  const fechaFin = new Date(microciclo.fechaFin).toLocaleDateString('es-ES', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
+  const fechaInicio = formatDateLocale(microciclo.fechaInicio);
+  const fechaFin = formatDateLocale(microciclo.fechaFin);
 
   return (
     <Card>
@@ -92,7 +86,7 @@ export function MicrocicloCard({ microciclo }: MicrocicloCardProps) {
 
         <div className="flex justify-end pt-2">
           <Button variant="ghost" size="sm" asChild>
-            <Link href={`/comite-tecnico/planificacion/microciclos/${microciclo.id}`}>
+            <Link href={COMITE_TECNICO_ROUTES.planificacion.microciclos.detalle(microciclo.id)}>
               Ver detalle
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>

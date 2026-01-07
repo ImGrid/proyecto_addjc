@@ -68,17 +68,7 @@ export const createSesionSchema = z.object({
     .optional()
     .or(z.literal('')),
 
-  // FC objetivo (opcional)
-  fcObjetivo: z.coerce.number().int().min(40).max(220).optional().or(z.literal('')),
-
-  // Relacion volumen-intensidad (opcional para COMPETENCIA/DESCANSO)
-  relacionVI: z.string().max(20).optional().or(z.literal('')),
-
-  // Zona de esfuerzo (opcional)
-  zonaEsfuerzo: z.string().max(50).optional(),
-
-  // Datos reales (opcionales, se llenan despues)
-  duracionReal: z.coerce.number().int().min(0).optional(),
+  // Datos reales (opcionales, usados por algoritmo de recomendacion)
   volumenReal: z.coerce.number().int().min(0).optional(),
   intensidadReal: z.coerce.number().int().min(0).max(100).optional(),
 
@@ -113,10 +103,6 @@ export const updateSesionSchema = z.object({
   duracionPlanificada: z.coerce.number().int().min(1).optional(),
   volumenPlanificado: z.coerce.number().int().min(0).optional(),
   intensidadPlanificada: z.coerce.number().int().min(0).max(100).optional(),
-  fcObjetivo: z.coerce.number().int().min(40).max(220).optional(),
-  relacionVI: z.string().max(20).optional(),
-  zonaEsfuerzo: z.string().max(50).optional(),
-  duracionReal: z.coerce.number().int().min(0).optional(),
   volumenReal: z.coerce.number().int().min(0).optional(),
   intensidadReal: z.coerce.number().int().min(0).max(100).optional(),
   contenidoFisico: z.string().optional(),

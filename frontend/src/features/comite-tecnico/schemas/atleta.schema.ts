@@ -75,6 +75,9 @@ export const updateAtletaSchema = z.object({
   entrenadorAsignadoId: z.string().optional(),
   pesoActual: z.coerce.number().positive('Peso actual debe ser positivo').optional(),
   fcReposo: z.coerce.number().int().positive('FC reposo debe ser positivo').optional(),
+
+  // Estado del atleta (para activar/desactivar)
+  estado: z.boolean().optional(),
 });
 
 export type UpdateAtletaInput = z.infer<typeof updateAtletaSchema>;

@@ -103,7 +103,6 @@ export class MicrociclosService {
         duracionPlanificada: template.duracionPlanificada,
         volumenPlanificado: template.volumenPlanificado,
         intensidadPlanificada: template.intensidadPlanificada,
-        relacionVI: template.relacionVI,
         contenidoFisico: template.contenidoFisico,
         contenidoTecnico: template.contenidoTecnico,
         contenidoTactico: template.contenidoTactico,
@@ -292,7 +291,6 @@ export class MicrociclosService {
         where: {
           microcicloId: microciclo.id,
           atletaId: atletaId,
-          activa: true,
         },
       });
 
@@ -397,14 +395,19 @@ export class MicrociclosService {
     return this.formatMicrocicloResponse(microciclo);
   }
 
-  // Eliminar un microciclo
-  // Las sesiones se eliminan automáticamente por onDelete: Cascade
-  @Transactional()
-  async remove(id: string): Promise<{ message: string }> {
+  // Obtener informacion de eliminacion (conteo de registros hijos)
+  // Usado por el frontend para mostrar advertencia antes de eliminar
+  async getDeleteInfo(id: string): Promise<{
+    numeroMicrociclo: number | null;
+    sesiones: number;
+  }> {
     const microciclo = await this.prisma.microciclo.findUnique({
       where: { id: BigInt(id) },
-      include: {
-        sesiones: true,
+      select: {
+        numeroMicrociclo: true,
+        _count: {
+          select: { sesiones: true },
+        },
       },
     });
 
@@ -412,13 +415,33 @@ export class MicrociclosService {
       throw new NotFoundException('Microciclo no encontrado');
     }
 
-    // Eliminar (las sesiones se eliminan en cascada)
+    return {
+      numeroMicrociclo: microciclo.numeroMicrociclo,
+      sesiones: microciclo._count.sesiones,
+    };
+  }
+
+  // Eliminar un microciclo (hard delete con cascade)
+  // Las sesiones se eliminan automaticamente por CASCADE
+  @Transactional()
+  async remove(id: string): Promise<{ message: string; deleted: { sesiones: number } }> {
+    // Obtener conteos antes de eliminar
+    const deleteInfo = await this.getDeleteInfo(id);
+
+    // Eliminar (cascade elimina sesiones)
     await this.prisma.microciclo.delete({
       where: { id: BigInt(id) },
     });
 
+    const microcicloLabel = deleteInfo.numeroMicrociclo
+      ? `#${deleteInfo.numeroMicrociclo}`
+      : `ID ${id}`;
+
     return {
-      message: `Microciclo y sus ${microciclo.sesiones.length} sesiones eliminados permanentemente`,
+      message: `Microciclo ${microcicloLabel} eliminado permanentemente`,
+      deleted: {
+        sesiones: deleteInfo.sesiones,
+      },
     };
   }
 

@@ -305,48 +305,6 @@ export function CreateSesionForm({ microciclos, redirectUrl }: CreateSesionFormP
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="relacionVI">Relacion V/I *</Label>
-                <Input
-                  type="text"
-                  id="relacionVI"
-                  name="relacionVI"
-                  placeholder="1:1"
-                  maxLength={20}
-                  defaultValue={getPreviousValue('relacionVI')}
-                  className={getFieldError('relacionVI') ? 'border-destructive' : ''}
-                />
-                {getFieldError('relacionVI') && (
-                  <p className="text-sm text-destructive">{getFieldError('relacionVI')}</p>
-                )}
-                <p className="text-xs text-muted-foreground">Ej: 1:1, 2:1, 1:2</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="fcObjetivo">FC Objetivo (opcional)</Label>
-                <Input
-                  type="number"
-                  id="fcObjetivo"
-                  name="fcObjetivo"
-                  min="40"
-                  max="220"
-                  placeholder="150"
-                  defaultValue={getPreviousValue('fcObjetivo')}
-                />
-                <p className="text-xs text-muted-foreground">Frecuencia cardiaca objetivo (40-220)</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="zonaEsfuerzo">Zona de Esfuerzo (opcional)</Label>
-                <Input
-                  type="text"
-                  id="zonaEsfuerzo"
-                  name="zonaEsfuerzo"
-                  placeholder="Z3 - Aerobico"
-                  maxLength={50}
-                  defaultValue={getPreviousValue('zonaEsfuerzo')}
-                />
-              </div>
             </>
           )}
         </CardContent>

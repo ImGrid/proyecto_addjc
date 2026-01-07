@@ -12,6 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ClipboardList, Eye } from 'lucide-react';
+import { formatDateMedium } from '@/lib/date-utils';
 
 export default async function TestsFisicosPage() {
   const result = await fetchTestsFisicos({ limit: 50 });
@@ -69,13 +70,7 @@ export default async function TestsFisicosPage() {
                       <TableCell className="font-medium">
                         {test.atleta?.nombreCompleto || 'N/A'}
                       </TableCell>
-                      <TableCell>
-                        {new Date(test.fechaTest).toLocaleDateString('es-ES', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric',
-                        })}
-                      </TableCell>
+                      <TableCell>{formatDateMedium(test.fechaTest)}</TableCell>
                       <TableCell>{test.pressBanca || '-'}</TableCell>
                       <TableCell>{test.sentadilla || '-'}</TableCell>
                       <TableCell>{test.navettePalier || '-'}</TableCell>

@@ -8,7 +8,7 @@ import { PrismaService } from '../../database/prisma.service';
 // Gestiona la relacion entre atletas y microciclos:
 // - Asignar atletas a microciclos (COMITE_TECNICO)
 // - Listar asignaciones con filtros
-// - Actualizar y desactivar asignaciones
+// - Actualizar observaciones y eliminar asignaciones (hard delete)
 @Module({
   imports: [DatabaseModule],
   controllers: [AsignacionesController],

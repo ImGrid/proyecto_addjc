@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Calendar, Clock, Activity, Edit, FileText, Trash2 } from 'lucide-react';
 import { AUTH_ROUTES, COMITE_TECNICO_ROUTES } from '@/lib/routes';
+import { formatDateFull } from '@/lib/date-utils';
 import { DeleteSesionButton } from './delete-button';
 
 // Mapeo de tipos de sesion a colores
@@ -99,14 +100,7 @@ export default async function SesionDetalleComiteTecnicoPage({ params }: PagePro
         <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <div>
             <p className="text-sm text-muted-foreground">Fecha</p>
-            <p className="font-medium">
-              {new Date(sesion.fecha).toLocaleDateString('es-ES', {
-                weekday: 'long',
-                day: '2-digit',
-                month: 'long',
-                year: 'numeric',
-              })}
-            </p>
+            <p className="font-medium">{formatDateFull(sesion.fecha)}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Tipo de Sesion</p>
@@ -151,38 +145,16 @@ export default async function SesionDetalleComiteTecnicoPage({ params }: PagePro
             <p className="text-sm text-muted-foreground">Intensidad Planificada</p>
             <p className="font-medium">{sesion.intensidadPlanificada}%</p>
           </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Relacion V/I</p>
-            <p className="font-medium">{sesion.relacionVI}</p>
-          </div>
-          {sesion.fcObjetivo && (
-            <div>
-              <p className="text-sm text-muted-foreground">FC Objetivo</p>
-              <p className="font-medium">{sesion.fcObjetivo} bpm</p>
-            </div>
-          )}
-          {sesion.zonaEsfuerzo && (
-            <div>
-              <p className="text-sm text-muted-foreground">Zona de Esfuerzo</p>
-              <p className="font-medium">{sesion.zonaEsfuerzo}</p>
-            </div>
-          )}
         </CardContent>
       </Card>
 
       {/* Datos Reales (si existen) */}
-      {(sesion.duracionReal || sesion.volumenReal || sesion.intensidadReal) && (
+      {(sesion.volumenReal || sesion.intensidadReal) && (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Datos Reales</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-3">
-            {sesion.duracionReal && (
-              <div>
-                <p className="text-sm text-muted-foreground">Duracion Real</p>
-                <p className="font-medium">{sesion.duracionReal} minutos</p>
-              </div>
-            )}
+          <CardContent className="grid gap-4 md:grid-cols-2">
             {sesion.volumenReal && (
               <div>
                 <p className="text-sm text-muted-foreground">Volumen Real</p>

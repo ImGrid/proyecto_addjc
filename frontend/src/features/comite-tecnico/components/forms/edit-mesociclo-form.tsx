@@ -14,6 +14,7 @@ import { initialActionState } from '@/types/action-result';
 import { Target, Layers, Save } from 'lucide-react';
 import { EtapaMesocicloValues } from '@/types/enums';
 import type { Mesociclo } from '../../types/planificacion.types';
+import { formatDateForInput } from '@/lib/date-utils';
 
 interface EditMesocicloFormProps {
   mesociclo: Mesociclo;
@@ -74,12 +75,6 @@ export function EditMesocicloForm({ mesociclo }: EditMesocicloFormProps) {
       }
     }
   }, [state]);
-
-  // Formatear fecha para input date
-  const formatDateForInput = (date: Date | string) => {
-    const d = new Date(date);
-    return d.toISOString().split('T')[0];
-  };
 
   return (
     <form action={formAction} className="space-y-6">

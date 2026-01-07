@@ -204,6 +204,42 @@ export async function updateMacrociclo(
   }
 }
 
+// Tipos para delete info
+export interface MacrocicloDeleteInfo {
+  nombre: string;
+  mesociclos: number;
+  microciclos: number;
+  sesiones: number;
+}
+
+// Funcion para obtener informacion antes de eliminar
+// Endpoint: GET /api/macrociclos/:id/delete-info
+export async function fetchMacrocicloDeleteInfo(id: string): Promise<MacrocicloDeleteInfo | null> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('accessToken')?.value;
+
+    if (!token) {
+      return null;
+    }
+
+    const response = await fetch(`${API_URL}/macrociclos/${id}/delete-info`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('[fetchMacrocicloDeleteInfo] Error:', error);
+    return null;
+  }
+}
+
 // Server Action para eliminar un macrociclo
 // Endpoint: DELETE /api/macrociclos/:id
 export async function deleteMacrociclo(id: string): Promise<ActionResult> {

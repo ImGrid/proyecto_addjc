@@ -14,6 +14,7 @@ import { initialActionState } from '@/types/action-result';
 import { CalendarClock, Activity, FileText } from 'lucide-react';
 import { DiaSemanaValues, TipoSesionValues, TurnoValues } from '@/types/enums';
 import type { MicrocicloParaSelector, SesionCompleta } from '../../actions/fetch-planificacion';
+import { formatDateForInput } from '@/lib/date-utils';
 
 interface EditSesionFormProps {
   sesion: SesionCompleta;
@@ -92,12 +93,6 @@ export function EditSesionForm({ sesion, microciclos, redirectUrl }: EditSesionF
       return state.fieldErrors[field]?.[0];
     }
     return undefined;
-  };
-
-  // Formatear fecha para input date
-  const formatDateForInput = (dateStr: string): string => {
-    const date = new Date(dateStr);
-    return date.toISOString().split('T')[0];
   };
 
   return (
@@ -283,43 +278,6 @@ export function EditSesionForm({ sesion, microciclos, redirectUrl }: EditSesionF
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="relacionVI">Relacion V/I *</Label>
-                <Input
-                  type="text"
-                  id="relacionVI"
-                  name="relacionVI"
-                  maxLength={20}
-                  defaultValue={sesion.relacionVI ?? ''}
-                  className={getFieldError('relacionVI') ? 'border-destructive' : ''}
-                />
-                {getFieldError('relacionVI') && (
-                  <p className="text-sm text-destructive">{getFieldError('relacionVI')}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="fcObjetivo">FC Objetivo (opcional)</Label>
-                <Input
-                  type="number"
-                  id="fcObjetivo"
-                  name="fcObjetivo"
-                  min="40"
-                  max="220"
-                  defaultValue={sesion.fcObjetivo || ''}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="zonaEsfuerzo">Zona de Esfuerzo (opcional)</Label>
-                <Input
-                  type="text"
-                  id="zonaEsfuerzo"
-                  name="zonaEsfuerzo"
-                  maxLength={50}
-                  defaultValue={sesion.zonaEsfuerzo || ''}
-                />
-              </div>
             </>
           )}
         </CardContent>
@@ -332,18 +290,7 @@ export function EditSesionForm({ sesion, microciclos, redirectUrl }: EditSesionF
             <CardTitle className="text-lg">Datos Reales (Post-Sesion)</CardTitle>
             <CardDescription>Registra los valores reales despues de la sesion</CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-3">
-            <div className="space-y-2">
-              <Label htmlFor="duracionReal">Duracion Real (min)</Label>
-              <Input
-                type="number"
-                id="duracionReal"
-                name="duracionReal"
-                min="0"
-                defaultValue={sesion.duracionReal || ''}
-              />
-            </div>
-
+          <CardContent className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="volumenReal">Volumen Real</Label>
               <Input

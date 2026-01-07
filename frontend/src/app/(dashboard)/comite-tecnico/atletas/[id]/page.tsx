@@ -16,6 +16,9 @@ import {
   Edit,
   Heart,
 } from 'lucide-react';
+import { formatDateLocale } from '@/lib/date-utils';
+import { COMITE_TECNICO_ROUTES } from '@/lib/routes';
+import { DeleteAtletaButton } from './delete-button';
 
 interface AtletaDetallePageProps {
   params: Promise<{ id: string }>;
@@ -31,7 +34,7 @@ export default async function AtletaDetallePage({ params }: AtletaDetallePagePro
   }
 
   // Formatear fecha de nacimiento
-  const fechaNacimiento = new Date(atleta.fechaNacimiento).toLocaleDateString('es-ES', {
+  const fechaNacimiento = formatDateLocale(atleta.fechaNacimiento, {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
@@ -43,7 +46,7 @@ export default async function AtletaDetallePage({ params }: AtletaDetallePagePro
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" asChild>
-            <Link href="/comite-tecnico/atletas">
+            <Link href={COMITE_TECNICO_ROUTES.atletas.list}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Volver
             </Link>
@@ -58,12 +61,19 @@ export default async function AtletaDetallePage({ params }: AtletaDetallePagePro
             <p className="text-muted-foreground">{atleta.club} - {atleta.categoria}</p>
           </div>
         </div>
-        <Button asChild>
-          <Link href={`/comite-tecnico/atletas/${id}/editar`}>
-            <Edit className="mr-2 h-4 w-4" />
-            Editar
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild>
+            <Link href={COMITE_TECNICO_ROUTES.atletas.editar(id)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Editar
+            </Link>
+          </Button>
+          <DeleteAtletaButton
+            atletaId={id}
+            atletaNombre={atleta.usuario.nombreCompleto}
+            redirectUrl={COMITE_TECNICO_ROUTES.atletas.list}
+          />
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">

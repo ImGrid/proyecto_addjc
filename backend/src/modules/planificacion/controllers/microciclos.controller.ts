@@ -66,8 +66,15 @@ export class MicrociclosController {
     return this.microciclosService.update(id, updateMicrocicloDto);
   }
 
+  // GET /api/microciclos/:id/delete-info - Info antes de eliminar (solo COMITE_TECNICO)
+  @Get(':id/delete-info')
+  @Roles('COMITE_TECNICO')
+  getDeleteInfo(@Param('id') id: string) {
+    return this.microciclosService.getDeleteInfo(id);
+  }
+
   // DELETE /api/microciclos/:id - Eliminar microciclo (solo COMITE_TECNICO)
-  // Las 7 sesiones se eliminan automáticamente en cascada
+  // Las 7 sesiones se eliminan automaticamente en cascada
   @Delete(':id')
   @Roles('COMITE_TECNICO')
   remove(@Param('id') id: string) {

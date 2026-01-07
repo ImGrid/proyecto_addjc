@@ -352,13 +352,31 @@ export class MacrociclosService {
     return macrociclo;
   }
 
-  // Eliminar un macrociclo (hard delete)
-  @Transactional()
-  async remove(id: string): Promise<{ message: string }> {
+  // Obtener informacion de eliminacion (conteo de registros hijos)
+  // Usado por el frontend para mostrar advertencia antes de eliminar
+  async getDeleteInfo(id: string): Promise<{
+    nombre: string;
+    mesociclos: number;
+    microciclos: number;
+    sesiones: number;
+  }> {
     const macrociclo = await this.prisma.macrociclo.findUnique({
       where: { id: BigInt(id) },
-      include: {
-        mesociclos: true,
+      select: {
+        nombre: true,
+        mesociclos: {
+          select: {
+            id: true,
+            microciclos: {
+              select: {
+                id: true,
+                _count: {
+                  select: { sesiones: true },
+                },
+              },
+            },
+          },
+        },
       },
     });
 
@@ -366,18 +384,45 @@ export class MacrociclosService {
       throw new NotFoundException('Macrociclo no encontrado');
     }
 
-    // Verificar si tiene mesociclos asociados
-    if (macrociclo.mesociclos.length > 0) {
-      throw new BadRequestException(
-        `No se puede eliminar el macrociclo porque tiene ${macrociclo.mesociclos.length} mesociclo(s) asociado(s)`
-      );
+    // Calcular totales
+    const mesociclosCount = macrociclo.mesociclos.length;
+    let microciclosCount = 0;
+    let sesionesCount = 0;
+
+    for (const mesociclo of macrociclo.mesociclos) {
+      microciclosCount += mesociclo.microciclos.length;
+      for (const microciclo of mesociclo.microciclos) {
+        sesionesCount += microciclo._count.sesiones;
+      }
     }
 
-    // Eliminar
+    return {
+      nombre: macrociclo.nombre,
+      mesociclos: mesociclosCount,
+      microciclos: microciclosCount,
+      sesiones: sesionesCount,
+    };
+  }
+
+  // Eliminar un macrociclo (hard delete con cascade)
+  // Las mesociclos, microciclos y sesiones se eliminan automaticamente por CASCADE
+  @Transactional()
+  async remove(id: string): Promise<{ message: string; deleted: { mesociclos: number; microciclos: number; sesiones: number } }> {
+    // Obtener conteos antes de eliminar
+    const deleteInfo = await this.getDeleteInfo(id);
+
+    // Eliminar (cascade elimina mesociclos -> microciclos -> sesiones)
     await this.prisma.macrociclo.delete({
       where: { id: BigInt(id) },
     });
 
-    return { message: 'Macrociclo eliminado permanentemente' };
+    return {
+      message: `Macrociclo "${deleteInfo.nombre}" eliminado permanentemente`,
+      deleted: {
+        mesociclos: deleteInfo.mesociclos,
+        microciclos: deleteInfo.microciclos,
+        sesiones: deleteInfo.sesiones,
+      },
+    };
   }
 }

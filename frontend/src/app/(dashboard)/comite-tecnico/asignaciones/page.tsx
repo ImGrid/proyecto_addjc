@@ -1,7 +1,6 @@
 import { fetchAsignaciones } from '@/features/comite-tecnico/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -12,6 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Link as LinkIcon, Plus } from 'lucide-react';
 import Link from 'next/link';
+import { COMITE_TECNICO_ROUTES } from '@/lib/routes';
 
 export default async function AsignacionesPage() {
   const result = await fetchAsignaciones({ limit: 50 });
@@ -19,21 +19,17 @@ export default async function AsignacionesPage() {
   const asignaciones = result?.data || [];
   const total = result?.meta?.total || 0;
 
-  // Separar activas de inactivas
-  const activas = asignaciones.filter((a) => a.activa);
-  const inactivas = asignaciones.filter((a) => !a.activa);
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Asignaciones</h1>
           <p className="text-muted-foreground">
-            {activas.length} activa{activas.length !== 1 ? 's' : ''}, {total} en total
+            {total} asignacion{total !== 1 ? 'es' : ''} en total
           </p>
         </div>
         <Button asChild>
-          <Link href="/comite-tecnico/asignaciones/nuevo">
+          <Link href={COMITE_TECNICO_ROUTES.asignaciones.nuevo}>
             <Plus className="mr-2 h-4 w-4" />
             Nueva Asignacion
           </Link>
@@ -55,9 +51,15 @@ export default async function AsignacionesPage() {
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <LinkIcon className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium">No hay asignaciones</h3>
-              <p className="text-muted-foreground mt-1">
+              <p className="text-muted-foreground mt-1 mb-4">
                 Crea asignaciones para vincular atletas con microciclos.
               </p>
+              <Button asChild>
+                <Link href={COMITE_TECNICO_ROUTES.asignaciones.nuevo}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Nueva Asignacion
+                </Link>
+              </Button>
             </div>
           ) : (
             <div className="rounded-md border">
@@ -67,8 +69,8 @@ export default async function AsignacionesPage() {
                     <TableHead>Atleta</TableHead>
                     <TableHead>Microciclo</TableHead>
                     <TableHead>Periodo</TableHead>
-                    <TableHead>Estado</TableHead>
                     <TableHead>Fecha Asignacion</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -92,16 +94,25 @@ export default async function AsignacionesPage() {
                           : '-'}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={asignacion.activa ? 'default' : 'secondary'}>
-                          {asignacion.activa ? 'Activa' : 'Inactiva'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
                         {new Date(asignacion.fechaAsignacion).toLocaleDateString('es-ES', {
                           day: '2-digit',
                           month: 'short',
                           year: 'numeric',
                         })}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href={COMITE_TECNICO_ROUTES.asignaciones.detalle(asignacion.id)}>
+                              Ver detalle
+                            </Link>
+                          </Button>
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href={COMITE_TECNICO_ROUTES.asignaciones.editar(asignacion.id)}>
+                              Editar
+                            </Link>
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

@@ -65,6 +65,13 @@ export class MesociclosController {
     return this.mesociclosService.update(id, updateMesocicloDto);
   }
 
+  // GET /api/mesociclos/:id/delete-info - Info antes de eliminar (solo COMITE_TECNICO)
+  @Get(':id/delete-info')
+  @Roles('COMITE_TECNICO')
+  getDeleteInfo(@Param('id') id: string) {
+    return this.mesociclosService.getDeleteInfo(id);
+  }
+
   // DELETE /api/mesociclos/:id - Eliminar mesociclo (solo COMITE_TECNICO)
   @Delete(':id')
   @Roles('COMITE_TECNICO')

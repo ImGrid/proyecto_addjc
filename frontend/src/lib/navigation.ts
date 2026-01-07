@@ -141,6 +141,25 @@ export const navigationConfig: Record<RolUsuario, NavigationItem[]> = {
       icon: Trophy,
     },
     {
+      href: '/entrenador/planificacion',
+      label: 'Planificacion',
+      icon: Calendar,
+      children: [
+        {
+          href: '/entrenador/planificacion',
+          label: 'Macrociclos',
+        },
+        {
+          href: '/entrenador/planificacion/mesociclos',
+          label: 'Mesociclos',
+        },
+        {
+          href: '/entrenador/planificacion/microciclos',
+          label: 'Microciclos',
+        },
+      ],
+    },
+    {
       href: '/entrenador/sesiones',
       label: 'Sesiones',
       icon: CalendarClock,

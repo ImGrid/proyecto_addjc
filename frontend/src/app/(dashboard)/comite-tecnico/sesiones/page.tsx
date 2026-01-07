@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CalendarClock, Plus, Calendar, Clock, Activity } from 'lucide-react';
 import { AUTH_ROUTES, COMITE_TECNICO_ROUTES } from '@/lib/routes';
+import { formatDateFull } from '@/lib/date-utils';
 
 // Mapeo de tipos de sesion a colores
 const TIPO_SESION_COLORS: Record<string, string> = {
@@ -80,14 +81,7 @@ export default async function SesionesComiteTecnicoPage() {
                 <CardTitle className="text-base flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span>
-                      {new Date(sesion.fecha).toLocaleDateString('es-ES', {
-                        weekday: 'long',
-                        day: '2-digit',
-                        month: 'long',
-                        year: 'numeric',
-                      })}
-                    </span>
+                    <span>{formatDateFull(sesion.fecha)}</span>
                     <Badge variant="outline">Sesion #{sesion.numeroSesion}</Badge>
                   </div>
                   <Badge className={TIPO_SESION_COLORS[sesion.tipoSesion] || 'bg-gray-100'}>
@@ -114,10 +108,6 @@ export default async function SesionesComiteTecnicoPage() {
                   <div>
                     <p className="text-muted-foreground">Volumen</p>
                     <p className="font-medium">{sesion.volumenPlanificado}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Relacion V/I</p>
-                    <p className="font-medium">{sesion.relacionVI}</p>
                   </div>
                 </div>
                 {sesion.microciclo && (

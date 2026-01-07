@@ -14,6 +14,7 @@ import { initialActionState } from '@/types/action-result';
 import { Calendar, Target, Activity, Save } from 'lucide-react';
 import { TipoMicrocicloValues } from '@/types/enums';
 import type { MicrocicloType } from '../../types/planificacion.types';
+import { formatDateForInput } from '@/lib/date-utils';
 
 interface EditMicrocicloFormProps {
   microciclo: MicrocicloType;
@@ -74,12 +75,6 @@ export function EditMicrocicloForm({ microciclo }: EditMicrocicloFormProps) {
       }
     }
   }, [state]);
-
-  // Formatear fecha para input date
-  const formatDateForInput = (date: Date | string) => {
-    const d = new Date(date);
-    return d.toISOString().split('T')[0];
-  };
 
   return (
     <form action={formAction} className="space-y-6">

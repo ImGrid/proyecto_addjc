@@ -199,6 +199,40 @@ export async function updateMicrociclo(
   }
 }
 
+// Tipos para delete info
+export interface MicrocicloDeleteInfo {
+  numeroMicrociclo: number | null;
+  sesiones: number;
+}
+
+// Funcion para obtener informacion antes de eliminar
+// Endpoint: GET /api/microciclos/:id/delete-info
+export async function fetchMicrocicloDeleteInfo(id: string): Promise<MicrocicloDeleteInfo | null> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('accessToken')?.value;
+
+    if (!token) {
+      return null;
+    }
+
+    const response = await fetch(`${API_URL}/microciclos/${id}/delete-info`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('[fetchMicrocicloDeleteInfo] Error:', error);
+    return null;
+  }
+}
+
 // Server Action para eliminar un microciclo
 // Endpoint: DELETE /api/microciclos/:id
 export async function deleteMicrociclo(id: string): Promise<ActionResult> {

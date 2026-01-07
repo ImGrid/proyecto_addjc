@@ -11,13 +11,16 @@ export const COMITE_TECNICO_ROUTES = {
   atletas: {
     list: '/comite-tecnico/atletas',
     nuevo: '/comite-tecnico/atletas/nuevo',
+    detalle: (id: string | number) => `/comite-tecnico/atletas/${id}`,
     editar: (id: string | number) => `/comite-tecnico/atletas/${id}/editar`,
   },
 
   // Asignaciones (atleta-microciclo)
   asignaciones: {
     list: '/comite-tecnico/asignaciones',
-    nueva: '/comite-tecnico/asignaciones/nueva',
+    nuevo: '/comite-tecnico/asignaciones/nuevo',
+    detalle: (id: string | number) => `/comite-tecnico/asignaciones/${id}`,
+    editar: (id: string | number) => `/comite-tecnico/asignaciones/${id}/editar`,
   },
 
   // Planificacion
@@ -26,18 +29,21 @@ export const COMITE_TECNICO_ROUTES = {
     macrociclos: {
       list: '/comite-tecnico/planificacion',
       nuevo: '/comite-tecnico/planificacion/nuevo',
+      detalle: (id: string | number) => `/comite-tecnico/planificacion/${id}`,
       editar: (id: string | number) => `/comite-tecnico/planificacion/${id}/editar`,
     },
     // Mesociclos
     mesociclos: {
       list: '/comite-tecnico/planificacion/mesociclos',
       nuevo: '/comite-tecnico/planificacion/mesociclos/nuevo',
+      detalle: (id: string | number) => `/comite-tecnico/planificacion/mesociclos/${id}`,
       editar: (id: string | number) => `/comite-tecnico/planificacion/mesociclos/${id}/editar`,
     },
     // Microciclos
     microciclos: {
       list: '/comite-tecnico/planificacion/microciclos',
       nuevo: '/comite-tecnico/planificacion/microciclos/nuevo',
+      detalle: (id: string | number) => `/comite-tecnico/planificacion/microciclos/${id}`,
       editar: (id: string | number) => `/comite-tecnico/planificacion/microciclos/${id}/editar`,
     },
   },
@@ -60,6 +66,25 @@ export const ENTRENADOR_ROUTES = {
   misAtletas: {
     list: '/entrenador/mis-atletas',
     detalle: (atletaId: string | number) => `/entrenador/mis-atletas/${atletaId}`,
+  },
+
+  // Planificacion (solo lectura)
+  planificacion: {
+    // Macrociclos
+    macrociclos: {
+      list: '/entrenador/planificacion',
+      detalle: (id: string | number) => `/entrenador/planificacion/${id}`,
+    },
+    // Mesociclos
+    mesociclos: {
+      list: '/entrenador/planificacion/mesociclos',
+      detalle: (id: string | number) => `/entrenador/planificacion/mesociclos/${id}`,
+    },
+    // Microciclos
+    microciclos: {
+      list: '/entrenador/planificacion/microciclos',
+      detalle: (id: string | number) => `/entrenador/planificacion/microciclos/${id}`,
+    },
   },
 
   // Sesiones

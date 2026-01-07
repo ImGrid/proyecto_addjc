@@ -3,6 +3,7 @@ import { CreateAsignacionForm } from '@/features/comite-tecnico/components';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { COMITE_TECNICO_ROUTES } from '@/lib/routes';
 
 export default async function NuevaAsignacionPage() {
   // Obtener atletas y microciclos para los selectores
@@ -28,7 +29,7 @@ export default async function NuevaAsignacionPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="sm" asChild>
-          <Link href="/comite-tecnico/asignaciones">
+          <Link href={COMITE_TECNICO_ROUTES.asignaciones.list}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Volver
           </Link>

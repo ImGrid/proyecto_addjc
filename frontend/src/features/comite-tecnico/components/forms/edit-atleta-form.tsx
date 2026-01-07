@@ -7,12 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { SubmitButton } from './submit-button';
 import { updateAtleta } from '../../actions/atleta.actions';
 import { initialActionState } from '@/types/action-result';
-import { MapPin, Scale, UserCog, Save } from 'lucide-react';
+import { MapPin, Scale, UserCog, Save, UserCheck } from 'lucide-react';
 import { CategoriaPesoValues } from '@/types/enums';
 import type { AtletaDetalle } from '@/features/entrenador/types/entrenador.types';
+import { formatDateForInput } from '@/lib/date-utils';
 
 interface Entrenador {
   id: string;
@@ -34,6 +36,7 @@ export function EditAtletaForm({ atleta, entrenadores }: EditAtletaFormProps) {
   const [state, formAction] = useActionState(updateWithId, initialActionState);
   const [selectedCategoriaPeso, setSelectedCategoriaPeso] = useState(atleta.categoriaPeso || '');
   const [selectedEntrenador, setSelectedEntrenador] = useState(atleta.entrenadorAsignado?.id || '');
+  const [estadoActivo, setEstadoActivo] = useState(atleta.usuario.estado);
 
   // Mostrar toast y redirigir en caso de exito
   useEffect(() => {
@@ -83,12 +86,6 @@ export function EditAtletaForm({ atleta, entrenadores }: EditAtletaFormProps) {
       }
     }
   }, [state]);
-
-  // Formatear fecha para input date
-  const formatDateForInput = (date: Date | string) => {
-    const d = new Date(date);
-    return d.toISOString().split('T')[0];
-  };
 
   return (
     <form action={formAction} className="space-y-6">
@@ -277,6 +274,35 @@ export function EditAtletaForm({ atleta, entrenadores }: EditAtletaFormProps) {
             </Select>
             <input type="hidden" name="entrenadorAsignadoId" value={selectedEntrenador} />
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Seccion: Estado del Atleta */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <UserCheck className="h-5 w-5" />
+            Estado del Atleta
+          </CardTitle>
+          <CardDescription>
+            Activa o desactiva el atleta en el sistema. Un atleta desactivado no podra acceder al sistema.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="estado">Atleta Activo</Label>
+              <p className="text-sm text-muted-foreground">
+                {estadoActivo ? 'El atleta puede acceder al sistema' : 'El atleta no puede acceder al sistema'}
+              </p>
+            </div>
+            <Switch
+              id="estado"
+              checked={estadoActivo}
+              onCheckedChange={setEstadoActivo}
+            />
+          </div>
+          <input type="hidden" name="estado" value={String(estadoActivo)} />
         </CardContent>
       </Card>
 

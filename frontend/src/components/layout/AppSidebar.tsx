@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { LogOut, ChevronDown } from 'lucide-react';
+import { logoutAction } from '@/app/actions/auth.actions';
 import {
   Sidebar,
   SidebarContent,
@@ -182,13 +183,13 @@ export function AppSidebar({ user }: AppSidebarProps) {
       </SidebarContent>
 
       <SidebarFooter className="border-t p-4">
-        <Link
-          href="/api/auth/logout"
-          className="flex items-center gap-3 px-4 py-[0.875rem] text-danger font-medium rounded-lg transition-all duration-300 hover:bg-danger/10"
+        <button
+          onClick={() => logoutAction()}
+          className="flex items-center gap-3 px-4 py-[0.875rem] text-danger font-medium rounded-lg transition-all duration-300 hover:bg-danger/10 w-full"
         >
           <LogOut className="h-5 w-5 flex-shrink-0" strokeWidth={2} />
-          <span>Cerrar sesión</span>
-        </Link>
+          <span>Cerrar sesion</span>
+        </button>
       </SidebarFooter>
     </Sidebar>
   );

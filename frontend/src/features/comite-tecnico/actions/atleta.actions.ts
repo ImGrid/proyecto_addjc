@@ -159,6 +159,12 @@ export async function updateAtleta(
       }
     }
 
+    // Incluir estado (campo booleano especial)
+    const estadoValue = formData.get('estado');
+    if (estadoValue !== null) {
+      rawData.estado = estadoValue === 'true';
+    }
+
     // Validar con Zod
     const validation = updateAtletaSchema.safeParse(rawData);
 

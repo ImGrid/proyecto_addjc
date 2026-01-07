@@ -1,15 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Sesion } from '../types/planificacion.types';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { formatDateMedium, formatDateShort } from '@/lib/date-utils';
 
 interface SesionDetalleCardProps {
   sesion: Sesion;
 }
 
 export function SesionDetalleCard({ sesion }: SesionDetalleCardProps) {
-  const fecha = new Date(sesion.fecha);
 
   return (
     <div className="space-y-6">
@@ -20,7 +18,7 @@ export function SesionDetalleCard({ sesion }: SesionDetalleCardProps) {
             <div>
               <CardTitle className="text-2xl">Sesion {sesion.numeroSesion}</CardTitle>
               <p className="text-muted-foreground mt-1">
-                {sesion.diaSemana} - {format(fecha, 'dd MMMM yyyy', { locale: es })}
+                {sesion.diaSemana} - {formatDateMedium(sesion.fecha)}
               </p>
             </div>
             <div className="flex gap-2">
@@ -42,9 +40,6 @@ export function SesionDetalleCard({ sesion }: SesionDetalleCardProps) {
             <div>
               <p className="text-xs text-muted-foreground mb-1">Duracion</p>
               <p className="text-lg font-semibold">{sesion.duracionPlanificada} min</p>
-              {sesion.duracionReal && (
-                <p className="text-xs text-muted-foreground">Real: {sesion.duracionReal} min</p>
-              )}
             </div>
 
             {/* Volumen */}
@@ -66,25 +61,6 @@ export function SesionDetalleCard({ sesion }: SesionDetalleCardProps) {
             </div>
           </div>
 
-          {/* Datos adicionales */}
-          <div className="mt-4 grid grid-cols-2 gap-4 pt-4 border-t">
-            <div>
-              <p className="text-xs text-muted-foreground">Relacion V/I</p>
-              <p className="text-sm font-medium">{sesion.relacionVI}</p>
-            </div>
-            {sesion.fcObjetivo && (
-              <div>
-                <p className="text-xs text-muted-foreground">FC Objetivo</p>
-                <p className="text-sm font-medium">{sesion.fcObjetivo} bpm</p>
-              </div>
-            )}
-            {sesion.zonaEsfuerzo && (
-              <div>
-                <p className="text-xs text-muted-foreground">Zona de Esfuerzo</p>
-                <p className="text-sm font-medium">{sesion.zonaEsfuerzo}</p>
-              </div>
-            )}
-          </div>
         </CardContent>
       </Card>
 
@@ -196,7 +172,7 @@ export function SesionDetalleCard({ sesion }: SesionDetalleCardProps) {
               Esta sesion pertenece al Microciclo {sesion.microciclo.numeroGlobalMicrociclo}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              {format(new Date(sesion.microciclo.fechaInicio), 'dd MMM', { locale: es })} - {format(new Date(sesion.microciclo.fechaFin), 'dd MMM yyyy', { locale: es })}
+              {formatDateShort(sesion.microciclo.fechaInicio)} - {formatDateMedium(sesion.microciclo.fechaFin)}
             </p>
           </CardContent>
         </Card>

@@ -61,6 +61,13 @@ export class MacrociclosController {
     return this.macrociclosService.update(id, updateMacrocicloDto);
   }
 
+  // GET /api/macrociclos/:id/delete-info - Info antes de eliminar (solo COMITE_TECNICO)
+  @Get(':id/delete-info')
+  @Roles('COMITE_TECNICO')
+  getDeleteInfo(@Param('id') id: string) {
+    return this.macrociclosService.getDeleteInfo(id);
+  }
+
   // DELETE /api/macrociclos/:id - Eliminar macrociclo (solo COMITE_TECNICO)
   @Delete(':id')
   @Roles('COMITE_TECNICO')

@@ -13,6 +13,8 @@ import {
   Edit,
   Clock,
 } from 'lucide-react';
+import { DeleteMicrocicloButton } from './delete-button';
+import { formatDateLocale, formatDateShort } from '@/lib/date-utils';
 
 // Mapeo de tipos de microciclo a variantes de badge
 const tipoVariants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
@@ -48,12 +50,12 @@ export default async function MicrocicloDetallePage({ params }: MicrocicloDetall
   }
 
   // Formatear fechas
-  const fechaInicio = new Date(microciclo.fechaInicio).toLocaleDateString('es-ES', {
+  const fechaInicio = formatDateLocale(microciclo.fechaInicio, {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
   });
-  const fechaFin = new Date(microciclo.fechaFin).toLocaleDateString('es-ES', {
+  const fechaFin = formatDateLocale(microciclo.fechaFin, {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
@@ -85,12 +87,18 @@ export default async function MicrocicloDetallePage({ params }: MicrocicloDetall
             </p>
           </div>
         </div>
-        <Button asChild>
-          <Link href={`/comite-tecnico/planificacion/microciclos/${id}/editar`}>
-            <Edit className="mr-2 h-4 w-4" />
-            Editar
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild>
+            <Link href={`/comite-tecnico/planificacion/microciclos/${id}/editar`}>
+              <Edit className="mr-2 h-4 w-4" />
+              Editar
+            </Link>
+          </Button>
+          <DeleteMicrocicloButton
+            microcicloId={id}
+            microcicloNumero={microciclo.numeroGlobalMicrociclo}
+          />
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -233,10 +241,7 @@ export default async function MicrocicloDetallePage({ params }: MicrocicloDetall
           ) : (
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
               {microciclo.sesiones.map((sesion) => {
-                const fechaSesion = new Date(sesion.fecha).toLocaleDateString('es-ES', {
-                  day: '2-digit',
-                  month: 'short',
-                });
+                const fechaSesion = formatDateShort(sesion.fecha);
 
                 return (
                   <Card key={sesion.id} className="border-l-4 border-l-primary">

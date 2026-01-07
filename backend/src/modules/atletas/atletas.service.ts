@@ -400,8 +400,11 @@ export class AtletasService {
       }
     }
 
-    // Preparar datos para actualizar
-    const dataToUpdate: any = { ...updateAtletaDto };
+    // Extraer estado del DTO (pertenece a Usuario, no a Atleta)
+    const { estado, ...atletaFields } = updateAtletaDto;
+
+    // Preparar datos para actualizar la tabla atletas
+    const dataToUpdate: any = { ...atletaFields };
 
     // Convertir entrenadorAsignadoId a BigInt si existe
     if (updateAtletaDto.entrenadorAsignadoId) {
@@ -411,6 +414,14 @@ export class AtletasService {
     // Convertir fechaNacimiento a Date si existe
     if (updateAtletaDto.fechaNacimiento) {
       dataToUpdate.fechaNacimiento = new Date(updateAtletaDto.fechaNacimiento);
+    }
+
+    // Si viene estado, actualizar el usuario asociado
+    if (estado !== undefined) {
+      await this.prisma.usuario.update({
+        where: { id: existingAtleta.usuarioId },
+        data: { estado },
+      });
     }
 
     // Actualizar el atleta

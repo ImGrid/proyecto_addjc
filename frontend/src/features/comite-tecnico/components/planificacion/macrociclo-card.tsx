@@ -4,6 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Macrociclo } from '../../types/planificacion.types';
 import { Calendar, Target, Layers, Clock, ArrowRight } from 'lucide-react';
+import { formatDateLocale } from '@/lib/date-utils';
+import { COMITE_TECNICO_ROUTES } from '@/lib/routes';
 
 interface MacrocicloCardProps {
   macrociclo: Macrociclo;
@@ -19,16 +21,8 @@ const estadoVariants: Record<string, 'default' | 'secondary' | 'destructive' | '
 
 // Card de macrociclo para COMITE_TECNICO
 export function MacrocicloCard({ macrociclo }: MacrocicloCardProps) {
-  const fechaInicio = new Date(macrociclo.fechaInicio).toLocaleDateString('es-ES', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-  const fechaFin = new Date(macrociclo.fechaFin).toLocaleDateString('es-ES', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
+  const fechaInicio = formatDateLocale(macrociclo.fechaInicio);
+  const fechaFin = formatDateLocale(macrociclo.fechaFin);
 
   return (
     <Card>
@@ -73,7 +67,7 @@ export function MacrocicloCard({ macrociclo }: MacrocicloCardProps) {
 
         <div className="flex justify-end pt-2">
           <Button variant="ghost" size="sm" asChild>
-            <Link href={`/comite-tecnico/planificacion/${macrociclo.id}`}>
+            <Link href={COMITE_TECNICO_ROUTES.planificacion.macrociclos.detalle(macrociclo.id)}>
               Ver detalle
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>

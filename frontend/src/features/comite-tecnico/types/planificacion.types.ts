@@ -144,7 +144,6 @@ export const asignacionSchema = z.object({
   microcicloId: z.string(),
   asignadoPor: z.string(),
   fechaAsignacion: z.coerce.date(),
-  activa: z.boolean(),
   observaciones: z.string().nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),

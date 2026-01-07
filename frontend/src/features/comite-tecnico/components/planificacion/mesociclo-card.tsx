@@ -3,7 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Mesociclo } from '../../types/planificacion.types';
-import { Calendar, Target, Layers, ArrowRight } from 'lucide-react';
+import { Calendar, Layers, ArrowRight } from 'lucide-react';
+import { formatDateLocale } from '@/lib/date-utils';
+import { COMITE_TECNICO_ROUTES } from '@/lib/routes';
 
 interface MesocicloCardProps {
   mesociclo: Mesociclo;
@@ -19,16 +21,8 @@ const etapaVariants: Record<string, 'default' | 'secondary' | 'destructive' | 'o
 
 // Card de mesociclo para COMITE_TECNICO
 export function MesocicloCard({ mesociclo }: MesocicloCardProps) {
-  const fechaInicio = new Date(mesociclo.fechaInicio).toLocaleDateString('es-ES', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-  const fechaFin = new Date(mesociclo.fechaFin).toLocaleDateString('es-ES', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
+  const fechaInicio = formatDateLocale(mesociclo.fechaInicio);
+  const fechaFin = formatDateLocale(mesociclo.fechaFin);
 
   return (
     <Card>
@@ -70,7 +64,7 @@ export function MesocicloCard({ mesociclo }: MesocicloCardProps) {
 
         <div className="flex justify-end pt-2">
           <Button variant="ghost" size="sm" asChild>
-            <Link href={`/comite-tecnico/planificacion/mesociclos/${mesociclo.id}`}>
+            <Link href={COMITE_TECNICO_ROUTES.planificacion.mesociclos.detalle(mesociclo.id)}>
               Ver detalle
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>

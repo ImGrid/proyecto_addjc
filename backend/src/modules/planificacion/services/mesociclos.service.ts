@@ -336,13 +336,25 @@ export class MesociclosService {
     return mesociclo;
   }
 
-  // Eliminar un mesociclo
-  @Transactional()
-  async remove(id: string): Promise<{ message: string }> {
+  // Obtener informacion de eliminacion (conteo de registros hijos)
+  // Usado por el frontend para mostrar advertencia antes de eliminar
+  async getDeleteInfo(id: string): Promise<{
+    nombre: string;
+    microciclos: number;
+    sesiones: number;
+  }> {
     const mesociclo = await this.prisma.mesociclo.findUnique({
       where: { id: BigInt(id) },
-      include: {
-        microciclos: true,
+      select: {
+        nombre: true,
+        microciclos: {
+          select: {
+            id: true,
+            _count: {
+              select: { sesiones: true },
+            },
+          },
+        },
       },
     });
 
@@ -350,18 +362,39 @@ export class MesociclosService {
       throw new NotFoundException('Mesociclo no encontrado');
     }
 
-    // Verificar si tiene microciclos asociados
-    if (mesociclo.microciclos.length > 0) {
-      throw new BadRequestException(
-        `No se puede eliminar el mesociclo porque tiene ${mesociclo.microciclos.length} microciclo(s) asociado(s)`
-      );
+    // Calcular totales
+    const microciclosCount = mesociclo.microciclos.length;
+    let sesionesCount = 0;
+
+    for (const microciclo of mesociclo.microciclos) {
+      sesionesCount += microciclo._count.sesiones;
     }
 
-    // Eliminar
+    return {
+      nombre: mesociclo.nombre,
+      microciclos: microciclosCount,
+      sesiones: sesionesCount,
+    };
+  }
+
+  // Eliminar un mesociclo (hard delete con cascade)
+  // Los microciclos y sesiones se eliminan automaticamente por CASCADE
+  @Transactional()
+  async remove(id: string): Promise<{ message: string; deleted: { microciclos: number; sesiones: number } }> {
+    // Obtener conteos antes de eliminar
+    const deleteInfo = await this.getDeleteInfo(id);
+
+    // Eliminar (cascade elimina microciclos -> sesiones)
     await this.prisma.mesociclo.delete({
       where: { id: BigInt(id) },
     });
 
-    return { message: 'Mesociclo eliminado permanentemente' };
+    return {
+      message: `Mesociclo "${deleteInfo.nombre}" eliminado permanentemente`,
+      deleted: {
+        microciclos: deleteInfo.microciclos,
+        sesiones: deleteInfo.sesiones,
+      },
+    };
   }
 }

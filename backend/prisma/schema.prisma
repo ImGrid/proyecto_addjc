@@ -350,7 +350,7 @@ model Microciclo {
   updatedAt DateTime @updatedAt
 
   // Relaciones
-  mesociclo           Mesociclo?                   @relation(fields: [mesocicloId], references: [id])
+  mesociclo           Mesociclo?                   @relation(fields: [mesocicloId], references: [id], onDelete: Cascade)
   sesiones            Sesion[]
   asignacionesAtletas AsignacionAtletaMicrociclo[]
   recomendaciones     Recomendacion[]
@@ -379,14 +379,8 @@ model Sesion {
   duracionPlanificada   Int
   volumenPlanificado    Int?
   intensidadPlanificada Int?
-  fcObjetivo            Int?
-  relacionVI            String? @db.VarChar(20)
 
-  // Zona de esfuerzo (planBD.txt - nuevo descubrimiento)
-  zonaEsfuerzo String? @db.VarChar(50)
-
-  // Datos reales (después de ejecución)
-  duracionReal   Int?
+  // Datos reales (después de ejecución) - usados por algoritmo de recomendación
   volumenReal    Int?
   intensidadReal Int?
 
@@ -757,7 +751,6 @@ model AsignacionAtletaMicrociclo {
   microcicloId    BigInt
   asignadoPor     BigInt
   fechaAsignacion DateTime @default(now())
-  activa          Boolean  @default(true)
   observaciones   String?  @db.Text
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

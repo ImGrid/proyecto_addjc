@@ -50,16 +50,19 @@ export {
 export type { FetchTestsFisicosParams, FetchDolenciasParams } from './fetch-tests-dolencias';
 
 // Acciones de escritura - Macrociclos
-export { createMacrociclo, updateMacrociclo, deleteMacrociclo } from './macrociclo.actions';
+export { createMacrociclo, updateMacrociclo, deleteMacrociclo, fetchMacrocicloDeleteInfo } from './macrociclo.actions';
+export type { MacrocicloDeleteInfo } from './macrociclo.actions';
 
 // Acciones de escritura - Mesociclos
-export { createMesociclo, updateMesociclo, deleteMesociclo } from './mesociclo.actions';
+export { createMesociclo, updateMesociclo, deleteMesociclo, fetchMesocicloDeleteInfo } from './mesociclo.actions';
+export type { MesocicloDeleteInfo } from './mesociclo.actions';
 
 // Acciones de escritura - Microciclos
-export { createMicrociclo, updateMicrociclo, deleteMicrociclo } from './microciclo.actions';
+export { createMicrociclo, updateMicrociclo, deleteMicrociclo, fetchMicrocicloDeleteInfo } from './microciclo.actions';
+export type { MicrocicloDeleteInfo } from './microciclo.actions';
 
 // Acciones de escritura - Asignaciones
-export { createAsignacion, deleteAsignacion, toggleAsignacionActiva } from './asignacion.actions';
+export { createAsignacion, deleteAsignacion, updateAsignacion } from './asignacion.actions';
 
 // Acciones de escritura - Sesiones
 export { createSesion, updateSesion, deleteSesion } from './sesion.actions';

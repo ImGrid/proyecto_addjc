@@ -12,6 +12,7 @@ import { createAsignacion } from '../../actions/asignacion.actions';
 import { initialActionState } from '@/types/action-result';
 import { Link as LinkIcon } from 'lucide-react';
 import { COMITE_TECNICO_ROUTES } from '@/lib/routes';
+import { formatDateShort } from '@/lib/date-utils';
 
 interface Atleta {
   id: string;
@@ -87,14 +88,6 @@ export function CreateAsignacionForm({ atletas, microciclos }: CreateAsignacionF
     }
   }, [state]);
 
-  // Formatear fecha para mostrar
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: 'short',
-    });
-  };
-
   return (
     <form action={formAction} className="space-y-6">
       <Card>
@@ -141,7 +134,7 @@ export function CreateAsignacionForm({ atletas, microciclos }: CreateAsignacionF
               <SelectContent>
                 {microciclos.map((micro) => (
                   <SelectItem key={micro.id} value={micro.id}>
-                    Microciclo {micro.numeroGlobalMicrociclo} ({formatDate(micro.fechaInicio)} - {formatDate(micro.fechaFin)})
+                    Microciclo {micro.numeroGlobalMicrociclo} ({formatDateShort(micro.fechaInicio)} - {formatDateShort(micro.fechaFin)})
                   </SelectItem>
                 ))}
               </SelectContent>

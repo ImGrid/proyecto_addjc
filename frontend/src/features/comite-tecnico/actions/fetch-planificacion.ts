@@ -224,7 +224,6 @@ export interface FetchAsignacionesParams {
   limit?: number;
   atletaId?: string;
   microcicloId?: string;
-  activa?: boolean;
 }
 
 // Obtener lista paginada de asignaciones
@@ -244,7 +243,6 @@ export async function fetchAsignaciones(
     if (params.limit) searchParams.set('limit', params.limit.toString());
     if (params.atletaId) searchParams.set('atletaId', params.atletaId);
     if (params.microcicloId) searchParams.set('microcicloId', params.microcicloId);
-    if (params.activa !== undefined) searchParams.set('activa', params.activa.toString());
 
     const queryString = searchParams.toString();
     const endpoint = `/asignaciones${queryString ? `?${queryString}` : ''}`;
@@ -310,10 +308,7 @@ export interface SesionCompleta {
   // Opcionales para COMPETENCIA/DESCANSO
   volumenPlanificado: number | null;
   intensidadPlanificada: number | null;
-  fcObjetivo: number | null;
-  relacionVI: string | null;
-  zonaEsfuerzo: string | null;
-  duracionReal: number | null;
+  // Datos reales (usados por algoritmo de recomendacion)
   volumenReal: number | null;
   intensidadReal: number | null;
   // Contenidos opcionales para COMPETENCIA/DESCANSO

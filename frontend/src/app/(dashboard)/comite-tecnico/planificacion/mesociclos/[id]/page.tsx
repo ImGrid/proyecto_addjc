@@ -12,6 +12,8 @@ import {
   Edit,
   Plus,
 } from 'lucide-react';
+import { DeleteMesocicloButton } from './delete-button';
+import { formatDateLocale, formatDateShort } from '@/lib/date-utils';
 
 // Mapeo de etapas a variantes de badge
 const etapaVariants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
@@ -41,12 +43,12 @@ export default async function MesocicloDetallePage({ params }: MesocicloDetalleP
   const microciclos = microciclosResult?.data || [];
 
   // Formatear fechas
-  const fechaInicio = new Date(mesociclo.fechaInicio).toLocaleDateString('es-ES', {
+  const fechaInicio = formatDateLocale(mesociclo.fechaInicio, {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
   });
-  const fechaFin = new Date(mesociclo.fechaFin).toLocaleDateString('es-ES', {
+  const fechaFin = formatDateLocale(mesociclo.fechaFin, {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
@@ -76,12 +78,18 @@ export default async function MesocicloDetallePage({ params }: MesocicloDetalleP
             </p>
           </div>
         </div>
-        <Button asChild>
-          <Link href={`/comite-tecnico/planificacion/mesociclos/${id}/editar`}>
-            <Edit className="mr-2 h-4 w-4" />
-            Editar
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild>
+            <Link href={`/comite-tecnico/planificacion/mesociclos/${id}/editar`}>
+              <Edit className="mr-2 h-4 w-4" />
+              Editar
+            </Link>
+          </Button>
+          <DeleteMesocicloButton
+            mesocicloId={id}
+            mesocicloNombre={mesociclo.nombre}
+          />
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -182,14 +190,8 @@ export default async function MesocicloDetallePage({ params }: MesocicloDetalleP
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {microciclos.map((microciclo) => {
-                const microInicio = new Date(microciclo.fechaInicio).toLocaleDateString('es-ES', {
-                  day: '2-digit',
-                  month: 'short',
-                });
-                const microFin = new Date(microciclo.fechaFin).toLocaleDateString('es-ES', {
-                  day: '2-digit',
-                  month: 'short',
-                });
+                const microInicio = formatDateShort(microciclo.fechaInicio);
+                const microFin = formatDateShort(microciclo.fechaFin);
 
                 return (
                   <Link

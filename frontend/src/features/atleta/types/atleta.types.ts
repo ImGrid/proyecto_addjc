@@ -316,12 +316,7 @@ export const sesionSchema = z.object({
   duracionPlanificada: z.number().int(),
   volumenPlanificado: z.number(),
   intensidadPlanificada: z.number(),
-  fcObjetivo: z.number().int().nullable(),
-  relacionVI: z.string(),
-  zonaEsfuerzo: z.string().nullable(),
-
-  // Datos reales (despues de ejecucion)
-  duracionReal: z.number().int().nullable(),
+  // Datos reales (usados por algoritmo de recomendacion)
   volumenReal: z.number().nullable(),
   intensidadReal: z.number().nullable(),
 

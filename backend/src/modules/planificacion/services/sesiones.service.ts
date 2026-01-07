@@ -50,10 +50,6 @@ export class SesionesService {
         duracionPlanificada: createSesionDto.duracionPlanificada,
         volumenPlanificado: createSesionDto.volumenPlanificado,
         intensidadPlanificada: createSesionDto.intensidadPlanificada,
-        fcObjetivo: createSesionDto.fcObjetivo,
-        relacionVI: createSesionDto.relacionVI,
-        zonaEsfuerzo: createSesionDto.zonaEsfuerzo,
-        duracionReal: createSesionDto.duracionReal,
         volumenReal: createSesionDto.volumenReal,
         intensidadReal: createSesionDto.intensidadReal,
         contenidoFisico: createSesionDto.contenidoFisico,
@@ -224,7 +220,6 @@ export class SesionesService {
         where: {
           microcicloId: sesion.microcicloId,
           atletaId: atletaId,
-          activa: true,
         },
       });
 
@@ -282,10 +277,6 @@ export class SesionesService {
         ...(updateSesionDto.duracionPlanificada !== undefined && { duracionPlanificada: updateSesionDto.duracionPlanificada }),
         ...(updateSesionDto.volumenPlanificado !== undefined && { volumenPlanificado: updateSesionDto.volumenPlanificado }),
         ...(updateSesionDto.intensidadPlanificada !== undefined && { intensidadPlanificada: updateSesionDto.intensidadPlanificada }),
-        ...(updateSesionDto.fcObjetivo !== undefined && { fcObjetivo: updateSesionDto.fcObjetivo }),
-        ...(updateSesionDto.relacionVI && { relacionVI: updateSesionDto.relacionVI }),
-        ...(updateSesionDto.zonaEsfuerzo !== undefined && { zonaEsfuerzo: updateSesionDto.zonaEsfuerzo }),
-        ...(updateSesionDto.duracionReal !== undefined && { duracionReal: updateSesionDto.duracionReal }),
         ...(updateSesionDto.volumenReal !== undefined && { volumenReal: updateSesionDto.volumenReal }),
         ...(updateSesionDto.intensidadReal !== undefined && { intensidadReal: updateSesionDto.intensidadReal }),
         ...(updateSesionDto.contenidoFisico && { contenidoFisico: updateSesionDto.contenidoFisico }),
@@ -364,7 +355,6 @@ export class SesionesService {
     const asignaciones = await this.prisma.asignacionAtletaMicrociclo.findMany({
       where: {
         atletaId: atletaIdBigInt,
-        activa: true,
       },
       select: {
         microcicloId: true,
@@ -439,10 +429,6 @@ export class SesionesService {
       duracionPlanificada: sesion.duracionPlanificada,
       volumenPlanificado: sesion.volumenPlanificado,
       intensidadPlanificada: sesion.intensidadPlanificada,
-      fcObjetivo: sesion.fcObjetivo,
-      relacionVI: sesion.relacionVI,
-      zonaEsfuerzo: sesion.zonaEsfuerzo,
-      duracionReal: sesion.duracionReal,
       volumenReal: sesion.volumenReal,
       intensidadReal: sesion.intensidadReal,
       contenidoFisico: sesion.contenidoFisico,

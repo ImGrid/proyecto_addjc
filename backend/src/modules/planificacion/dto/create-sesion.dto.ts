@@ -73,28 +73,7 @@ export class CreateSesionDto {
   @IsOptional()
   intensidadPlanificada?: number; // Porcentaje
 
-  @IsInt()
-  @Min(40)
-  @Max(220)
-  @IsOptional()
-  fcObjetivo?: number; // Frecuencia cardíaca objetivo
-
-  @IsString()
-  @MaxLength(20)
-  @IsOptional()
-  relacionVI?: string; // Relación volumen-intensidad
-
-  @IsString()
-  @MaxLength(50)
-  @IsOptional()
-  zonaEsfuerzo?: string;
-
-  // Datos reales (se llenan después de la sesión)
-  @IsInt()
-  @Min(0)
-  @IsOptional()
-  duracionReal?: number;
-
+  // Datos reales (se llenan despues de la sesion - usados por algoritmo de recomendacion)
   @IsInt()
   @Min(0)
   @IsOptional()

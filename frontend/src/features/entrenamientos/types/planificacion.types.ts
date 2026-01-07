@@ -72,10 +72,6 @@ export interface Sesion {
   duracionPlanificada: number;
   volumenPlanificado: number;
   intensidadPlanificada: number;
-  fcObjetivo: number | null;
-  relacionVI: string;
-  zonaEsfuerzo: string | null;
-  duracionReal: number | null;
   volumenReal: number | null;
   intensidadReal: number | null;
   contenidoFisico: string;

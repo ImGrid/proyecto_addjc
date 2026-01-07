@@ -96,13 +96,7 @@ export class AsignacionesService {
   }
 
   // Listar asignaciones con filtros
-  async findAll(
-    atletaId?: string,
-    microcicloId?: string,
-    activa?: boolean,
-    page = 1,
-    limit = 10,
-  ) {
+  async findAll(atletaId?: string, microcicloId?: string, page = 1, limit = 10) {
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -113,10 +107,6 @@ export class AsignacionesService {
 
     if (microcicloId) {
       where.microcicloId = BigInt(microcicloId);
-    }
-
-    if (activa !== undefined) {
-      where.activa = activa;
     }
 
     const [asignaciones, total] = await Promise.all([
@@ -211,7 +201,6 @@ export class AsignacionesService {
     const asignacion = await this.prisma.asignacionAtletaMicrociclo.update({
       where: { id: BigInt(id) },
       data: {
-        ...(updateDto.activa !== undefined && { activa: updateDto.activa }),
         ...(updateDto.observaciones !== undefined && {
           observaciones: updateDto.observaciones,
         }),
@@ -270,7 +259,6 @@ export class AsignacionesService {
       microcicloId: asignacion.microcicloId.toString(),
       asignadoPor: asignacion.asignadoPor.toString(),
       fechaAsignacion: asignacion.fechaAsignacion,
-      activa: asignacion.activa,
       observaciones: asignacion.observaciones,
       createdAt: asignacion.createdAt,
       updatedAt: asignacion.updatedAt,

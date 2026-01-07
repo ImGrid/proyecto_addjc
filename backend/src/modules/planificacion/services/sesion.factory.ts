@@ -16,7 +16,6 @@ export interface SesionTemplate {
   duracionPlanificada: number;
   volumenPlanificado: number;
   intensidadPlanificada: number;
-  relacionVI: string;
   contenidoFisico: string;
   contenidoTecnico: string;
   contenidoTactico: string;
@@ -59,40 +58,36 @@ export class SesionFactory {
       const diaSemana = diasSemana[i];
       const numeroSesion = i + 1;
 
-      // Determinar tipo de sesión basado en el patrón
+      // Determinar tipo de sesion basado en el patron
       let tipoSesion: TipoSesion;
       let duracionPlanificada: number;
       let volumenPlanificado: number;
       let intensidadPlanificada: number;
-      let relacionVI: string;
 
       switch (diaSemana) {
         case 'LUNES':
         case 'MARTES':
-          // Días de carga alta
+          // Dias de carga alta
           tipoSesion = 'ENTRENAMIENTO';
           duracionPlanificada = 120; // 2 horas
           volumenPlanificado = 80;
           intensidadPlanificada = 75;
-          relacionVI = 'ALTO-MEDIO';
           break;
 
         case 'MIERCOLES':
-          // Día de recuperación
+          // Dia de recuperacion
           tipoSesion = 'RECUPERACION';
           duracionPlanificada = 60; // 1 hora
           volumenPlanificado = 40;
           intensidadPlanificada = 40;
-          relacionVI = 'BAJO-BAJO';
           break;
 
         case 'JUEVES':
-          // Día de carga moderada-alta
+          // Dia de carga moderada-alta
           tipoSesion = 'ENTRENAMIENTO';
           duracionPlanificada = 100; // 1h 40min
           volumenPlanificado = 70;
           intensidadPlanificada = 70;
-          relacionVI = 'MEDIO-MEDIO';
           break;
 
         case 'VIERNES':
@@ -102,13 +97,11 @@ export class SesionFactory {
             duracionPlanificada = 90; // 1h 30min para evaluaciones
             volumenPlanificado = 50;
             intensidadPlanificada = 100; // Test al maximo esfuerzo
-            relacionVI = 'BAJO-ALTO';
           } else {
             tipoSesion = 'ENTRENAMIENTO';
             duracionPlanificada = 100;
             volumenPlanificado = 70;
             intensidadPlanificada = 70;
-            relacionVI = 'MEDIO-MEDIO';
           }
           break;
 
@@ -118,16 +111,14 @@ export class SesionFactory {
           duracionPlanificada = 90; // 1h 30min
           volumenPlanificado = 60;
           intensidadPlanificada = 65;
-          relacionVI = 'MEDIO-MEDIO';
           break;
 
         case 'DOMINGO':
-          // Día de descanso/recuperación
+          // Dia de descanso/recuperacion
           tipoSesion = 'DESCANSO';
           duracionPlanificada = 0;
           volumenPlanificado = 0;
           intensidadPlanificada = 0;
-          relacionVI = 'BAJO-BAJO';
           break;
 
         default:
@@ -135,7 +126,6 @@ export class SesionFactory {
           duracionPlanificada = 90;
           volumenPlanificado = 60;
           intensidadPlanificada = 60;
-          relacionVI = 'MEDIO-MEDIO';
       }
 
       sessions.push({
@@ -147,10 +137,9 @@ export class SesionFactory {
         duracionPlanificada,
         volumenPlanificado,
         intensidadPlanificada,
-        relacionVI,
-        contenidoFisico: `Contenido físico para ${diaSemana} - ${objetivoSemanal}`,
-        contenidoTecnico: `Contenido técnico para ${diaSemana}`,
-        contenidoTactico: `Contenido táctico para ${diaSemana}`,
+        contenidoFisico: `Contenido fisico para ${diaSemana} - ${objetivoSemanal}`,
+        contenidoTecnico: `Contenido tecnico para ${diaSemana}`,
+        contenidoTactico: `Contenido tactico para ${diaSemana}`,
         tipoPlanificacion: 'INICIAL',
         creadoPor: 'SISTEMA_ALGORITMO',
       });

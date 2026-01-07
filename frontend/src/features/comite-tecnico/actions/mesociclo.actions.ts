@@ -194,6 +194,41 @@ export async function updateMesociclo(
   }
 }
 
+// Tipos para delete info
+export interface MesocicloDeleteInfo {
+  nombre: string;
+  microciclos: number;
+  sesiones: number;
+}
+
+// Funcion para obtener informacion antes de eliminar
+// Endpoint: GET /api/mesociclos/:id/delete-info
+export async function fetchMesocicloDeleteInfo(id: string): Promise<MesocicloDeleteInfo | null> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('accessToken')?.value;
+
+    if (!token) {
+      return null;
+    }
+
+    const response = await fetch(`${API_URL}/mesociclos/${id}/delete-info`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('[fetchMesocicloDeleteInfo] Error:', error);
+    return null;
+  }
+}
+
 // Server Action para eliminar un mesociclo
 // Endpoint: DELETE /api/mesociclos/:id
 export async function deleteMesociclo(id: string): Promise<ActionResult> {
