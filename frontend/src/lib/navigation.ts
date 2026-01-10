@@ -46,14 +46,9 @@ export const navigationConfig: Record<RolUsuario, NavigationItem[]> = {
       icon: Users,
     },
     {
-      href: '/admin/configuracion',
-      label: 'Configuracion',
-      icon: Settings,
-    },
-    {
-      href: '/admin/auditoria',
-      label: 'Auditoria',
-      icon: Database,
+      href: '/admin/actividad',
+      label: 'Actividad',
+      icon: Activity,
     },
   ],
 

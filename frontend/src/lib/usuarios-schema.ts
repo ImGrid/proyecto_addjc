@@ -68,6 +68,39 @@ export const editarUsuarioSchema = z.object({
   estado: z.boolean().optional(),
 });
 
+// Schema para el formulario (contraseña opcional: vacio o min 8 caracteres)
+export const usuarioFormSchema = z.object({
+  ci: z
+    .string()
+    .min(5, 'CI debe tener al menos 5 caracteres')
+    .max(20, 'CI no puede tener más de 20 caracteres')
+    .trim(),
+  nombreCompleto: z
+    .string()
+    .min(3, 'Nombre debe tener al menos 3 caracteres')
+    .max(255, 'Nombre no puede tener más de 255 caracteres')
+    .trim(),
+  email: z
+    .string()
+    .email('Email inválido')
+    .max(255, 'Email no puede tener más de 255 caracteres')
+    .toLowerCase()
+    .trim(),
+  // Contraseña: vacio es valido, si tiene contenido debe tener min 8 caracteres
+  contrasena: z
+    .string()
+    .refine(
+      (val) => val === '' || val.length >= 8,
+      { message: 'Contraseña debe tener al menos 8 caracteres' }
+    )
+    .refine(
+      (val) => val === '' || val.length <= 100,
+      { message: 'Contraseña no puede tener más de 100 caracteres' }
+    ),
+  rol: z.enum(rolesUsuario),
+  estado: z.boolean().optional(),
+});
+
 // Schema para respuesta del servidor (coincide con UserResponseDto)
 export const usuarioResponseSchema = z.object({
   id: z.string(),
@@ -92,8 +125,23 @@ export const usuariosListSchema = z.object({
   }),
 });
 
+// Schema para estadisticas de usuarios (coincide con UsersService.getStats)
+export const usuariosStatsSchema = z.object({
+  total: z.number(),
+  porRol: z.object({
+    ADMINISTRADOR: z.number(),
+    COMITE_TECNICO: z.number(),
+    ENTRENADOR: z.number(),
+    ATLETA: z.number(),
+  }),
+  activos: z.number(),
+  inactivos: z.number(),
+});
+
 // Tipos inferidos automáticamente
 export type CrearUsuarioInput = z.infer<typeof crearUsuarioSchema>;
 export type EditarUsuarioInput = z.infer<typeof editarUsuarioSchema>;
+export type UsuarioFormInput = z.infer<typeof usuarioFormSchema>;
 export type Usuario = z.infer<typeof usuarioResponseSchema>;
 export type UsuariosList = z.infer<typeof usuariosListSchema>;
+export type UsuariosStats = z.infer<typeof usuariosStatsSchema>;

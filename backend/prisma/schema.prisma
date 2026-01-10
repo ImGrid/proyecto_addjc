@@ -791,6 +791,8 @@ model AuditoriaAcceso {
   id        BigInt   @id @default(autoincrement())
   usuarioId BigInt?
   accion    String   @db.VarChar(100)
+  recurso   String?  @db.VarChar(50)
+  recursoId BigInt?
   ip        String   @db.VarChar(45)
   userAgent String   @db.Text
   exito     Boolean
@@ -801,5 +803,6 @@ model AuditoriaAcceso {
 
   @@index([usuarioId])
   @@index([createdAt])
+  @@index([recurso, recursoId])
   @@map("auditorias_acceso")
 }

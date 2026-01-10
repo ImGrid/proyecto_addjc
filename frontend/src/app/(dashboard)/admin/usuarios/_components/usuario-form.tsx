@@ -4,9 +4,9 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  crearUsuarioSchema,
+  usuarioFormSchema,
   rolesUsuario,
-  type CrearUsuarioInput,
+  type UsuarioFormInput,
   type Usuario,
 } from '@/lib/usuarios-schema';
 import {
@@ -40,8 +40,8 @@ export function UsuarioForm({ usuario, onSuccess }: UsuarioFormProps) {
   const [isPending, setIsPending] = useState(false);
   const isEditing = !!usuario;
 
-  const form = useForm<CrearUsuarioInput>({
-    resolver: zodResolver(crearUsuarioSchema),
+  const form = useForm<UsuarioFormInput>({
+    resolver: zodResolver(usuarioFormSchema),
     defaultValues: usuario
       ? {
           ci: usuario.ci,
@@ -61,7 +61,7 @@ export function UsuarioForm({ usuario, onSuccess }: UsuarioFormProps) {
         },
   });
 
-  const onSubmit = async (data: CrearUsuarioInput) => {
+  const onSubmit = async (data: UsuarioFormInput) => {
     setIsPending(true);
 
     try {

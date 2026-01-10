@@ -138,6 +138,9 @@ export const ADMIN_ROUTES = {
   usuarios: {
     list: '/admin/usuarios',
   },
+
+  // Actividad (Activity Logs)
+  actividad: '/admin/actividad',
 } as const;
 
 // Rutas de autenticacion (publicas)

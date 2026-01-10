@@ -4,6 +4,7 @@ import { LoginDto } from './dto/login.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { AuditLog } from '../../common/decorators/audit-log.decorator';
 
 @Controller('auth')
 @UseGuards(JwtAuthGuard) // Aplicar autenticacion a todas las rutas por defecto
@@ -16,6 +17,7 @@ export class AuthController {
   // No requiere autenticacion (marcado con @Public())
   @Public()
   @Post('login')
+  @AuditLog({ accion: 'LOGIN', recurso: 'Usuario' })
   async login(@Body() loginDto: LoginDto) {
     console.log('[AuthController] Login request recibido para email:', loginDto.email);
     const result = await this.authService.signIn(loginDto.email, loginDto.password);

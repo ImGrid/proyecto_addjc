@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { AuthService } from '../auth/auth.service';
 import { CreateUserDto, UpdateUserDto, QueryUserDto, UserResponseDto } from './dto';
+import { RolUsuario } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -244,6 +245,7 @@ export class UsersService {
   }
 
   // Hard delete (borrar permanentemente)
+  // Verifica dependencias RESTRICT antes de eliminar
   async remove(id: string): Promise<{ message: string }> {
     const userId = BigInt(id);
 
@@ -255,10 +257,117 @@ export class UsersService {
       throw new NotFoundException('Usuario no encontrado');
     }
 
+    // Verificar dependencias que bloquean la eliminacion (FK con RESTRICT)
+    const dependencies = await this.checkUserDependencies(userId);
+
+    if (dependencies.hasBlockingDependencies) {
+      throw new BadRequestException(
+        `No se puede eliminar el usuario porque tiene datos asociados: ${dependencies.reasons.join(', ')}. ` +
+        `Use la opcion de desactivar en su lugar.`
+      );
+    }
+
+    // Si no hay dependencias bloqueantes, proceder con la eliminacion
     await this.prisma.usuario.delete({
       where: { id: userId },
     });
 
     return { message: 'Usuario eliminado permanentemente' };
+  }
+
+  // Verificar dependencias que bloquean la eliminacion de un usuario
+  // Incluye FK directas (RESTRICT) e indirectas (a traves de entrenador/atleta)
+  private async checkUserDependencies(userId: bigint): Promise<{
+    hasBlockingDependencies: boolean;
+    reasons: string[];
+  }> {
+    const reasons: string[] = [];
+
+    // Verificar macrociclos creados (RESTRICT directo)
+    const macrociclosCount = await this.prisma.macrociclo.count({
+      where: { creadoPor: userId },
+    });
+    if (macrociclosCount > 0) {
+      reasons.push(`${macrociclosCount} macrociclo(s) creado(s)`);
+    }
+
+    // Verificar asignaciones creadas (RESTRICT directo)
+    const asignacionesCount = await this.prisma.asignacionAtletaMicrociclo.count({
+      where: { asignadoPor: userId },
+    });
+    if (asignacionesCount > 0) {
+      reasons.push(`${asignacionesCount} asignacion(es) de atletas`);
+    }
+
+    // Verificar alertas del sistema (RESTRICT directo)
+    const alertasCount = await this.prisma.alertaSistema.count({
+      where: { destinatarioId: userId },
+    });
+    if (alertasCount > 0) {
+      reasons.push(`${alertasCount} alerta(s) del sistema`);
+    }
+
+    // Verificar dependencias indirectas a traves de ENTRENADOR
+    // Si el usuario es entrenador, verificar tests_fisicos.entrenadorRegistroId (RESTRICT)
+    const entrenador = await this.prisma.entrenador.findUnique({
+      where: { usuarioId: userId },
+      select: { id: true },
+    });
+
+    if (entrenador) {
+      const testsRegistradosCount = await this.prisma.testFisico.count({
+        where: { entrenadorRegistroId: entrenador.id },
+      });
+      if (testsRegistradosCount > 0) {
+        reasons.push(`${testsRegistradosCount} test(s) fisico(s) registrado(s)`);
+      }
+    }
+
+    return {
+      hasBlockingDependencies: reasons.length > 0,
+      reasons,
+    };
+  }
+
+  // Obtener estadisticas de usuarios para el dashboard del administrador
+  async getStats(): Promise<{
+    total: number;
+    porRol: Record<string, number>;
+    activos: number;
+    inactivos: number;
+  }> {
+    // Ejecutar consultas en paralelo para mejor rendimiento
+    const [total, activos, porRolResult] = await Promise.all([
+      // Total de usuarios
+      this.prisma.usuario.count(),
+      // Usuarios activos
+      this.prisma.usuario.count({ where: { estado: true } }),
+      // Agrupado por rol
+      this.prisma.usuario.groupBy({
+        by: ['rol'],
+        _count: { rol: true },
+      }),
+    ]);
+
+    // Transformar resultado de groupBy a objeto
+    const porRol: Record<string, number> = {};
+    for (const item of porRolResult) {
+      porRol[item.rol] = item._count.rol;
+    }
+
+    // Asegurar que todos los roles esten presentes (incluso con 0)
+    const allRoles: RolUsuario[] = ['ADMINISTRADOR', 'COMITE_TECNICO', 'ENTRENADOR', 'ATLETA'];
+    for (const rol of allRoles) {
+      if (!(rol in porRol)) {
+        porRol[rol] = 0;
+      }
+    }
+
+    return {
+      total,
+      porRol,
+      activos,
+      inactivos: total - activos,
+    };
   }
 }

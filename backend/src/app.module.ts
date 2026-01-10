@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { ClsModule } from 'nestjs-cls';
 import { ClsPluginTransactional } from '@nestjs-cls/transactional';
@@ -17,6 +18,8 @@ import { RegistroPostEntrenamientoModule } from './modules/registro-post-entrena
 import { DolenciasModule } from './modules/dolencias/dolencias.module';
 import { AsignacionesModule } from './modules/asignaciones/asignaciones.module';
 import { TestingModule } from './modules/testing/testing.module';
+import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
+import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor';
 import {
   databaseConfig,
   jwtConfig,
@@ -63,8 +66,16 @@ import {
     DolenciasModule,
     AsignacionesModule,
     TestingModule,
+    AuditLogsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    // Interceptor global para registrar activity logs
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AuditLogInterceptor,
+    },
+  ],
 })
 export class AppModule {}
