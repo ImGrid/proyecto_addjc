@@ -15,12 +15,22 @@ export const COMITE_TECNICO_ROUTES = {
     editar: (id: string | number) => `/comite-tecnico/atletas/${id}/editar`,
   },
 
+  // Entrenadores
+  entrenadores: {
+    list: '/comite-tecnico/entrenadores',
+    nuevo: '/comite-tecnico/entrenadores/nuevo',
+    detalle: (id: string | number) => `/comite-tecnico/entrenadores/${id}`,
+    editar: (id: string | number) =>
+      `/comite-tecnico/entrenadores/${id}/editar`,
+  },
+
   // Asignaciones (atleta-microciclo)
   asignaciones: {
     list: '/comite-tecnico/asignaciones',
     nuevo: '/comite-tecnico/asignaciones/nuevo',
     detalle: (id: string | number) => `/comite-tecnico/asignaciones/${id}`,
-    editar: (id: string | number) => `/comite-tecnico/asignaciones/${id}/editar`,
+    editar: (id: string | number) =>
+      `/comite-tecnico/asignaciones/${id}/editar`,
   },
 
   // Planificacion
@@ -30,21 +40,26 @@ export const COMITE_TECNICO_ROUTES = {
       list: '/comite-tecnico/planificacion',
       nuevo: '/comite-tecnico/planificacion/nuevo',
       detalle: (id: string | number) => `/comite-tecnico/planificacion/${id}`,
-      editar: (id: string | number) => `/comite-tecnico/planificacion/${id}/editar`,
+      editar: (id: string | number) =>
+        `/comite-tecnico/planificacion/${id}/editar`,
     },
     // Mesociclos
     mesociclos: {
       list: '/comite-tecnico/planificacion/mesociclos',
       nuevo: '/comite-tecnico/planificacion/mesociclos/nuevo',
-      detalle: (id: string | number) => `/comite-tecnico/planificacion/mesociclos/${id}`,
-      editar: (id: string | number) => `/comite-tecnico/planificacion/mesociclos/${id}/editar`,
+      detalle: (id: string | number) =>
+        `/comite-tecnico/planificacion/mesociclos/${id}`,
+      editar: (id: string | number) =>
+        `/comite-tecnico/planificacion/mesociclos/${id}/editar`,
     },
     // Microciclos
     microciclos: {
       list: '/comite-tecnico/planificacion/microciclos',
       nuevo: '/comite-tecnico/planificacion/microciclos/nuevo',
-      detalle: (id: string | number) => `/comite-tecnico/planificacion/microciclos/${id}`,
-      editar: (id: string | number) => `/comite-tecnico/planificacion/microciclos/${id}/editar`,
+      detalle: (id: string | number) =>
+        `/comite-tecnico/planificacion/microciclos/${id}`,
+      editar: (id: string | number) =>
+        `/comite-tecnico/planificacion/microciclos/${id}/editar`,
     },
   },
 
@@ -65,7 +80,8 @@ export const ENTRENADOR_ROUTES = {
   // Mis Atletas
   misAtletas: {
     list: '/entrenador/mis-atletas',
-    detalle: (atletaId: string | number) => `/entrenador/mis-atletas/${atletaId}`,
+    detalle: (atletaId: string | number) =>
+      `/entrenador/mis-atletas/${atletaId}`,
   },
 
   // Planificacion (solo lectura)
@@ -78,12 +94,14 @@ export const ENTRENADOR_ROUTES = {
     // Mesociclos
     mesociclos: {
       list: '/entrenador/planificacion/mesociclos',
-      detalle: (id: string | number) => `/entrenador/planificacion/mesociclos/${id}`,
+      detalle: (id: string | number) =>
+        `/entrenador/planificacion/mesociclos/${id}`,
     },
     // Microciclos
     microciclos: {
       list: '/entrenador/planificacion/microciclos',
-      detalle: (id: string | number) => `/entrenador/planificacion/microciclos/${id}`,
+      detalle: (id: string | number) =>
+        `/entrenador/planificacion/microciclos/${id}`,
     },
   },
 

@@ -1,7 +1,10 @@
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import type { EntrenadorResumen } from '../../types/planificacion.types';
-import { UserCog, MapPin, Users, Mail } from 'lucide-react';
+import { UserCog, MapPin, Users, Mail, ArrowRight } from 'lucide-react';
+import { COMITE_TECNICO_ROUTES } from '@/lib/routes';
 
 interface EntrenadorCardProps {
   entrenador: EntrenadorResumen;
@@ -19,8 +22,12 @@ export function EntrenadorCard({ entrenador }: EntrenadorCardProps) {
             <UserCog className="h-5 w-5" />
           </div>
           <div>
-            <CardTitle className="text-lg">{entrenador.usuario.nombreCompleto}</CardTitle>
-            <p className="text-sm text-muted-foreground">{entrenador.especialidad || 'Sin especialidad'}</p>
+            <CardTitle className="text-lg">
+              {entrenador.usuario.nombreCompleto}
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              {entrenador.especialidad || 'Sin especialidad'}
+            </p>
           </div>
         </div>
         <Badge variant={entrenador.usuario.estado ? 'default' : 'secondary'}>
@@ -39,10 +46,26 @@ export function EntrenadorCard({ entrenador }: EntrenadorCardProps) {
           </div>
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4 text-muted-foreground" />
-            <span className={atletasCount > 0 ? 'font-medium' : 'text-muted-foreground'}>
-              {atletasCount} atleta{atletasCount !== 1 ? 's' : ''} asignado{atletasCount !== 1 ? 's' : ''}
+            <span
+              className={
+                atletasCount > 0 ? 'font-medium' : 'text-muted-foreground'
+              }
+            >
+              {atletasCount} atleta{atletasCount !== 1 ? 's' : ''} asignado
+              {atletasCount !== 1 ? 's' : ''}
             </span>
           </div>
+        </div>
+
+        <div className="flex justify-end pt-2">
+          <Button variant="ghost" size="sm" asChild>
+            <Link
+              href={COMITE_TECNICO_ROUTES.entrenadores.detalle(entrenador.id)}
+            >
+              Ver detalle
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
         </div>
       </CardContent>
     </Card>

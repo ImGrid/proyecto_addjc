@@ -17,7 +17,7 @@ export class TestsFisicosService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly accessControl: AccessControlService,
-    private readonly calculations: CalculationsService,
+    private readonly calculations: CalculationsService
   ) {}
 
   // ===== CREATE =====
@@ -32,9 +32,7 @@ export class TestsFisicosService {
       });
 
       if (!entrenador) {
-        throw new BadRequestException(
-          'No se encontro el registro de entrenador para este usuario',
-        );
+        throw new BadRequestException('No se encontro el registro de entrenador para este usuario');
       }
 
       const entrenadorRegistroId = entrenador.id;
@@ -51,9 +49,7 @@ export class TestsFisicosService {
       });
 
       if (!atleta) {
-        throw new NotFoundException(
-          `El atleta con ID ${atletaId} no existe`,
-        );
+        throw new NotFoundException(`El atleta con ID ${atletaId} no existe`);
       }
 
       // 3. Obtener la sesion y validar que existe
@@ -75,15 +71,13 @@ export class TestsFisicosService {
       });
 
       if (!sesion) {
-        throw new NotFoundException(
-          `La sesion con ID ${sesionId} no existe`,
-        );
+        throw new NotFoundException(`La sesion con ID ${sesionId} no existe`);
       }
 
       // Validar que la sesion sea de tipo TEST
       if (sesion.tipoSesion !== 'TEST') {
         throw new BadRequestException(
-          `Solo se pueden registrar tests fisicos en sesiones de tipo TEST. La sesion ${sesionId} es de tipo ${sesion.tipoSesion}`,
+          `Solo se pueden registrar tests fisicos en sesiones de tipo TEST. La sesion ${sesionId} es de tipo ${sesion.tipoSesion}`
         );
       }
 
@@ -97,7 +91,7 @@ export class TestsFisicosService {
 
       if (!asignacion) {
         throw new BadRequestException(
-          `El atleta no esta asignado al microciclo ${sesion.microciclo?.numeroGlobalMicrociclo || sesion.microcicloId} de esta sesion`,
+          `El atleta no esta asignado al microciclo ${sesion.microciclo?.numeroGlobalMicrociclo || sesion.microcicloId} de esta sesion`
         );
       }
 
@@ -111,7 +105,7 @@ export class TestsFisicosService {
 
       if (testExistente) {
         throw new ConflictException(
-          `Ya existe un test fisico para este atleta en la sesion ${sesion.id}`,
+          `Ya existe un test fisico para este atleta en la sesion ${sesion.id}`
         );
       }
 
@@ -136,26 +130,17 @@ export class TestsFisicosService {
       // Calcular intensidades como % del 1RM anterior
       const pressBancaIntensidad =
         dto.pressBanca && testAnterior?.pressBanca
-          ? this.calculations.calculate1RMIntensity(
-              dto.pressBanca,
-              Number(testAnterior.pressBanca),
-            )
+          ? this.calculations.calculate1RMIntensity(dto.pressBanca, Number(testAnterior.pressBanca))
           : null;
 
       const tironIntensidad =
         dto.tiron && testAnterior?.tiron
-          ? this.calculations.calculate1RMIntensity(
-              dto.tiron,
-              Number(testAnterior.tiron),
-            )
+          ? this.calculations.calculate1RMIntensity(dto.tiron, Number(testAnterior.tiron))
           : null;
 
       const sentadillaIntensidad =
         dto.sentadilla && testAnterior?.sentadilla
-          ? this.calculations.calculate1RMIntensity(
-              dto.sentadilla,
-              Number(testAnterior.sentadilla),
-            )
+          ? this.calculations.calculate1RMIntensity(dto.sentadilla, Number(testAnterior.sentadilla))
           : null;
 
       // Normalizar test1500m a formato ISO valido para PostgreSQL TIME
@@ -253,7 +238,7 @@ export class TestsFisicosService {
     atletaId?: string,
     microcicloId?: string,
     page = 1,
-    limit = 10,
+    limit = 10
   ) {
     const skip = (page - 1) * limit;
 
@@ -361,13 +346,11 @@ export class TestsFisicosService {
       const hasAccess = await this.accessControl.checkAtletaOwnership(
         userId,
         userRole,
-        test.atleta.id,
+        test.atleta.id
       );
 
       if (!hasAccess) {
-        throw new ForbiddenException(
-          'No tienes permiso para ver este test',
-        );
+        throw new ForbiddenException('No tienes permiso para ver este test');
       }
     }
 
@@ -388,11 +371,7 @@ export class TestsFisicosService {
   }
 
   // Obtener tests de un atleta
-  async findByAtleta(
-    atletaId: string,
-    userId: bigint,
-    userRole: RolUsuario,
-  ) {
+  async findByAtleta(atletaId: string, userId: bigint, userRole: RolUsuario) {
     const whereClause: any = {
       atletaId: BigInt(atletaId),
     };
@@ -464,24 +443,17 @@ export class TestsFisicosService {
   }
 
   // Obtener ultimo test de un atleta por tipo
-  async findLatestByType(
-    atletaId: string,
-    tipoTest: string,
-    userId: bigint,
-    userRole: RolUsuario,
-  ) {
+  async findLatestByType(atletaId: string, tipoTest: string, userId: bigint, userRole: RolUsuario) {
     // Verificar autorizacion
     if (userRole === RolUsuario.ENTRENADOR) {
       const hasAccess = await this.accessControl.checkAtletaOwnership(
         userId,
         userRole,
-        BigInt(atletaId),
+        BigInt(atletaId)
       );
 
       if (!hasAccess) {
-        throw new ForbiddenException(
-          'No tienes permiso para ver tests de este atleta',
-        );
+        throw new ForbiddenException('No tienes permiso para ver tests de este atleta');
       }
     }
 
@@ -558,24 +530,17 @@ export class TestsFisicosService {
   // ===== STATISTICS =====
 
   // Obtener estadisticas de un atleta para un tipo de test
-  async getStatistics(
-    atletaId: string,
-    tipoTest: string,
-    userId: bigint,
-    userRole: RolUsuario,
-  ) {
+  async getStatistics(atletaId: string, tipoTest: string, userId: bigint, userRole: RolUsuario) {
     // Verificar autorizacion
     if (userRole === RolUsuario.ENTRENADOR) {
       const hasAccess = await this.accessControl.checkAtletaOwnership(
         userId,
         userRole,
-        BigInt(atletaId),
+        BigInt(atletaId)
       );
 
       if (!hasAccess) {
-        throw new ForbiddenException(
-          'No tienes permiso para ver estadisticas de este atleta',
-        );
+        throw new ForbiddenException('No tienes permiso para ver estadisticas de este atleta');
       }
     }
 
@@ -651,12 +616,7 @@ export class TestsFisicosService {
   }
 
   // Obtener evolucion temporal para graficos
-  async getEvolution(
-    atletaId: string,
-    tipoTest: string,
-    userId: bigint,
-    userRole: RolUsuario,
-  ) {
+  async getEvolution(atletaId: string, tipoTest: string, userId: bigint, userRole: RolUsuario) {
     const stats = await this.getStatistics(atletaId, tipoTest, userId, userRole);
 
     if (!stats) {
@@ -683,12 +643,7 @@ export class TestsFisicosService {
   }
 
   // Comparar dos tests
-  async compareTests(
-    test1Id: string,
-    test2Id: string,
-    userId: bigint,
-    userRole: RolUsuario,
-  ) {
+  async compareTests(test1Id: string, test2Id: string, userId: bigint, userRole: RolUsuario) {
     const [test1, test2] = await Promise.all([
       this.findOne(test1Id, userId, userRole),
       this.findOne(test2Id, userId, userRole),
@@ -699,9 +654,7 @@ export class TestsFisicosService {
     }
 
     if (test1.atletaId !== test2.atletaId) {
-      throw new BadRequestException(
-        'Los tests deben ser del mismo atleta',
-      );
+      throw new BadRequestException('Los tests deben ser del mismo atleta');
     }
 
     // Comparar cada tipo de test
@@ -722,10 +675,7 @@ export class TestsFisicosService {
       const valor2 = test2[campo];
 
       if (valor1 !== null && valor2 !== null) {
-        const mejora = this.calculations.calculateImprovement(
-          Number(valor2),
-          Number(valor1),
-        );
+        const mejora = this.calculations.calculateImprovement(Number(valor2), Number(valor1));
 
         comparaciones[campo] = {
           test1: Number(valor1),
@@ -775,6 +725,16 @@ export class TestsFisicosService {
     return Number(value) || 0;
   }
 
+  // Formatear DateTime (TIME) a string MM:SS
+  private formatTimeToString(time: Date | null): string | null {
+    if (!time) return null;
+
+    const minutos = time.getUTCMinutes();
+    const segundos = time.getUTCSeconds();
+
+    return `${minutos}:${segundos.toString().padStart(2, '0')}`;
+  }
+
   private formatResponse(test: any) {
     // Calcular clasificacion VO2max si existe
     const clasificacionVO2max = test.navetteVO2max
@@ -798,17 +758,11 @@ export class TestsFisicosService {
 
       // Tests de fuerza maxima
       pressBanca: test.pressBanca ? test.pressBanca.toString() : null,
-      pressBancaIntensidad: test.pressBancaIntensidad
-        ? test.pressBancaIntensidad.toString()
-        : null,
+      pressBancaIntensidad: test.pressBancaIntensidad ? test.pressBancaIntensidad.toString() : null,
       tiron: test.tiron ? test.tiron.toString() : null,
-      tironIntensidad: test.tironIntensidad
-        ? test.tironIntensidad.toString()
-        : null,
+      tironIntensidad: test.tironIntensidad ? test.tironIntensidad.toString() : null,
       sentadilla: test.sentadilla ? test.sentadilla.toString() : null,
-      sentadillaIntensidad: test.sentadillaIntensidad
-        ? test.sentadillaIntensidad.toString()
-        : null,
+      sentadillaIntensidad: test.sentadillaIntensidad ? test.sentadillaIntensidad.toString() : null,
 
       // Tests de fuerza resistencia
       barraFija: test.barraFija,
@@ -819,10 +773,8 @@ export class TestsFisicosService {
       navetteVO2max: test.navetteVO2max ? test.navetteVO2max.toString() : null,
       clasificacionVO2max,
       objetivoVO2max,
-      test1500m: test.test1500m,
-      test1500mVO2max: test.test1500mVO2max
-        ? test.test1500mVO2max.toString()
-        : null,
+      test1500m: this.formatTimeToString(test.test1500m),
+      test1500mVO2max: test.test1500mVO2max ? test.test1500mVO2max.toString() : null,
 
       // Observaciones
       observaciones: test.observaciones,

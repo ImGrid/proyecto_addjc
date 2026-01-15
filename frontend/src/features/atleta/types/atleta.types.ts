@@ -44,7 +44,7 @@ export const testFisicoSchema = z.object({
   navetteVO2max: z.string().nullable(),
   clasificacionVO2max: z.string().nullable(),
   objetivoVO2max: z.number(),
-  test1500m: z.coerce.date().nullable(),
+  test1500m: z.string().nullable(),
   test1500mVO2max: z.string().nullable(),
 
   // Observaciones
@@ -157,7 +157,9 @@ export const registroPostEntrenamientoSchema = z.object({
         zona: z.string(),
         nivel: z.number().int().min(1).max(10),
         descripcion: z.string().nullable(),
-        tipoLesion: z.enum(TipoLesionValues as [string, ...string[]]).nullable(),
+        tipoLesion: z
+          .enum(TipoLesionValues as [string, ...string[]])
+          .nullable(),
         recuperado: z.boolean(),
         fechaRecuperacion: z.coerce.date().nullable(),
       })
@@ -165,7 +167,9 @@ export const registroPostEntrenamientoSchema = z.object({
     .optional(),
 });
 
-export type RegistroPostEntrenamiento = z.infer<typeof registroPostEntrenamientoSchema>;
+export type RegistroPostEntrenamiento = z.infer<
+  typeof registroPostEntrenamientoSchema
+>;
 
 // ===================================
 // SCHEMAS PARA DOLENCIAS
@@ -261,8 +265,12 @@ export const microcicloSchema = z.object({
   // Campos de carga - Backend retorna Decimal convertido a number
   mediaVolumen: z.number().nullable(),
   mediaIntensidad: z.number().nullable(),
-  sentidoVolumen: z.enum(SentidoCargaValues as [string, ...string[]]).nullable(),
-  sentidoIntensidad: z.enum(SentidoCargaValues as [string, ...string[]]).nullable(),
+  sentidoVolumen: z
+    .enum(SentidoCargaValues as [string, ...string[]])
+    .nullable(),
+  sentidoIntensidad: z
+    .enum(SentidoCargaValues as [string, ...string[]])
+    .nullable(),
   vCarga1: z.number().nullable(),
   vCarga1Nivel: z.number().nullable(),
   iCarga1: z.number().nullable(),
@@ -356,7 +364,9 @@ export type Sesion = z.infer<typeof sesionSchema>;
 // ===================================
 
 // Respuesta paginada generica
-export const paginatedResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+export const paginatedResponseSchema = <T extends z.ZodTypeAny>(
+  dataSchema: T
+) =>
   z.object({
     data: z.array(dataSchema),
     meta: z.object({

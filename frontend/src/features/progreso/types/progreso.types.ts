@@ -51,7 +51,7 @@ export interface TestFisico {
   navetteVO2max: string | null;
   clasificacionVO2max: string | null; // Calculado en backend: "Excelente", "Bueno", etc.
   objetivoVO2max: number; // 60 por defecto
-  test1500m: Date | null;
+  test1500m: string | null;
   test1500mVO2max: string | null;
 
   // Observaciones

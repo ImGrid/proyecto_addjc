@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { PrismaService } from '../../../database/prisma.service';
 import { AccessControlService } from '../../../common/services/access-control.service';
@@ -13,7 +18,7 @@ export class MicrociclosService {
     private readonly prisma: PrismaService,
     private readonly accessControl: AccessControlService,
     private readonly dateRangeValidator: DateRangeValidator,
-    private readonly sesionFactory: SesionFactory,
+    private readonly sesionFactory: SesionFactory
   ) {}
 
   // Crear un nuevo microciclo (Aggregate Root)
@@ -41,14 +46,16 @@ export class MicrociclosService {
       await this.dateRangeValidator.validateMicrocicloInMesociclo(
         mesocicloId,
         fechaInicio,
-        fechaFin,
+        fechaFin
       );
     }
 
     // Crear microciclo
     const microciclo = await this.prisma.microciclo.create({
       data: {
-        mesocicloId: createMicrocicloDto.mesocicloId ? BigInt(createMicrocicloDto.mesocicloId) : null,
+        mesocicloId: createMicrocicloDto.mesocicloId
+          ? BigInt(createMicrocicloDto.mesocicloId)
+          : null,
         numeroMicrociclo: createMicrocicloDto.numeroMicrociclo,
         numeroGlobalMicrociclo: createMicrocicloDto.numeroGlobalMicrociclo,
         fechaInicio,
@@ -59,17 +66,29 @@ export class MicrociclosService {
         objetivoSemanal: createMicrocicloDto.objetivoSemanal,
         observaciones: createMicrocicloDto.observaciones,
         creadoPor: createMicrocicloDto.creadoPor || 'COMITE_TECNICO',
-        mediaVolumen: createMicrocicloDto.mediaVolumen ? new Prisma.Decimal(createMicrocicloDto.mediaVolumen) : null,
-        mediaIntensidad: createMicrocicloDto.mediaIntensidad ? new Prisma.Decimal(createMicrocicloDto.mediaIntensidad) : null,
+        mediaVolumen: createMicrocicloDto.mediaVolumen
+          ? new Prisma.Decimal(createMicrocicloDto.mediaVolumen)
+          : null,
+        mediaIntensidad: createMicrocicloDto.mediaIntensidad
+          ? new Prisma.Decimal(createMicrocicloDto.mediaIntensidad)
+          : null,
         sentidoVolumen: createMicrocicloDto.sentidoVolumen,
         sentidoIntensidad: createMicrocicloDto.sentidoIntensidad,
-        vCarga1: createMicrocicloDto.vCarga1 ? new Prisma.Decimal(createMicrocicloDto.vCarga1) : null,
+        vCarga1: createMicrocicloDto.vCarga1
+          ? new Prisma.Decimal(createMicrocicloDto.vCarga1)
+          : null,
         vCarga1Nivel: createMicrocicloDto.vCarga1Nivel,
-        iCarga1: createMicrocicloDto.iCarga1 ? new Prisma.Decimal(createMicrocicloDto.iCarga1) : null,
+        iCarga1: createMicrocicloDto.iCarga1
+          ? new Prisma.Decimal(createMicrocicloDto.iCarga1)
+          : null,
         iCarga1Nivel: createMicrocicloDto.iCarga1Nivel,
-        vCarga2: createMicrocicloDto.vCarga2 ? new Prisma.Decimal(createMicrocicloDto.vCarga2) : null,
+        vCarga2: createMicrocicloDto.vCarga2
+          ? new Prisma.Decimal(createMicrocicloDto.vCarga2)
+          : null,
         vCarga2Nivel: createMicrocicloDto.vCarga2Nivel,
-        iCarga2: createMicrocicloDto.iCarga2 ? new Prisma.Decimal(createMicrocicloDto.iCarga2) : null,
+        iCarga2: createMicrocicloDto.iCarga2
+          ? new Prisma.Decimal(createMicrocicloDto.iCarga2)
+          : null,
         iCarga2Nivel: createMicrocicloDto.iCarga2Nivel,
       },
       include: {
@@ -86,7 +105,7 @@ export class MicrociclosService {
     // Generar 7 sesiones automáticamente usando el Factory
     const sessionTemplates = this.sesionFactory.generateWeeklySessions(
       fechaInicio,
-      createMicrocicloDto.objetivoSemanal,
+      createMicrocicloDto.objetivoSemanal
     );
 
     // Crear las 7 sesiones en batch
@@ -136,13 +155,7 @@ export class MicrociclosService {
   }
 
   // Listar microciclos con filtros opcionales
-  async findAll(
-    userId: bigint,
-    rol: string,
-    mesocicloId?: string,
-    page = 1,
-    limit = 10,
-  ) {
+  async findAll(userId: bigint, rol: string, mesocicloId?: string, page = 1, limit = 10) {
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -180,7 +193,6 @@ export class MicrociclosService {
       where.asignacionesAtletas = {
         some: {
           atletaId: atletaId,
-          activa: true,
         },
       };
     }
@@ -225,11 +237,7 @@ export class MicrociclosService {
   }
 
   // Obtener un microciclo por ID (con validacion de ownership para ENTRENADOR)
-  async findOne(
-    id: string,
-    userId: bigint,
-    rol: string,
-  ): Promise<MicrocicloResponseDto> {
+  async findOne(id: string, userId: bigint, rol: string): Promise<MicrocicloResponseDto> {
     const microciclo = await this.prisma.microciclo.findUnique({
       where: { id: BigInt(id) },
       include: {
@@ -306,7 +314,7 @@ export class MicrociclosService {
   @Transactional()
   async update(
     id: string,
-    updateMicrocicloDto: UpdateMicrocicloDto,
+    updateMicrocicloDto: UpdateMicrocicloDto
   ): Promise<MicrocicloResponseDto> {
     const existingMicrociclo = await this.prisma.microciclo.findUnique({
       where: { id: BigInt(id) },
@@ -340,7 +348,7 @@ export class MicrociclosService {
         await this.dateRangeValidator.validateMicrocicloInMesociclo(
           existingMicrociclo.mesocicloId,
           fechaInicio,
-          fechaFin,
+          fechaFin
         );
       }
     }
@@ -349,28 +357,80 @@ export class MicrociclosService {
     const microciclo = await this.prisma.microciclo.update({
       where: { id: BigInt(id) },
       data: {
-        ...(updateMicrocicloDto.numeroMicrociclo && { numeroMicrociclo: updateMicrocicloDto.numeroMicrociclo }),
-        ...(updateMicrocicloDto.numeroGlobalMicrociclo && { numeroGlobalMicrociclo: updateMicrocicloDto.numeroGlobalMicrociclo }),
-        ...(updateMicrocicloDto.fechaInicio && { fechaInicio: new Date(updateMicrocicloDto.fechaInicio) }),
+        ...(updateMicrocicloDto.numeroMicrociclo && {
+          numeroMicrociclo: updateMicrocicloDto.numeroMicrociclo,
+        }),
+        ...(updateMicrocicloDto.numeroGlobalMicrociclo && {
+          numeroGlobalMicrociclo: updateMicrocicloDto.numeroGlobalMicrociclo,
+        }),
+        ...(updateMicrocicloDto.fechaInicio && {
+          fechaInicio: new Date(updateMicrocicloDto.fechaInicio),
+        }),
         ...(updateMicrocicloDto.fechaFin && { fechaFin: new Date(updateMicrocicloDto.fechaFin) }),
-        ...(updateMicrocicloDto.tipoMicrociclo && { tipoMicrociclo: updateMicrocicloDto.tipoMicrociclo }),
-        ...(updateMicrocicloDto.volumenTotal !== undefined && { volumenTotal: new Prisma.Decimal(updateMicrocicloDto.volumenTotal) }),
-        ...(updateMicrocicloDto.intensidadPromedio !== undefined && { intensidadPromedio: new Prisma.Decimal(updateMicrocicloDto.intensidadPromedio) }),
-        ...(updateMicrocicloDto.objetivoSemanal && { objetivoSemanal: updateMicrocicloDto.objetivoSemanal }),
-        ...(updateMicrocicloDto.observaciones !== undefined && { observaciones: updateMicrocicloDto.observaciones }),
+        ...(updateMicrocicloDto.tipoMicrociclo && {
+          tipoMicrociclo: updateMicrocicloDto.tipoMicrociclo,
+        }),
+        ...(updateMicrocicloDto.volumenTotal !== undefined && {
+          volumenTotal: new Prisma.Decimal(updateMicrocicloDto.volumenTotal),
+        }),
+        ...(updateMicrocicloDto.intensidadPromedio !== undefined && {
+          intensidadPromedio: new Prisma.Decimal(updateMicrocicloDto.intensidadPromedio),
+        }),
+        ...(updateMicrocicloDto.objetivoSemanal && {
+          objetivoSemanal: updateMicrocicloDto.objetivoSemanal,
+        }),
+        ...(updateMicrocicloDto.observaciones !== undefined && {
+          observaciones: updateMicrocicloDto.observaciones,
+        }),
         ...(updateMicrocicloDto.creadoPor && { creadoPor: updateMicrocicloDto.creadoPor }),
-        ...(updateMicrocicloDto.mediaVolumen !== undefined && { mediaVolumen: updateMicrocicloDto.mediaVolumen ? new Prisma.Decimal(updateMicrocicloDto.mediaVolumen) : null }),
-        ...(updateMicrocicloDto.mediaIntensidad !== undefined && { mediaIntensidad: updateMicrocicloDto.mediaIntensidad ? new Prisma.Decimal(updateMicrocicloDto.mediaIntensidad) : null }),
-        ...(updateMicrocicloDto.sentidoVolumen !== undefined && { sentidoVolumen: updateMicrocicloDto.sentidoVolumen }),
-        ...(updateMicrocicloDto.sentidoIntensidad !== undefined && { sentidoIntensidad: updateMicrocicloDto.sentidoIntensidad }),
-        ...(updateMicrocicloDto.vCarga1 !== undefined && { vCarga1: updateMicrocicloDto.vCarga1 ? new Prisma.Decimal(updateMicrocicloDto.vCarga1) : null }),
-        ...(updateMicrocicloDto.vCarga1Nivel !== undefined && { vCarga1Nivel: updateMicrocicloDto.vCarga1Nivel }),
-        ...(updateMicrocicloDto.iCarga1 !== undefined && { iCarga1: updateMicrocicloDto.iCarga1 ? new Prisma.Decimal(updateMicrocicloDto.iCarga1) : null }),
-        ...(updateMicrocicloDto.iCarga1Nivel !== undefined && { iCarga1Nivel: updateMicrocicloDto.iCarga1Nivel }),
-        ...(updateMicrocicloDto.vCarga2 !== undefined && { vCarga2: updateMicrocicloDto.vCarga2 ? new Prisma.Decimal(updateMicrocicloDto.vCarga2) : null }),
-        ...(updateMicrocicloDto.vCarga2Nivel !== undefined && { vCarga2Nivel: updateMicrocicloDto.vCarga2Nivel }),
-        ...(updateMicrocicloDto.iCarga2 !== undefined && { iCarga2: updateMicrocicloDto.iCarga2 ? new Prisma.Decimal(updateMicrocicloDto.iCarga2) : null }),
-        ...(updateMicrocicloDto.iCarga2Nivel !== undefined && { iCarga2Nivel: updateMicrocicloDto.iCarga2Nivel }),
+        ...(updateMicrocicloDto.mediaVolumen !== undefined && {
+          mediaVolumen: updateMicrocicloDto.mediaVolumen
+            ? new Prisma.Decimal(updateMicrocicloDto.mediaVolumen)
+            : null,
+        }),
+        ...(updateMicrocicloDto.mediaIntensidad !== undefined && {
+          mediaIntensidad: updateMicrocicloDto.mediaIntensidad
+            ? new Prisma.Decimal(updateMicrocicloDto.mediaIntensidad)
+            : null,
+        }),
+        ...(updateMicrocicloDto.sentidoVolumen !== undefined && {
+          sentidoVolumen: updateMicrocicloDto.sentidoVolumen,
+        }),
+        ...(updateMicrocicloDto.sentidoIntensidad !== undefined && {
+          sentidoIntensidad: updateMicrocicloDto.sentidoIntensidad,
+        }),
+        ...(updateMicrocicloDto.vCarga1 !== undefined && {
+          vCarga1: updateMicrocicloDto.vCarga1
+            ? new Prisma.Decimal(updateMicrocicloDto.vCarga1)
+            : null,
+        }),
+        ...(updateMicrocicloDto.vCarga1Nivel !== undefined && {
+          vCarga1Nivel: updateMicrocicloDto.vCarga1Nivel,
+        }),
+        ...(updateMicrocicloDto.iCarga1 !== undefined && {
+          iCarga1: updateMicrocicloDto.iCarga1
+            ? new Prisma.Decimal(updateMicrocicloDto.iCarga1)
+            : null,
+        }),
+        ...(updateMicrocicloDto.iCarga1Nivel !== undefined && {
+          iCarga1Nivel: updateMicrocicloDto.iCarga1Nivel,
+        }),
+        ...(updateMicrocicloDto.vCarga2 !== undefined && {
+          vCarga2: updateMicrocicloDto.vCarga2
+            ? new Prisma.Decimal(updateMicrocicloDto.vCarga2)
+            : null,
+        }),
+        ...(updateMicrocicloDto.vCarga2Nivel !== undefined && {
+          vCarga2Nivel: updateMicrocicloDto.vCarga2Nivel,
+        }),
+        ...(updateMicrocicloDto.iCarga2 !== undefined && {
+          iCarga2: updateMicrocicloDto.iCarga2
+            ? new Prisma.Decimal(updateMicrocicloDto.iCarga2)
+            : null,
+        }),
+        ...(updateMicrocicloDto.iCarga2Nivel !== undefined && {
+          iCarga2Nivel: updateMicrocicloDto.iCarga2Nivel,
+        }),
       },
       include: {
         mesociclo: {
@@ -461,7 +521,9 @@ export class MicrociclosService {
       observaciones: microciclo.observaciones,
       creadoPor: microciclo.creadoPor,
       mediaVolumen: microciclo.mediaVolumen ? parseFloat(microciclo.mediaVolumen.toString()) : null,
-      mediaIntensidad: microciclo.mediaIntensidad ? parseFloat(microciclo.mediaIntensidad.toString()) : null,
+      mediaIntensidad: microciclo.mediaIntensidad
+        ? parseFloat(microciclo.mediaIntensidad.toString())
+        : null,
       sentidoVolumen: microciclo.sentidoVolumen,
       sentidoIntensidad: microciclo.sentidoIntensidad,
       vCarga1: microciclo.vCarga1 ? parseFloat(microciclo.vCarga1.toString()) : null,

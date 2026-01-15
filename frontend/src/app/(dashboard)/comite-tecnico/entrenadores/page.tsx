@@ -1,7 +1,16 @@
 import { fetchEntrenadores } from '@/features/comite-tecnico/actions';
 import { EntrenadoresList } from '@/features/comite-tecnico/components';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { UserCog } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { UserCog, UserPlus } from 'lucide-react';
+import Link from 'next/link';
+import { COMITE_TECNICO_ROUTES } from '@/lib/routes';
 
 export default async function EntrenadoresPage() {
   const result = await fetchEntrenadores({ limit: 50 });
@@ -18,6 +27,12 @@ export default async function EntrenadoresPage() {
             {total} entrenador{total !== 1 ? 'es' : ''} en el sistema
           </p>
         </div>
+        <Button asChild>
+          <Link href={COMITE_TECNICO_ROUTES.entrenadores.nuevo}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Nuevo Entrenador
+          </Link>
+        </Button>
       </div>
 
       <Card>

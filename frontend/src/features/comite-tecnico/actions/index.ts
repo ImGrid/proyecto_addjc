@@ -47,22 +47,44 @@ export {
   fetchDolencia,
   fetchDolenciasActivasByAtleta,
 } from './fetch-tests-dolencias';
-export type { FetchTestsFisicosParams, FetchDolenciasParams } from './fetch-tests-dolencias';
+export type {
+  FetchTestsFisicosParams,
+  FetchDolenciasParams,
+} from './fetch-tests-dolencias';
 
 // Acciones de escritura - Macrociclos
-export { createMacrociclo, updateMacrociclo, deleteMacrociclo, fetchMacrocicloDeleteInfo } from './macrociclo.actions';
+export {
+  createMacrociclo,
+  updateMacrociclo,
+  deleteMacrociclo,
+  fetchMacrocicloDeleteInfo,
+} from './macrociclo.actions';
 export type { MacrocicloDeleteInfo } from './macrociclo.actions';
 
 // Acciones de escritura - Mesociclos
-export { createMesociclo, updateMesociclo, deleteMesociclo, fetchMesocicloDeleteInfo } from './mesociclo.actions';
+export {
+  createMesociclo,
+  updateMesociclo,
+  deleteMesociclo,
+  fetchMesocicloDeleteInfo,
+} from './mesociclo.actions';
 export type { MesocicloDeleteInfo } from './mesociclo.actions';
 
 // Acciones de escritura - Microciclos
-export { createMicrociclo, updateMicrociclo, deleteMicrociclo, fetchMicrocicloDeleteInfo } from './microciclo.actions';
+export {
+  createMicrociclo,
+  updateMicrociclo,
+  deleteMicrociclo,
+  fetchMicrocicloDeleteInfo,
+} from './microciclo.actions';
 export type { MicrocicloDeleteInfo } from './microciclo.actions';
 
 // Acciones de escritura - Asignaciones
-export { createAsignacion, deleteAsignacion, updateAsignacion } from './asignacion.actions';
+export {
+  createAsignacion,
+  deleteAsignacion,
+  updateAsignacion,
+} from './asignacion.actions';
 
 // Acciones de escritura - Sesiones
 export { createSesion, updateSesion, deleteSesion } from './sesion.actions';
@@ -70,13 +92,24 @@ export { createSesion, updateSesion, deleteSesion } from './sesion.actions';
 // Acciones de escritura - Atletas
 export { createAtleta, updateAtleta, deleteAtleta } from './atleta.actions';
 
+// Acciones de escritura - Entrenadores
+export {
+  createEntrenador,
+  updateEntrenador,
+  deleteEntrenador,
+} from './entrenador.actions';
+
 // Estadisticas de atletas
 export {
   fetchAtletaEstadisticas,
   fetchAtletaEvolucion,
   fetchAtletaEstadisticasCompletas,
 } from './fetch-estadisticas';
-export type { AtletaEstadisticas, AtletaEvolucion, TipoTest } from './fetch-estadisticas';
+export type {
+  AtletaEstadisticas,
+  AtletaEvolucion,
+  TipoTest,
+} from './fetch-estadisticas';
 export { TIPOS_TEST } from './estadisticas.types';
 
 // Registros Post-Entrenamiento

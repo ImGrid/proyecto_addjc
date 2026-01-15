@@ -1,15 +1,27 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { AccessControlService } from '../../common/services/access-control.service';
 import { AuthService } from '../auth/auth.service';
-import { CreateEntrenadorDto, UpdateEntrenadorDto, QueryEntrenadorDto, AssignAtletaDto, EntrenadorResponseDto } from './dto';
+import {
+  CreateEntrenadorDto,
+  UpdateEntrenadorDto,
+  QueryEntrenadorDto,
+  AssignAtletaDto,
+  EntrenadorResponseDto,
+} from './dto';
 
 @Injectable()
 export class EntrenadoresService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly accessControl: AccessControlService,
-    private readonly authService: AuthService,
+    private readonly authService: AuthService
   ) {}
 
   // Crear un nuevo entrenador (incluye crear usuario con rol ENTRENADOR)
@@ -207,7 +219,10 @@ export class EntrenadoresService {
   }
 
   // Actualizar un entrenador
-  async update(id: string, updateEntrenadorDto: UpdateEntrenadorDto): Promise<EntrenadorResponseDto> {
+  async update(
+    id: string,
+    updateEntrenadorDto: UpdateEntrenadorDto
+  ): Promise<EntrenadorResponseDto> {
     const entrenadorId = BigInt(id);
 
     // Verificar que el entrenador exista
@@ -219,10 +234,21 @@ export class EntrenadoresService {
       throw new NotFoundException('Entrenador no encontrado');
     }
 
-    // Actualizar el entrenador
+    // Extraer estado del DTO (pertenece a Usuario, no a Entrenador)
+    const { estado, ...entrenadorFields } = updateEntrenadorDto;
+
+    // Si viene estado, actualizar el usuario asociado
+    if (estado !== undefined) {
+      await this.prisma.usuario.update({
+        where: { id: existingEntrenador.usuarioId },
+        data: { estado },
+      });
+    }
+
+    // Actualizar el entrenador con los campos restantes
     const updatedEntrenador = await this.prisma.entrenador.update({
       where: { id: entrenadorId },
-      data: updateEntrenadorDto,
+      data: entrenadorFields,
       select: {
         id: true,
         usuarioId: true,
@@ -264,7 +290,7 @@ export class EntrenadoresService {
     // Verificar si tiene atletas asignados
     if (entrenador.atletasAsignados.length > 0) {
       throw new BadRequestException(
-        `No se puede eliminar el entrenador porque tiene ${entrenador.atletasAsignados.length} atleta(s) asignado(s). Reasigne los atletas primero.`,
+        `No se puede eliminar el entrenador porque tiene ${entrenador.atletasAsignados.length} atleta(s) asignado(s). Reasigne los atletas primero.`
       );
     }
 
@@ -277,7 +303,10 @@ export class EntrenadoresService {
   }
 
   // Asignar un atleta a este entrenador
-  async assignAtleta(entrenadorId: string, assignAtletaDto: AssignAtletaDto): Promise<{ message: string }> {
+  async assignAtleta(
+    entrenadorId: string,
+    assignAtletaDto: AssignAtletaDto
+  ): Promise<{ message: string }> {
     const entrenaderId = BigInt(entrenadorId);
     const atletaId = BigInt(assignAtletaDto.atletaId);
 
@@ -324,9 +353,7 @@ export class EntrenadoresService {
 
       // Verificar que el entrenadorId solicitado sea el suyo
       if (entrenadorAutenticadoId !== entrenaderId) {
-        throw new ForbiddenException(
-          'No tienes permiso para ver los atletas de otro entrenador',
-        );
+        throw new ForbiddenException('No tienes permiso para ver los atletas de otro entrenador');
       }
     }
 

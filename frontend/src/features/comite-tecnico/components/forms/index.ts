@@ -10,3 +10,5 @@ export { CreateAsignacionForm } from './create-asignacion-form';
 export { EditAsignacionForm } from './edit-asignacion-form';
 export { CreateAtletaForm } from './create-atleta-form';
 export { EditAtletaForm } from './edit-atleta-form';
+export { CreateEntrenadorForm } from './create-entrenador-form';
+export { EditEntrenadorForm } from './edit-entrenador-form';

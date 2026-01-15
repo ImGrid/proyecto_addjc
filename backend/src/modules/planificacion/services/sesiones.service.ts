@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { PrismaService } from '../../../database/prisma.service';
 import { AccessControlService } from '../../../common/services/access-control.service';
@@ -8,7 +13,7 @@ import { CreateSesionDto, UpdateSesionDto, SesionResponseDto } from '../dto';
 export class SesionesService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly accessControl: AccessControlService,
+    private readonly accessControl: AccessControlService
   ) {}
 
   // Crear una sesión individual
@@ -31,7 +36,7 @@ export class SesionesService {
     if (fecha < microciclo.fechaInicio || fecha > microciclo.fechaFin) {
       throw new BadRequestException(
         `La fecha de la sesión debe estar entre ${microciclo.fechaInicio.toISOString().split('T')[0]} ` +
-        `y ${microciclo.fechaFin.toISOString().split('T')[0]}`
+          `y ${microciclo.fechaFin.toISOString().split('T')[0]}`
       );
     }
 
@@ -83,7 +88,7 @@ export class SesionesService {
     microcicloId?: string,
     fecha?: string,
     page = 1,
-    limit = 10,
+    limit = 10
   ) {
     const skip = (page - 1) * limit;
 
@@ -128,7 +133,6 @@ export class SesionesService {
         asignacionesAtletas: {
           some: {
             atletaId: atletaId,
-            activa: true,
           },
         },
       };
@@ -233,10 +237,7 @@ export class SesionesService {
 
   // Actualizar una sesión
   @Transactional()
-  async update(
-    id: string,
-    updateSesionDto: UpdateSesionDto,
-  ): Promise<SesionResponseDto> {
+  async update(id: string, updateSesionDto: UpdateSesionDto): Promise<SesionResponseDto> {
     const existingSesion = await this.prisma.sesion.findUnique({
       where: { id: BigInt(id) },
     });
@@ -256,7 +257,7 @@ export class SesionesService {
         if (nuevaFecha < microciclo.fechaInicio || nuevaFecha > microciclo.fechaFin) {
           throw new BadRequestException(
             `La fecha de la sesión debe estar entre ${microciclo.fechaInicio.toISOString().split('T')[0]} ` +
-            `y ${microciclo.fechaFin.toISOString().split('T')[0]}`
+              `y ${microciclo.fechaFin.toISOString().split('T')[0]}`
           );
         }
       }
@@ -271,22 +272,50 @@ export class SesionesService {
         ...(updateSesionDto.numeroSesion && { numeroSesion: updateSesionDto.numeroSesion }),
         ...(updateSesionDto.tipoSesion && { tipoSesion: updateSesionDto.tipoSesion }),
         ...(updateSesionDto.turno && { turno: updateSesionDto.turno }),
-        ...(updateSesionDto.tipoPlanificacion && { tipoPlanificacion: updateSesionDto.tipoPlanificacion }),
+        ...(updateSesionDto.tipoPlanificacion && {
+          tipoPlanificacion: updateSesionDto.tipoPlanificacion,
+        }),
         ...(updateSesionDto.sesionBaseId && { sesionBaseId: BigInt(updateSesionDto.sesionBaseId) }),
         ...(updateSesionDto.creadoPor && { creadoPor: updateSesionDto.creadoPor }),
-        ...(updateSesionDto.duracionPlanificada !== undefined && { duracionPlanificada: updateSesionDto.duracionPlanificada }),
-        ...(updateSesionDto.volumenPlanificado !== undefined && { volumenPlanificado: updateSesionDto.volumenPlanificado }),
-        ...(updateSesionDto.intensidadPlanificada !== undefined && { intensidadPlanificada: updateSesionDto.intensidadPlanificada }),
-        ...(updateSesionDto.volumenReal !== undefined && { volumenReal: updateSesionDto.volumenReal }),
-        ...(updateSesionDto.intensidadReal !== undefined && { intensidadReal: updateSesionDto.intensidadReal }),
-        ...(updateSesionDto.contenidoFisico && { contenidoFisico: updateSesionDto.contenidoFisico }),
-        ...(updateSesionDto.contenidoTecnico && { contenidoTecnico: updateSesionDto.contenidoTecnico }),
-        ...(updateSesionDto.contenidoTactico && { contenidoTactico: updateSesionDto.contenidoTactico }),
-        ...(updateSesionDto.calentamiento !== undefined && { calentamiento: updateSesionDto.calentamiento }),
-        ...(updateSesionDto.partePrincipal !== undefined && { partePrincipal: updateSesionDto.partePrincipal }),
-        ...(updateSesionDto.vueltaCalma !== undefined && { vueltaCalma: updateSesionDto.vueltaCalma }),
-        ...(updateSesionDto.observaciones !== undefined && { observaciones: updateSesionDto.observaciones }),
-        ...(updateSesionDto.materialNecesario !== undefined && { materialNecesario: updateSesionDto.materialNecesario }),
+        ...(updateSesionDto.duracionPlanificada !== undefined && {
+          duracionPlanificada: updateSesionDto.duracionPlanificada,
+        }),
+        ...(updateSesionDto.volumenPlanificado !== undefined && {
+          volumenPlanificado: updateSesionDto.volumenPlanificado,
+        }),
+        ...(updateSesionDto.intensidadPlanificada !== undefined && {
+          intensidadPlanificada: updateSesionDto.intensidadPlanificada,
+        }),
+        ...(updateSesionDto.volumenReal !== undefined && {
+          volumenReal: updateSesionDto.volumenReal,
+        }),
+        ...(updateSesionDto.intensidadReal !== undefined && {
+          intensidadReal: updateSesionDto.intensidadReal,
+        }),
+        ...(updateSesionDto.contenidoFisico && {
+          contenidoFisico: updateSesionDto.contenidoFisico,
+        }),
+        ...(updateSesionDto.contenidoTecnico && {
+          contenidoTecnico: updateSesionDto.contenidoTecnico,
+        }),
+        ...(updateSesionDto.contenidoTactico && {
+          contenidoTactico: updateSesionDto.contenidoTactico,
+        }),
+        ...(updateSesionDto.calentamiento !== undefined && {
+          calentamiento: updateSesionDto.calentamiento,
+        }),
+        ...(updateSesionDto.partePrincipal !== undefined && {
+          partePrincipal: updateSesionDto.partePrincipal,
+        }),
+        ...(updateSesionDto.vueltaCalma !== undefined && {
+          vueltaCalma: updateSesionDto.vueltaCalma,
+        }),
+        ...(updateSesionDto.observaciones !== undefined && {
+          observaciones: updateSesionDto.observaciones,
+        }),
+        ...(updateSesionDto.materialNecesario !== undefined && {
+          materialNecesario: updateSesionDto.materialNecesario,
+        }),
       },
       include: {
         microciclo: {
@@ -324,12 +353,7 @@ export class SesionesService {
   // Obtener sesiones de microciclos asignados a un atleta especifico
   // Usado para filtrar sesiones al registrar post-entrenamiento o test fisico
   // tipoSesion: Filtro opcional por tipo de sesion (puede ser un valor o array separado por comas)
-  async findByAtleta(
-    atletaId: string,
-    userId: bigint,
-    rol: string,
-    tipoSesion?: string,
-  ) {
+  async findByAtleta(atletaId: string, userId: bigint, rol: string, tipoSesion?: string) {
     const atletaIdBigInt = BigInt(atletaId);
 
     // Si es ENTRENADOR, verificar que el atleta le pertenece

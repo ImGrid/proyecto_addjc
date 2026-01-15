@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { createTestSchema, CreateTestPayload } from '../schemas/create-test.schema';
 import { ActionResult } from '@/types/action-result';
 import { ENTRENADOR_ROUTES } from '@/lib/routes';
+import { sanitizeFormData } from '@/lib/form-utils';
 
 // Server Action para crear un test fisico
 // Endpoint: POST /tests-fisicos
@@ -24,23 +25,24 @@ export async function createTestFisico(
       };
     }
 
-    // Extraer datos del FormData
+    // Extraer y sanitizar datos del FormData
     // NOTA: fechaTest y microcicloId se derivan de la sesion en el backend
-    const rawData = {
-      atletaId: formData.get('atletaId'),
-      sesionId: formData.get('sesionId'),
-      asistio: formData.get('asistio'),
-      motivoInasistencia: formData.get('motivoInasistencia'),
-      pressBanca: formData.get('pressBanca'),
-      tiron: formData.get('tiron'),
-      sentadilla: formData.get('sentadilla'),
-      barraFija: formData.get('barraFija'),
-      paralelas: formData.get('paralelas'),
-      navettePalier: formData.get('navettePalier'),
-      test1500m: formData.get('test1500m'),
-      observaciones: formData.get('observaciones'),
-      condicionesTest: formData.get('condicionesTest'),
-    };
+    // sanitizeFormData convierte null a undefined para compatibilidad con Zod .optional()
+    const rawData = sanitizeFormData(formData, [
+      'atletaId',
+      'sesionId',
+      'asistio',
+      'motivoInasistencia',
+      'pressBanca',
+      'tiron',
+      'sentadilla',
+      'barraFija',
+      'paralelas',
+      'navettePalier',
+      'test1500m',
+      'observaciones',
+      'condicionesTest',
+    ]);
 
     // Validar con Zod
     const validation = createTestSchema.safeParse(rawData);

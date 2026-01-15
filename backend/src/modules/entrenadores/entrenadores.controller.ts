@@ -10,7 +10,12 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { EntrenadoresService } from './entrenadores.service';
-import { CreateEntrenadorDto, UpdateEntrenadorDto, QueryEntrenadorDto, AssignAtletaDto } from './dto';
+import {
+  CreateEntrenadorDto,
+  UpdateEntrenadorDto,
+  QueryEntrenadorDto,
+  AssignAtletaDto,
+} from './dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -21,9 +26,9 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 export class EntrenadoresController {
   constructor(private readonly entrenadoresService: EntrenadoresService) {}
 
-  // POST /api/entrenadores - Crear entrenador (solo ADMINISTRADOR)
+  // POST /api/entrenadores - Crear entrenador (ADMINISTRADOR y COMITE_TECNICO)
   @Post()
-  @Roles('ADMINISTRADOR')
+  @Roles('ADMINISTRADOR', 'COMITE_TECNICO')
   create(@Body() createEntrenadorDto: CreateEntrenadorDto) {
     return this.entrenadoresService.create(createEntrenadorDto);
   }
@@ -46,25 +51,25 @@ export class EntrenadoresController {
   }
 
   // PATCH /api/entrenadores/:id - Actualizar entrenador
-  // Solo ADMINISTRADOR puede editar entrenadores
+  // ADMINISTRADOR y COMITE_TECNICO pueden editar entrenadores
   @Patch(':id')
-  @Roles('ADMINISTRADOR')
+  @Roles('ADMINISTRADOR', 'COMITE_TECNICO')
   update(@Param('id') id: string, @Body() updateEntrenadorDto: UpdateEntrenadorDto) {
     return this.entrenadoresService.update(id, updateEntrenadorDto);
   }
 
   // DELETE /api/entrenadores/:id - Eliminar entrenador permanentemente
-  // Solo ADMINISTRADOR puede eliminar entrenadores
+  // ADMINISTRADOR y COMITE_TECNICO pueden eliminar entrenadores
   @Delete(':id')
-  @Roles('ADMINISTRADOR')
+  @Roles('ADMINISTRADOR', 'COMITE_TECNICO')
   remove(@Param('id') id: string) {
     return this.entrenadoresService.remove(id);
   }
 
   // POST /api/entrenadores/:id/atletas - Asignar atleta a entrenador
-  // Solo ADMINISTRADOR puede asignar atletas
+  // ADMINISTRADOR y COMITE_TECNICO pueden asignar atletas
   @Post(':id/atletas')
-  @Roles('ADMINISTRADOR')
+  @Roles('ADMINISTRADOR', 'COMITE_TECNICO')
   assignAtleta(@Param('id') id: string, @Body() assignAtletaDto: AssignAtletaDto) {
     return this.entrenadoresService.assignAtleta(id, assignAtletaDto);
   }
