@@ -3,9 +3,13 @@
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { createRegistroSchema, CreateRegistroPayload } from '../schemas/create-registro.schema';
+import {
+  createRegistroSchema,
+  CreateRegistroPayload,
+} from '../schemas/create-registro.schema';
 import { ActionResult } from '@/types/action-result';
 import { ENTRENADOR_ROUTES } from '@/lib/routes';
+import { sanitizeFormData } from '@/lib/form-utils';
 
 // Server Action para crear un registro post-entrenamiento
 // Endpoint: POST /registros-post-entrenamiento
@@ -24,25 +28,31 @@ export async function createRegistro(
       };
     }
 
-    // Extraer datos del FormData
-    const rawData = {
-      atletaId: formData.get('atletaId'),
-      sesionId: formData.get('sesionId'),
-      asistio: formData.get('asistio') === 'true',
-      motivoInasistencia: formData.get('motivoInasistencia') || undefined,
-      ejerciciosCompletados: formData.get('ejerciciosCompletados'),
-      intensidadAlcanzada: formData.get('intensidadAlcanzada'),
-      duracionReal: formData.get('duracionReal'),
-      rpe: formData.get('rpe'),
-      calidadSueno: formData.get('calidadSueno'),
-      horasSueno: formData.get('horasSueno') || undefined,
-      estadoAnimico: formData.get('estadoAnimico'),
-      observaciones: formData.get('observaciones') || undefined,
-      // Dolencias se envian como JSON string
-      dolencias: formData.get('dolencias')
-        ? JSON.parse(formData.get('dolencias') as string)
-        : undefined,
-    };
+    // Extraer y sanitizar datos del FormData
+    // sanitizeFormData convierte null a undefined para compatibilidad con Zod .optional()
+    const rawData = sanitizeFormData(formData, [
+      'atletaId',
+      'sesionId',
+      'asistio',
+      'motivoInasistencia',
+      'ejerciciosCompletados',
+      'intensidadAlcanzada',
+      'duracionReal',
+      'rpe',
+      'calidadSueno',
+      'horasSueno',
+      'estadoAnimico',
+      'observaciones',
+      'dolencias',
+    ]);
+
+    // Manejar conversiones especiales
+    rawData.asistio = formData.get('asistio') === 'true';
+
+    // Parsear dolencias si existen
+    if (rawData.dolencias && typeof rawData.dolencias === 'string') {
+      rawData.dolencias = JSON.parse(rawData.dolencias as string);
+    }
 
     // Validar con Zod
     const validation = createRegistroSchema.safeParse(rawData);
@@ -75,36 +85,62 @@ export async function createRegistro(
     };
 
     // Solo agregar campos opcionales que tengan valor
-    if (validation.data.motivoInasistencia && validation.data.motivoInasistencia.trim() !== '') {
+    if (
+      validation.data.motivoInasistencia &&
+      validation.data.motivoInasistencia.trim() !== ''
+    ) {
       payload.motivoInasistencia = validation.data.motivoInasistencia.trim();
     }
 
     // Campos de entrenamiento (opcionales para COMPETENCIA)
-    if (validation.data.ejerciciosCompletados !== undefined && validation.data.ejerciciosCompletados !== '') {
-      payload.ejerciciosCompletados = Number(validation.data.ejerciciosCompletados);
+    if (
+      validation.data.ejerciciosCompletados !== undefined &&
+      validation.data.ejerciciosCompletados !== ''
+    ) {
+      payload.ejerciciosCompletados = Number(
+        validation.data.ejerciciosCompletados
+      );
     }
-    if (validation.data.intensidadAlcanzada !== undefined && validation.data.intensidadAlcanzada !== '') {
+    if (
+      validation.data.intensidadAlcanzada !== undefined &&
+      validation.data.intensidadAlcanzada !== ''
+    ) {
       payload.intensidadAlcanzada = Number(validation.data.intensidadAlcanzada);
     }
-    if (validation.data.duracionReal !== undefined && validation.data.duracionReal !== '') {
+    if (
+      validation.data.duracionReal !== undefined &&
+      validation.data.duracionReal !== ''
+    ) {
       payload.duracionReal = Number(validation.data.duracionReal);
     }
     if (validation.data.rpe !== undefined && validation.data.rpe !== '') {
       payload.rpe = Number(validation.data.rpe);
     }
-    if (validation.data.calidadSueno !== undefined && validation.data.calidadSueno !== '') {
+    if (
+      validation.data.calidadSueno !== undefined &&
+      validation.data.calidadSueno !== ''
+    ) {
       payload.calidadSueno = Number(validation.data.calidadSueno);
     }
-    if (validation.data.estadoAnimico !== undefined && validation.data.estadoAnimico !== '') {
+    if (
+      validation.data.estadoAnimico !== undefined &&
+      validation.data.estadoAnimico !== ''
+    ) {
       payload.estadoAnimico = Number(validation.data.estadoAnimico);
     }
 
     // Manejar horasSueno - puede ser numero o string vacio
-    if (validation.data.horasSueno !== undefined && validation.data.horasSueno !== '') {
+    if (
+      validation.data.horasSueno !== undefined &&
+      validation.data.horasSueno !== ''
+    ) {
       payload.horasSueno = Number(validation.data.horasSueno);
     }
 
-    if (validation.data.observaciones && validation.data.observaciones.trim() !== '') {
+    if (
+      validation.data.observaciones &&
+      validation.data.observaciones.trim() !== ''
+    ) {
       payload.observaciones = validation.data.observaciones.trim();
     }
 
@@ -118,12 +154,13 @@ export async function createRegistro(
       }));
     }
 
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+    const API_URL =
+      process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
     const response = await fetch(`${API_URL}/registros-post-entrenamiento`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
@@ -131,7 +168,11 @@ export async function createRegistro(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
-      console.error('[createRegistro] Error del backend:', response.status, errorData);
+      console.error(
+        '[createRegistro] Error del backend:',
+        response.status,
+        errorData
+      );
 
       // Manejar errores especificos del backend
       if (response.status === 403) {
@@ -171,7 +212,6 @@ export async function createRegistro(
     revalidatePath('/entrenador');
     revalidatePath('/entrenador/dolencias');
     revalidatePath(`/entrenador/mis-atletas/${validation.data.atletaId}`);
-
   } catch (error) {
     console.error('[createRegistro] Error:', error);
     return {

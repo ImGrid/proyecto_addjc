@@ -251,7 +251,7 @@ export type Notificacion = z.infer<typeof notificacionSchema>;
 export const microcicloSchema = z.object({
   id: z.string(),
   mesocicloId: z.string().nullable(),
-  numeroMicrociclo: z.number().int(),
+  numeroMicrociclo: z.number().int().nullable(),
   numeroGlobalMicrociclo: z.number().int(),
   fechaInicio: z.coerce.date(),
   fechaFin: z.coerce.date(),
