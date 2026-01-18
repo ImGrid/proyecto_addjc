@@ -299,8 +299,8 @@ export class UsersService {
       reasons.push(`${asignacionesCount} asignacion(es) de atletas`);
     }
 
-    // Verificar alertas del sistema (RESTRICT directo)
-    const alertasCount = await this.prisma.alertaSistema.count({
+    // Verificar alertas del sistema via junction table
+    const alertasCount = await this.prisma.alertaDestinatario.count({
       where: { destinatarioId: userId },
     });
     if (alertasCount > 0) {

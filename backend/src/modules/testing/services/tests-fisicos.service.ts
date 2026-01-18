@@ -143,20 +143,6 @@ export class TestsFisicosService {
           ? this.calculations.calculate1RMIntensity(dto.sentadilla, Number(testAnterior.sentadilla))
           : null;
 
-      // Normalizar test1500m a formato ISO valido para PostgreSQL TIME
-      let test1500mDate: Date | null = null;
-      if (dto.test1500m) {
-        const segundos = this.calculations.parseTimeToSeconds(dto.test1500m);
-        if (segundos !== null) {
-          // Convertir segundos a formato HH:MM:SS con ceros
-          const horas = Math.floor(segundos / 3600);
-          const minutos = Math.floor((segundos % 3600) / 60);
-          const segs = segundos % 60;
-          const tiempoISO = `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:${segs.toString().padStart(2, '0')}`;
-          test1500mDate = new Date(`1970-01-01T${tiempoISO}`);
-        }
-      }
-
       // 7. Crear el test fisico
       // fechaTest y microcicloId se derivan de la sesion
       const test = await tx.testFisico.create({
@@ -186,7 +172,7 @@ export class TestsFisicosService {
           // Tests de resistencia aerobica
           navettePalier: dto.navettePalier,
           navetteVO2max,
-          test1500m: test1500mDate,
+          test1500m: dto.test1500m || null,
           test1500mVO2max: null,
 
           // Observaciones
@@ -725,16 +711,6 @@ export class TestsFisicosService {
     return Number(value) || 0;
   }
 
-  // Formatear DateTime (TIME) a string MM:SS
-  private formatTimeToString(time: Date | null): string | null {
-    if (!time) return null;
-
-    const minutos = time.getUTCMinutes();
-    const segundos = time.getUTCSeconds();
-
-    return `${minutos}:${segundos.toString().padStart(2, '0')}`;
-  }
-
   private formatResponse(test: any) {
     // Calcular clasificacion VO2max si existe
     const clasificacionVO2max = test.navetteVO2max
@@ -773,7 +749,7 @@ export class TestsFisicosService {
       navetteVO2max: test.navetteVO2max ? test.navetteVO2max.toString() : null,
       clasificacionVO2max,
       objetivoVO2max,
-      test1500m: this.formatTimeToString(test.test1500m),
+      test1500m: test.test1500m,
       test1500mVO2max: test.test1500mVO2max ? test.test1500mVO2max.toString() : null,
 
       // Observaciones

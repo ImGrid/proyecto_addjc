@@ -24,11 +24,11 @@ export class MicrociclosController {
   constructor(private readonly microciclosService: MicrociclosService) {}
 
   // POST /api/microciclos - Crear microciclo (solo COMITE_TECNICO)
-  // Genera automáticamente 7 sesiones
+  // Genera automaticamente 7 sesiones PERSONALIZADAS segun el perfil del atleta
   @Post()
   @Roles('COMITE_TECNICO')
-  create(@Body() createMicrocicloDto: CreateMicrocicloDto) {
-    return this.microciclosService.create(createMicrocicloDto);
+  create(@Body() createMicrocicloDto: CreateMicrocicloDto, @CurrentUser() user: any) {
+    return this.microciclosService.create(createMicrocicloDto, BigInt(user.id));
   }
 
   // GET /api/microciclos - Listar microciclos (filtrados por rol)

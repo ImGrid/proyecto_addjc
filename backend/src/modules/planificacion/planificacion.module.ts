@@ -12,6 +12,7 @@ import { SesionesService } from './services/sesiones.service';
 import { SesionFactory } from './services/sesion.factory';
 import { DateRangeValidator } from './validators/date-range.validator';
 import { PrismaService } from '../../database/prisma.service';
+import { CatalogoEjerciciosService } from '../algoritmo/services/catalogo-ejercicios.service';
 
 // Módulo de Planificación Deportiva
 // Incluye: Macrociclos, Mesociclos, Microciclos y Sesiones
@@ -34,6 +35,7 @@ import { PrismaService } from '../../database/prisma.service';
     SesionFactory,
     DateRangeValidator,
     PrismaService,
+    CatalogoEjerciciosService,
   ],
   exports: [
     MacrociclosService,

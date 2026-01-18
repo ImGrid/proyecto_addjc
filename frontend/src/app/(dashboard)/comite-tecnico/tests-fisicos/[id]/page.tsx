@@ -148,7 +148,7 @@ export default async function TestFisicoDetallePage({ params }: TestFisicoDetall
               <div>
                 <p className="text-sm text-muted-foreground">Test 1500m</p>
                 <p className="font-medium">
-                  {new Date(test.test1500m).toISOString().substring(11, 19)}
+                  {test.test1500m}
                 </p>
               </div>
             )}

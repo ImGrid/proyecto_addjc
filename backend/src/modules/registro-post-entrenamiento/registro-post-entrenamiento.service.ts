@@ -4,24 +4,29 @@ import {
   ConflictException,
   BadRequestException,
   ForbiddenException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { PrismaService } from '../../database/prisma.service';
 import { AccessControlService } from '../../common/services/access-control.service';
 import { CreateRegistroPostEntrenamientoDto } from './dto';
 import { RolUsuario } from '@prisma/client';
+import { AlertasSistemaService } from '../algoritmo/services/alertas-sistema.service';
 
 @Injectable()
 export class RegistroPostEntrenamientoService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly accessControl: AccessControlService,
+    @Inject(forwardRef(() => AlertasSistemaService))
+    private readonly alertasService: AlertasSistemaService,
   ) {}
 
   // Crear registro post-entrenamiento con validacion 1:1
   @Transactional()
   async create(dto: CreateRegistroPostEntrenamientoDto, userId: bigint) {
-    return await this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       // Buscar el entrenadorId usando el userId
       const entrenador = await tx.entrenador.findUnique({
         where: { usuarioId: userId },
@@ -205,8 +210,33 @@ export class RegistroPostEntrenamientoService {
       });
 
       // 6. Formatear respuesta con BigInt convertidos a string
-      return this.formatResponse(registro);
+      return {
+        registro,
+        atletaId,
+        sesionId,
+      };
     });
+
+    // 7. Procesar alertas automaticas (fuera de la transaccion)
+    // Esto evalua reglas de fatiga, lesion, peso, etc.
+    let alertasGeneradas = null;
+    try {
+      if (dto.asistio) {
+        alertasGeneradas = await this.alertasService.procesarAlertasPostEntrenamiento(
+          result.atletaId,
+          result.registro.id,
+          result.sesionId,
+        );
+      }
+    } catch (error) {
+      // Log del error pero no fallamos la creacion del registro
+      console.error('Error procesando alertas:', error);
+    }
+
+    return {
+      ...this.formatResponse(result.registro),
+      alertas: alertasGeneradas,
+    };
   }
 
   // Listar registros con filtros

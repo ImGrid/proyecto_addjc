@@ -19,6 +19,8 @@ import { DolenciasModule } from './modules/dolencias/dolencias.module';
 import { AsignacionesModule } from './modules/asignaciones/asignaciones.module';
 import { TestingModule } from './modules/testing/testing.module';
 import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
+import { AlgoritmoModule } from './modules/algoritmo/algoritmo.module';
+import { RecomendacionesModule } from './modules/recomendaciones/recomendaciones.module';
 import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor';
 import {
   databaseConfig,
@@ -67,6 +69,8 @@ import {
     AsignacionesModule,
     TestingModule,
     AuditLogsModule,
+    AlgoritmoModule,
+    RecomendacionesModule,
   ],
   controllers: [AppController],
   providers: [

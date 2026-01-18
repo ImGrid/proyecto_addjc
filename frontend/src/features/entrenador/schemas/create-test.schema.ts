@@ -49,9 +49,9 @@ export const createTestSchema = z.object({
   ]).optional(),
 
   test1500m: z.string()
-    .max(10, 'Formato invalido para test 1500m')
-    .regex(/^(\d{1,2}):([0-5]\d)(:([0-5]\d))?$/, {
-      message: 'Formato invalido. Usa MM:SS o HH:MM:SS (ej: 05:30)',
+    .max(5, 'Formato invalido para test 1500m')
+    .regex(/^([0-5]?\d):([0-5]\d)$/, {
+      message: 'Formato invalido. Usa MM:SS (ej: 05:30)',
     })
     .optional()
     .or(z.literal('')),

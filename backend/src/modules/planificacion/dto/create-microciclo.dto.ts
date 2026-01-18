@@ -13,6 +13,11 @@ import { Transform } from 'class-transformer';
 import { TipoMicrociclo, CreadoPor, SentidoCarga } from '@prisma/client';
 
 export class CreateMicrocicloDto {
+  // Atleta obligatorio - el algoritmo genera sesiones personalizadas
+  @IsString()
+  @IsNotEmpty({ message: 'El atletaId es obligatorio para generar sesiones personalizadas' })
+  atletaId!: string;
+
   @IsString()
   @IsOptional()
   mesocicloId?: string; // BigInt como string (opcional en v1.0)
