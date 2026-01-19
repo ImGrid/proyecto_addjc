@@ -2,7 +2,7 @@
 // El COMITE_TECNICO debe proporcionar una razon para el rechazo
 // El algoritmo usara esta informacion para mejorar futuras recomendaciones
 
-import { IsString, IsNotEmpty, MaxLength, IsOptional } from 'class-validator';
+import { IsString, MaxLength, IsOptional } from 'class-validator';
 
 export class RechazarRecomendacionDto {
   @IsOptional()

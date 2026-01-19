@@ -8,6 +8,7 @@ import { RankingAtletasService } from './services/ranking-atletas.service';
 import { RankingController } from './controllers/ranking.controller';
 import { NotificacionesController } from './controllers/notificaciones.controller';
 import { NotificacionesService } from './services/notificaciones.service';
+import { NotificacionesCronService } from './services/notificaciones-cron.service';
 
 // Modulo de Algoritmo de Recomendaciones
 // Incluye:
@@ -30,6 +31,7 @@ import { NotificacionesService } from './services/notificaciones.service';
     AlertasSistemaService,
     RankingAtletasService,
     NotificacionesService,
+    NotificacionesCronService,
   ],
   exports: [
     CatalogoEjerciciosService,

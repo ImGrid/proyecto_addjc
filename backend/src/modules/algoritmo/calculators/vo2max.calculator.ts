@@ -46,12 +46,6 @@ export function calcularVO2maxLeger(palier: number, edad: number): number {
   return Math.round(vo2max * 100) / 100;
 }
 
-// Formula simplificada (menos precisa pero mas rapida)
-// VO2max = 30 + (palier x 2)
-export function calcularVO2maxSimplificado(palier: number): number {
-  return 30 + palier * 2;
-}
-
 // Clasifica el VO2max segun la tabla de referencia
 export function clasificarVO2max(vo2max: number): ClasificacionVO2max {
   if (vo2max >= CLASIFICACION_VO2MAX.EXCELENTE.min) return 'EXCELENTE';

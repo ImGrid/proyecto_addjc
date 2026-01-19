@@ -319,35 +319,3 @@ export function calcularScoreAtleta(
     },
   };
 }
-
-// Genera un ranking de atletas ordenados por score
-export function generarRankingAtletas(
-  atletas: Array<{
-    atletaId: bigint;
-    nombreCompleto: string;
-    datosTest: DatosTestFisico;
-    datosEstado: DatosEstadoAtleta;
-    datosPeso: DatosPesoAtleta;
-  }>,
-): Array<{
-  posicion: number;
-  atletaId: bigint;
-  nombreCompleto: string;
-  resultado: ResultadoScore;
-}> {
-  // Calcular score para cada atleta
-  const atletasConScore = atletas.map((atleta) => ({
-    atletaId: atleta.atletaId,
-    nombreCompleto: atleta.nombreCompleto,
-    resultado: calcularScoreAtleta(atleta.datosTest, atleta.datosEstado, atleta.datosPeso),
-  }));
-
-  // Ordenar por score total descendente
-  atletasConScore.sort((a, b) => b.resultado.scoreTotal - a.resultado.scoreTotal);
-
-  // Agregar posicion
-  return atletasConScore.map((atleta, index) => ({
-    posicion: index + 1,
-    ...atleta,
-  }));
-}

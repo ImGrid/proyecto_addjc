@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ClsModule } from 'nestjs-cls';
 import { ClsPluginTransactional } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
@@ -42,6 +43,8 @@ import {
         abortEarly: false,
       },
     }),
+    // Modulo para tareas programadas (cron jobs)
+    ScheduleModule.forRoot(),
     // Configuracion de transacciones declarativas con CLS
     ClsModule.forRoot({
       global: true,

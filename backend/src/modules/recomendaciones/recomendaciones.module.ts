@@ -5,6 +5,7 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../../database/database.module';
 import { AuthModule } from '../auth/auth.module';
+import { AlgoritmoModule } from '../algoritmo/algoritmo.module';
 import { PrismaService } from '../../database/prisma.service';
 import { RecomendacionesController } from './recomendaciones.controller';
 import { RecomendacionesService } from './recomendaciones.service';
@@ -13,6 +14,7 @@ import { RecomendacionesService } from './recomendaciones.service';
   imports: [
     DatabaseModule,
     AuthModule,
+    AlgoritmoModule,
   ],
   controllers: [RecomendacionesController],
   providers: [

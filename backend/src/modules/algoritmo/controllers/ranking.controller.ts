@@ -10,8 +10,10 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { RankingAtletasService } from '../services/ranking-atletas.service';
+import { AccessControlService } from '../../../common/services/access-control.service';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -32,7 +34,10 @@ const CATEGORIAS_VALIDAS: CategoriaPeso[] = [
 @Controller('ranking')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class RankingController {
-  constructor(private readonly rankingService: RankingAtletasService) {}
+  constructor(
+    private readonly rankingService: RankingAtletasService,
+    private readonly accessControl: AccessControlService,
+  ) {}
 
   // GET /api/ranking - Obtener ranking global (todas las categorias)
   // Solo COMITE_TECNICO puede ver el ranking global
@@ -144,9 +149,14 @@ export class RankingController {
   ) {
     // Si es ATLETA, solo puede ver su propio ranking
     if (user.rol === 'ATLETA') {
-      const atletaId = await this.obtenerAtletaIdDelUsuario(user.id);
-      if (atletaId && atletaId.toString() !== id) {
-        throw new BadRequestException('Solo puedes ver tu propio ranking');
+      const atletaId = await this.accessControl.getAtletaId(BigInt(user.id));
+
+      if (!atletaId) {
+        throw new BadRequestException('No se encontro perfil de atleta');
+      }
+
+      if (atletaId.toString() !== id) {
+        throw new ForbiddenException('Solo puedes ver tu propio ranking');
       }
     }
 
@@ -163,7 +173,7 @@ export class RankingController {
   @Get('mi-ranking')
   @Roles('ATLETA')
   async obtenerMiRanking(@CurrentUser() user: any) {
-    const atletaId = await this.obtenerAtletaIdDelUsuario(user.id);
+    const atletaId = await this.accessControl.getAtletaId(BigInt(user.id));
 
     if (!atletaId) {
       throw new BadRequestException('No se encontro perfil de atleta');
@@ -176,12 +186,5 @@ export class RankingController {
     }
 
     return resultado;
-  }
-
-  // Metodo auxiliar para obtener atletaId de un usuario
-  private async obtenerAtletaIdDelUsuario(usuarioId: bigint): Promise<bigint | null> {
-    // Este metodo deberia usar el AccessControlService, pero por simplicidad
-    // hacemos una consulta directa (en produccion usar el servicio)
-    return null;
   }
 }

@@ -6,13 +6,12 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
+import { NotificacionesService } from '../algoritmo/services/notificaciones.service';
 import {
   EstadoRecomendacion,
   RolUsuario,
-  TipoNotificacion,
   Prioridad,
 } from '@prisma/client';
 import {
@@ -42,7 +41,10 @@ type AccionHistorial =
 
 @Injectable()
 export class RecomendacionesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificacionesService: NotificacionesService,
+  ) {}
 
   // Validar transicion de estado (State Machine)
   private validarTransicion(
@@ -321,7 +323,10 @@ export class RecomendacionesService {
         include: {
           atleta: {
             include: {
-              usuario: { select: { nombreCompleto: true } },
+              usuario: { select: { nombreCompleto: true, id: true } },
+              entrenadorAsignado: {
+                select: { usuarioId: true },
+              },
             },
           },
           microcicloAfectado: {
@@ -366,12 +371,20 @@ export class RecomendacionesService {
       { sesionAprobada: recomendacion.sesionGeneradaId?.toString() },
     );
 
-    // Notificar al atleta (si aplica)
-    await this.notificarAtleta(
-      resultado.atletaId,
-      resultado.id,
-      'Tu planificacion ha sido aprobada',
-    );
+    // Notificar al atleta y entrenador
+    try {
+      const microcicloNumero = resultado.microcicloAfectado?.numeroGlobalMicrociclo || 0;
+      const entrenadorUsuarioId = resultado.atleta.entrenadorAsignado?.usuarioId || null;
+
+      await this.notificacionesService.notificarPlanificacionAprobada(
+        resultado.atleta.usuario.id,
+        entrenadorUsuarioId,
+        microcicloNumero,
+      );
+    } catch (error) {
+      // No fallar si la notificacion no se puede crear
+      console.error('Error creando notificaciones de aprobacion:', error);
+    }
 
     return {
       ...this.formatResponse(resultado),
@@ -484,7 +497,10 @@ export class RecomendacionesService {
         include: {
           atleta: {
             include: {
-              usuario: { select: { nombreCompleto: true } },
+              usuario: { select: { nombreCompleto: true, id: true } },
+              entrenadorAsignado: {
+                select: { usuarioId: true },
+              },
             },
           },
           microcicloAfectado: {
@@ -532,12 +548,19 @@ export class RecomendacionesService {
       },
     );
 
-    // Notificar al atleta
-    await this.notificarAtleta(
-      resultado.atletaId,
-      resultado.id,
-      'Tu planificacion ha sido ajustada y aprobada',
-    );
+    // Notificar al atleta y entrenador
+    try {
+      const microcicloNumero = resultado.microcicloAfectado?.numeroGlobalMicrociclo || 0;
+      const entrenadorUsuarioId = resultado.atleta.entrenadorAsignado?.usuarioId || null;
+
+      await this.notificacionesService.notificarPlanificacionAprobada(
+        resultado.atleta.usuario.id,
+        entrenadorUsuarioId,
+        microcicloNumero,
+      );
+    } catch (error) {
+      console.error('Error creando notificaciones de modificacion:', error);
+    }
 
     return {
       ...this.formatResponse(resultado),
@@ -652,37 +675,6 @@ export class RecomendacionesService {
       categoriaPesoAtleta: r.atleta.categoriaPeso,
       fecha: r.fechaRevision,
     }));
-  }
-
-  // Notificar atleta (helper)
-  private async notificarAtleta(
-    atletaId: bigint,
-    recomendacionId: bigint,
-    mensaje: string,
-  ) {
-    try {
-      // Obtener usuarioId del atleta
-      const atleta = await this.prisma.atleta.findUnique({
-        where: { id: atletaId },
-        select: { usuarioId: true },
-      });
-
-      if (atleta) {
-        await this.prisma.notificacion.create({
-          data: {
-            destinatarioId: atleta.usuarioId,
-            recomendacionId,
-            tipo: 'PLANIFICACION_APROBADA',
-            titulo: 'Planificacion Actualizada',
-            mensaje,
-            prioridad: 'MEDIA',
-          },
-        });
-      }
-    } catch (error) {
-      // No fallar si la notificacion no se puede crear
-      console.error('Error creando notificacion:', error);
-    }
   }
 
   // Formatear respuesta con BigInt a string
