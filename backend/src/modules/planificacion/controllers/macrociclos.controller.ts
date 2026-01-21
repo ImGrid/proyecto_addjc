@@ -26,10 +26,7 @@ export class MacrociclosController {
   // POST /api/macrociclos - Crear macrociclo (solo COMITE_TECNICO)
   @Post()
   @Roles('COMITE_TECNICO')
-  create(
-    @Body() createMacrocicloDto: CreateMacrocicloDto,
-    @CurrentUser() user: any,
-  ) {
+  create(@Body() createMacrocicloDto: CreateMacrocicloDto, @CurrentUser() user: any) {
     return this.macrociclosService.create(createMacrocicloDto, user.id);
   }
 
@@ -39,7 +36,7 @@ export class MacrociclosController {
   findAll(
     @CurrentUser() user: any,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number
   ) {
     return this.macrociclosService.findAll(BigInt(user.id), user.rol, page, limit);
   }
@@ -54,10 +51,7 @@ export class MacrociclosController {
   // PATCH /api/macrociclos/:id - Actualizar macrociclo (solo COMITE_TECNICO)
   @Patch(':id')
   @Roles('COMITE_TECNICO')
-  update(
-    @Param('id') id: string,
-    @Body() updateMacrocicloDto: UpdateMacrocicloDto,
-  ) {
+  update(@Param('id') id: string, @Body() updateMacrocicloDto: UpdateMacrocicloDto) {
     return this.macrociclosService.update(id, updateMacrocicloDto);
   }
 

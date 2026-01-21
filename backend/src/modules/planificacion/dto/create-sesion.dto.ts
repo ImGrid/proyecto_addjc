@@ -10,13 +10,7 @@ import {
   MinLength,
   MaxLength,
 } from 'class-validator';
-import {
-  DiaSemana,
-  TipoSesion,
-  Turno,
-  TipoPlanificacion,
-  CreadoPor,
-} from '@prisma/client';
+import { DiaSemana, TipoSesion, Turno, TipoPlanificacion, CreadoPor } from '@prisma/client';
 
 export class CreateSesionDto {
   @IsString()

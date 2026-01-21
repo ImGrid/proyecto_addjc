@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { AuthService } from '../auth/auth.service';
 import { CreateUserDto, UpdateUserDto, QueryUserDto, UserResponseDto } from './dto';
@@ -8,7 +13,7 @@ import { RolUsuario } from '@prisma/client';
 export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly authService: AuthService,
+    private readonly authService: AuthService
   ) {}
 
   // Crear un nuevo usuario
@@ -263,7 +268,7 @@ export class UsersService {
     if (dependencies.hasBlockingDependencies) {
       throw new BadRequestException(
         `No se puede eliminar el usuario porque tiene datos asociados: ${dependencies.reasons.join(', ')}. ` +
-        `Use la opcion de desactivar en su lugar.`
+          `Use la opcion de desactivar en su lugar.`
       );
     }
 

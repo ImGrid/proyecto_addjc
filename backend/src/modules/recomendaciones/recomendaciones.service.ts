@@ -2,18 +2,10 @@
 // Implementa: State Machine, Human-in-the-Loop, Audit Trail, Feedback Loop
 // Basado en mejores practicas de sistemas de aprobacion y decision support
 
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { NotificacionesService } from '../algoritmo/services/notificaciones.service';
-import {
-  EstadoRecomendacion,
-  RolUsuario,
-  Prioridad,
-} from '@prisma/client';
+import { EstadoRecomendacion, RolUsuario, Prioridad } from '@prisma/client';
 import {
   AprobarRecomendacionDto,
   RechazarRecomendacionDto,
@@ -43,13 +35,13 @@ type AccionHistorial =
 export class RecomendacionesService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly notificacionesService: NotificacionesService,
+    private readonly notificacionesService: NotificacionesService
   ) {}
 
   // Validar transicion de estado (State Machine)
   private validarTransicion(
     estadoActual: EstadoRecomendacion,
-    estadoNuevo: EstadoRecomendacion,
+    estadoNuevo: EstadoRecomendacion
   ): boolean {
     const transicionesPermitidas = TRANSICIONES_VALIDAS[estadoActual];
     return transicionesPermitidas.includes(estadoNuevo);
@@ -63,7 +55,7 @@ export class RecomendacionesService {
     usuarioId: bigint,
     accion: AccionHistorial,
     comentario?: string,
-    datosAdicionales?: any,
+    datosAdicionales?: any
   ): Promise<void> {
     await this.prisma.historialRecomendacion.create({
       data: {
@@ -128,12 +120,7 @@ export class RecomendacionesService {
   }
 
   // Listar recomendaciones pendientes de revision (para COMITE_TECNICO)
-  async findPendientes(
-    page = 1,
-    limit = 10,
-    prioridad?: Prioridad,
-    atletaId?: string,
-  ) {
+  async findPendientes(page = 1, limit = 10, prioridad?: Prioridad, atletaId?: string) {
     const skip = (page - 1) * limit;
 
     const where: any = {
@@ -187,12 +174,7 @@ export class RecomendacionesService {
   }
 
   // Listar todas las recomendaciones con filtros
-  async findAll(
-    page = 1,
-    limit = 10,
-    estado?: EstadoRecomendacion,
-    atletaId?: string,
-  ) {
+  async findAll(page = 1, limit = 10, estado?: EstadoRecomendacion, atletaId?: string) {
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -254,7 +236,7 @@ export class RecomendacionesService {
 
     if (!this.validarTransicion(recomendacion.estado, 'EN_PROCESO')) {
       throw new BadRequestException(
-        `No se puede iniciar revision de una recomendacion en estado ${recomendacion.estado}`,
+        `No se puede iniciar revision de una recomendacion en estado ${recomendacion.estado}`
       );
     }
 
@@ -281,7 +263,7 @@ export class RecomendacionesService {
       'EN_PROCESO',
       userId,
       'EN_REVISION',
-      'Recomendacion tomada para revision',
+      'Recomendacion tomada para revision'
     );
 
     return this.formatResponse(actualizada);
@@ -305,7 +287,7 @@ export class RecomendacionesService {
     if (!this.validarTransicion(recomendacion.estado, 'CUMPLIDA')) {
       throw new BadRequestException(
         `No se puede aprobar una recomendacion en estado ${recomendacion.estado}. ` +
-        `Primero debe estar EN_PROCESO.`,
+          `Primero debe estar EN_PROCESO.`
       );
     }
 
@@ -368,7 +350,7 @@ export class RecomendacionesService {
       userId,
       'APROBADA',
       dto.comentario || 'Recomendacion aprobada',
-      { sesionAprobada: recomendacion.sesionGeneradaId?.toString() },
+      { sesionAprobada: recomendacion.sesionGeneradaId?.toString() }
     );
 
     // Notificar al atleta y entrenador
@@ -379,7 +361,7 @@ export class RecomendacionesService {
       await this.notificacionesService.notificarPlanificacionAprobada(
         resultado.atleta.usuario.id,
         entrenadorUsuarioId,
-        microcicloNumero,
+        microcicloNumero
       );
     } catch (error) {
       // No fallar si la notificacion no se puede crear
@@ -405,7 +387,7 @@ export class RecomendacionesService {
     if (!this.validarTransicion(recomendacion.estado, 'RECHAZADA')) {
       throw new BadRequestException(
         `No se puede rechazar una recomendacion en estado ${recomendacion.estado}. ` +
-        `Primero debe estar EN_PROCESO.`,
+          `Primero debe estar EN_PROCESO.`
       );
     }
 
@@ -428,7 +410,7 @@ export class RecomendacionesService {
         comentarioRevision: dto.motivo,
         // Guardar feedback en datosAnalisis para que el algoritmo lo use
         datosAnalisis: {
-          ...(recomendacion.datosAnalisis as object || {}),
+          ...((recomendacion.datosAnalisis as object) || {}),
           feedback: feedbackData,
         },
       },
@@ -452,7 +434,7 @@ export class RecomendacionesService {
       {
         accionAlternativa: dto.accionAlternativa,
         tipoRecomendacion: recomendacion.tipo,
-      },
+      }
     );
 
     return {
@@ -478,7 +460,7 @@ export class RecomendacionesService {
     if (!this.validarTransicion(recomendacion.estado, 'MODIFICADA')) {
       throw new BadRequestException(
         `No se puede modificar una recomendacion en estado ${recomendacion.estado}. ` +
-        `Primero debe estar EN_PROCESO.`,
+          `Primero debe estar EN_PROCESO.`
       );
     }
 
@@ -519,9 +501,13 @@ export class RecomendacionesService {
           where: { id: recomendacion.sesionGeneradaId },
           data: {
             aprobado: true,
-            ...(ajustes.duracionPlanificada && { duracionPlanificada: ajustes.duracionPlanificada }),
+            ...(ajustes.duracionPlanificada && {
+              duracionPlanificada: ajustes.duracionPlanificada,
+            }),
             ...(ajustes.volumenPlanificado && { volumenPlanificado: ajustes.volumenPlanificado }),
-            ...(ajustes.intensidadPlanificada && { intensidadPlanificada: ajustes.intensidadPlanificada }),
+            ...(ajustes.intensidadPlanificada && {
+              intensidadPlanificada: ajustes.intensidadPlanificada,
+            }),
             ...(ajustes.contenidoFisico && { contenidoFisico: ajustes.contenidoFisico }),
             ...(ajustes.contenidoTecnico && { contenidoTecnico: ajustes.contenidoTecnico }),
             ...(ajustes.contenidoTactico && { contenidoTactico: ajustes.contenidoTactico }),
@@ -545,7 +531,7 @@ export class RecomendacionesService {
       {
         modificaciones: dto.modificaciones,
         comentarioAdicional: dto.comentarioAdicional,
-      },
+      }
     );
 
     // Notificar al atleta y entrenador
@@ -556,7 +542,7 @@ export class RecomendacionesService {
       await this.notificacionesService.notificarPlanificacionAprobada(
         resultado.atleta.usuario.id,
         entrenadorUsuarioId,
-        microcicloNumero,
+        microcicloNumero
       );
     } catch (error) {
       console.error('Error creando notificaciones de modificacion:', error);
@@ -596,25 +582,19 @@ export class RecomendacionesService {
 
   // Estadisticas de recomendaciones (para dashboard del COMITE)
   async getEstadisticas() {
-    const [
-      pendientes,
-      enProceso,
-      cumplidas,
-      rechazadas,
-      modificadas,
-      porPrioridad,
-    ] = await Promise.all([
-      this.prisma.recomendacion.count({ where: { estado: 'PENDIENTE' } }),
-      this.prisma.recomendacion.count({ where: { estado: 'EN_PROCESO' } }),
-      this.prisma.recomendacion.count({ where: { estado: 'CUMPLIDA' } }),
-      this.prisma.recomendacion.count({ where: { estado: 'RECHAZADA' } }),
-      this.prisma.recomendacion.count({ where: { estado: 'MODIFICADA' } }),
-      this.prisma.recomendacion.groupBy({
-        by: ['prioridad'],
-        where: { estado: { in: ['PENDIENTE', 'EN_PROCESO'] } },
-        _count: { prioridad: true },
-      }),
-    ]);
+    const [pendientes, enProceso, cumplidas, rechazadas, modificadas, porPrioridad] =
+      await Promise.all([
+        this.prisma.recomendacion.count({ where: { estado: 'PENDIENTE' } }),
+        this.prisma.recomendacion.count({ where: { estado: 'EN_PROCESO' } }),
+        this.prisma.recomendacion.count({ where: { estado: 'CUMPLIDA' } }),
+        this.prisma.recomendacion.count({ where: { estado: 'RECHAZADA' } }),
+        this.prisma.recomendacion.count({ where: { estado: 'MODIFICADA' } }),
+        this.prisma.recomendacion.groupBy({
+          by: ['prioridad'],
+          where: { estado: { in: ['PENDIENTE', 'EN_PROCESO'] } },
+          _count: { prioridad: true },
+        }),
+      ]);
 
     const prioridadMap: Record<string, number> = {};
     porPrioridad.forEach((p) => {
@@ -636,12 +616,14 @@ export class RecomendacionesService {
         MEDIA: prioridadMap['MEDIA'] || 0,
         BAJA: prioridadMap['BAJA'] || 0,
       },
-      tasaAprobacion: cumplidas + modificadas > 0
-        ? Math.round(((cumplidas + modificadas) / (cumplidas + modificadas + rechazadas)) * 100)
-        : 0,
-      tasaModificacion: modificadas > 0 && (cumplidas + modificadas) > 0
-        ? Math.round((modificadas / (cumplidas + modificadas)) * 100)
-        : 0,
+      tasaAprobacion:
+        cumplidas + modificadas > 0
+          ? Math.round(((cumplidas + modificadas) / (cumplidas + modificadas + rechazadas)) * 100)
+          : 0,
+      tasaModificacion:
+        modificadas > 0 && cumplidas + modificadas > 0
+          ? Math.round((modificadas / (cumplidas + modificadas)) * 100)
+          : 0,
     };
   }
 

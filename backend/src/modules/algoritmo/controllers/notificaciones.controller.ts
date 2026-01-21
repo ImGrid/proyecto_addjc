@@ -27,7 +27,7 @@ import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 export class NotificacionesController {
   constructor(
     private readonly notificacionesService: NotificacionesService,
-    private readonly alertasService: AlertasSistemaService,
+    private readonly alertasService: AlertasSistemaService
   ) {}
 
   // =====================
@@ -41,13 +41,13 @@ export class NotificacionesController {
     @CurrentUser() user: any,
     @Query('soloNoLeidas', new DefaultValuePipe(false), ParseBoolPipe) soloNoLeidas: boolean,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number
   ) {
     return await this.notificacionesService.obtenerNotificacionesUsuario(
       BigInt(user.id),
       soloNoLeidas,
       page,
-      limit,
+      limit
     );
   }
 
@@ -77,13 +77,13 @@ export class NotificacionesController {
     @CurrentUser() user: any,
     @Query('soloNoLeidas', new DefaultValuePipe(false), ParseBoolPipe) soloNoLeidas: boolean,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number
   ) {
     return await this.alertasService.obtenerAlertasDestinatario(
       BigInt(user.id),
       soloNoLeidas,
       page,
-      limit,
+      limit
     );
   }
 
@@ -99,12 +99,9 @@ export class NotificacionesController {
   @Roles('COMITE_TECNICO', 'ENTRENADOR')
   async obtenerAlertasAtleta(
     @Param('atletaId') atletaId: string,
-    @Query('soloNoLeidas', new DefaultValuePipe(false), ParseBoolPipe) soloNoLeidas: boolean,
+    @Query('soloNoLeidas', new DefaultValuePipe(false), ParseBoolPipe) soloNoLeidas: boolean
   ) {
-    return await this.alertasService.obtenerAlertasAtleta(
-      BigInt(atletaId),
-      soloNoLeidas,
-    );
+    return await this.alertasService.obtenerAlertasAtleta(BigInt(atletaId), soloNoLeidas);
   }
 
   // POST /api/notificaciones/alertas/leer-todas - Marcar todas las alertas como leidas
@@ -117,13 +114,10 @@ export class NotificacionesController {
   // PATCH /api/notificaciones/alertas/:alertaId/leer - Marcar alerta como leida
   @Patch('alertas/:alertaId/leer')
   @Roles('COMITE_TECNICO', 'ENTRENADOR')
-  async marcarAlertaComoLeida(
-    @Param('alertaId') alertaId: string,
-    @CurrentUser() user: any,
-  ) {
+  async marcarAlertaComoLeida(@Param('alertaId') alertaId: string, @CurrentUser() user: any) {
     const resultado = await this.alertasService.marcarAlertaLeida(
       BigInt(alertaId),
-      BigInt(user.id),
+      BigInt(user.id)
     );
 
     if (!resultado) {
@@ -164,39 +158,21 @@ export class NotificacionesController {
   // GET /api/notificaciones/:id - Obtener una notificacion por ID
   @Get(':id')
   @Roles('COMITE_TECNICO', 'ENTRENADOR', 'ATLETA', 'ADMINISTRADOR')
-  async obtenerNotificacion(
-    @Param('id') id: string,
-    @CurrentUser() user: any,
-  ) {
-    return await this.notificacionesService.obtenerPorId(
-      BigInt(id),
-      BigInt(user.id),
-    );
+  async obtenerNotificacion(@Param('id') id: string, @CurrentUser() user: any) {
+    return await this.notificacionesService.obtenerPorId(BigInt(id), BigInt(user.id));
   }
 
   // PATCH /api/notificaciones/:id/leer - Marcar notificacion como leida
   @Patch(':id/leer')
   @Roles('COMITE_TECNICO', 'ENTRENADOR', 'ATLETA', 'ADMINISTRADOR')
-  async marcarComoLeida(
-    @Param('id') id: string,
-    @CurrentUser() user: any,
-  ) {
-    return await this.notificacionesService.marcarComoLeida(
-      BigInt(id),
-      BigInt(user.id),
-    );
+  async marcarComoLeida(@Param('id') id: string, @CurrentUser() user: any) {
+    return await this.notificacionesService.marcarComoLeida(BigInt(id), BigInt(user.id));
   }
 
   // DELETE /api/notificaciones/:id - Eliminar notificacion
   @Delete(':id')
   @Roles('COMITE_TECNICO', 'ENTRENADOR', 'ATLETA', 'ADMINISTRADOR')
-  async eliminarNotificacion(
-    @Param('id') id: string,
-    @CurrentUser() user: any,
-  ) {
-    return await this.notificacionesService.eliminar(
-      BigInt(id),
-      BigInt(user.id),
-    );
+  async eliminarNotificacion(@Param('id') id: string, @CurrentUser() user: any) {
+    return await this.notificacionesService.eliminar(BigInt(id), BigInt(user.id));
   }
 }

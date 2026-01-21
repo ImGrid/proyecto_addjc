@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Query,
-  UseGuards,
-  ParseIntPipe,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, UseGuards, ParseIntPipe } from '@nestjs/common';
 import { RegistroPostEntrenamientoService } from './registro-post-entrenamiento.service';
 import { CreateRegistroPostEntrenamientoDto } from './dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -20,7 +11,7 @@ import { AtletaOwnershipGuard } from '../../common/guards/atleta-ownership.guard
 @UseGuards(JwtAuthGuard)
 export class RegistroPostEntrenamientoController {
   constructor(
-    private readonly registroPostEntrenamientoService: RegistroPostEntrenamientoService,
+    private readonly registroPostEntrenamientoService: RegistroPostEntrenamientoService
   ) {}
 
   // POST /api/registros-post-entrenamiento - Crear registro (solo ENTRENADOR)
@@ -28,15 +19,9 @@ export class RegistroPostEntrenamientoController {
   @Post()
   @Roles('ENTRENADOR')
   @UseGuards(RolesGuard, AtletaOwnershipGuard)
-  create(
-    @Body() createDto: CreateRegistroPostEntrenamientoDto,
-    @CurrentUser() user: any,
-  ) {
+  create(@Body() createDto: CreateRegistroPostEntrenamientoDto, @CurrentUser() user: any) {
     // Pasar el userId, el servicio buscará el entrenadorId
-    return this.registroPostEntrenamientoService.create(
-      createDto,
-      BigInt(user.id),
-    );
+    return this.registroPostEntrenamientoService.create(createDto, BigInt(user.id));
   }
 
   // GET /api/registros-post-entrenamiento - Listar registros
@@ -48,7 +33,7 @@ export class RegistroPostEntrenamientoController {
     @Query('atletaId') atletaId?: string,
     @Query('sesionId') sesionId?: string,
     @Query('page', new ParseIntPipe({ optional: true })) page = 1,
-    @Query('limit', new ParseIntPipe({ optional: true })) limit = 10,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit = 10
   ) {
     return this.registroPostEntrenamientoService.findAll(
       BigInt(user.id),
@@ -56,7 +41,7 @@ export class RegistroPostEntrenamientoController {
       atletaId,
       sesionId,
       page,
-      limit,
+      limit
     );
   }
 
@@ -65,11 +50,7 @@ export class RegistroPostEntrenamientoController {
   @Roles('ENTRENADOR', 'COMITE_TECNICO', 'ATLETA')
   @UseGuards(RolesGuard)
   findOne(@Param('id') id: string, @CurrentUser() user: any) {
-    return this.registroPostEntrenamientoService.findOne(
-      id,
-      BigInt(user.id),
-      user.rol,
-    );
+    return this.registroPostEntrenamientoService.findOne(id, BigInt(user.id), user.rol);
   }
 
   // GET /api/sesiones/:sesionId/registros-post-entrenamiento - Ver registros de una sesion
@@ -77,10 +58,6 @@ export class RegistroPostEntrenamientoController {
   @Roles('ENTRENADOR', 'COMITE_TECNICO', 'ATLETA')
   @UseGuards(RolesGuard)
   findBySesion(@Param('sesionId') sesionId: string, @CurrentUser() user: any) {
-    return this.registroPostEntrenamientoService.findBySesion(
-      sesionId,
-      BigInt(user.id),
-      user.rol,
-    );
+    return this.registroPostEntrenamientoService.findBySesion(sesionId, BigInt(user.id), user.rol);
   }
 }

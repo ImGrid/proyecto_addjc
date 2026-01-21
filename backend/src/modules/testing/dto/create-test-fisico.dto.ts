@@ -35,10 +35,7 @@ export class CreateTestFisicoDto {
   // Tests de fuerza maxima (1RM) - kg
   @IsOptional()
   @Transform(({ value }) => (value ? parseFloat(value) : null))
-  @IsNumber(
-    { maxDecimalPlaces: 2 },
-    { message: 'Press banca debe ser un numero' },
-  )
+  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'Press banca debe ser un numero' })
   @Min(0, { message: 'Press banca no puede ser negativo' })
   @Max(300, { message: 'Press banca no puede exceder 300 kg' })
   pressBanca?: number;
@@ -52,10 +49,7 @@ export class CreateTestFisicoDto {
 
   @IsOptional()
   @Transform(({ value }) => (value ? parseFloat(value) : null))
-  @IsNumber(
-    { maxDecimalPlaces: 2 },
-    { message: 'Sentadilla debe ser un numero' },
-  )
+  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'Sentadilla debe ser un numero' })
   @Min(0, { message: 'Sentadilla no puede ser negativo' })
   @Max(400, { message: 'Sentadilla no puede exceder 400 kg' })
   sentadilla?: number;
@@ -76,10 +70,7 @@ export class CreateTestFisicoDto {
   // Tests de resistencia aerobica
   @IsOptional()
   @Transform(({ value }) => (value ? parseFloat(value) : null))
-  @IsNumber(
-    { maxDecimalPlaces: 2 },
-    { message: 'Navette palier debe ser un numero' },
-  )
+  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'Navette palier debe ser un numero' })
   @Min(0, { message: 'Navette palier no puede ser negativo' })
   @Max(20, { message: 'Navette palier no puede exceder 20' })
   navettePalier?: number;

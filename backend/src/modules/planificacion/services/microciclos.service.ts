@@ -22,6 +22,7 @@ import {
   CatalogoEjerciciosService,
   DolenciaActiva,
   EstadoAtleta,
+  EjercicioParaSesion,
 } from '../../algoritmo/services/catalogo-ejercicios.service';
 import { TipoRecomendacion, Prioridad, EstadoRecomendacion } from '@prisma/client';
 
@@ -32,7 +33,7 @@ export class MicrociclosService {
     private readonly accessControl: AccessControlService,
     private readonly dateRangeValidator: DateRangeValidator,
     private readonly sesionFactory: SesionFactory,
-    private readonly catalogoEjercicios: CatalogoEjerciciosService,
+    private readonly catalogoEjercicios: CatalogoEjerciciosService
   ) {}
 
   // Crear un nuevo microciclo (Aggregate Root)
@@ -40,7 +41,7 @@ export class MicrociclosService {
   @Transactional()
   async create(
     createMicrocicloDto: CreateMicrocicloDto,
-    userId: bigint,
+    userId: bigint
   ): Promise<MicrocicloResponseDto> {
     const fechaInicio = new Date(createMicrocicloDto.fechaInicio);
     const fechaFin = new Date(createMicrocicloDto.fechaFin);
@@ -53,7 +54,7 @@ export class MicrociclosService {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     if (diffDays !== 6) {
       throw new BadRequestException(
-        'Un microciclo debe durar exactamente 7 dias (fechaFin debe ser fechaInicio + 6 dias)',
+        'Un microciclo debe durar exactamente 7 dias (fechaFin debe ser fechaInicio + 6 dias)'
       );
     }
 
@@ -63,7 +64,7 @@ export class MicrociclosService {
       await this.dateRangeValidator.validateMicrocicloInMesociclo(
         mesocicloId,
         fechaInicio,
-        fechaFin,
+        fechaFin
       );
     }
 
@@ -178,8 +179,11 @@ export class MicrociclosService {
 
     // PASO 5.1: Seleccionar ejercicios del catalogo para cada sesion de entrenamiento
     // Esto reemplaza el contenido estatico por ejercicios reales del catalogo
+    // IMPORTANTE: Ahora guardamos los IDs de ejercicios para la tabla ejercicios_sesion
     const alertasDolencias: string[] = [];
     const ejerciciosExcluidosTotales: string[] = [];
+    // Mapa para guardar ejercicios por numero de sesion (se asociaran despues de crear las sesiones)
+    const ejerciciosPorSesion = new Map<number, EjercicioParaSesion[]>();
 
     for (const sesion of resultadoGeneracion.sesiones) {
       // Solo seleccionar ejercicios para sesiones de entrenamiento
@@ -190,15 +194,18 @@ export class MicrociclosService {
           etapaMesociclo,
           dolenciasActivas,
           estadoAtleta,
-          2, // cantidad de ejercicios por tipo
+          2 // cantidad de ejercicios por tipo
         );
 
-        // Generar contenido usando los ejercicios seleccionados
-        const contenido = this.catalogoEjercicios.generarContenidoSesion(seleccion);
+        // Generar contenido CON IDs preservados usando el nuevo metodo
+        const contenido = this.catalogoEjercicios.generarContenidoSesionConIds(seleccion);
         sesion.contenidoFisico = contenido.contenidoFisico;
         sesion.contenidoTecnico = contenido.contenidoTecnico;
         sesion.contenidoTactico = contenido.contenidoTactico;
         sesion.partePrincipal = contenido.partePrincipal;
+
+        // Guardar ejercicios con IDs para insertar despues en ejercicios_sesion
+        ejerciciosPorSesion.set(sesion.numeroSesion, contenido.ejercicios);
 
         // Recolectar alertas y ejercicios excluidos
         alertasDolencias.push(...seleccion.alertas);
@@ -209,7 +216,7 @@ export class MicrociclosService {
     // Agregar informacion de dolencias a la justificacion
     let justificacionExtra = '';
     if (dolenciasActivas.length > 0) {
-      justificacionExtra += ` Dolencias activas: ${dolenciasActivas.map(d => `${d.zona}(${d.nivel})`).join(', ')}.`;
+      justificacionExtra += ` Dolencias activas: ${dolenciasActivas.map((d) => `${d.zona}(${d.nivel})`).join(', ')}.`;
     }
     if (ejerciciosExcluidosTotales.length > 0) {
       const excluidos = [...new Set(ejerciciosExcluidosTotales)].slice(0, 5);
@@ -252,7 +259,7 @@ export class MicrociclosService {
       })),
     });
 
-    // Obtener el microciclo con sus sesiones creadas
+    // Obtener el microciclo con sus sesiones creadas (incluir numeroSesion para asociar ejercicios)
     const microcicloConSesiones = await this.prisma.microciclo.findUnique({
       where: { id: microciclo.id },
       include: {
@@ -269,17 +276,47 @@ export class MicrociclosService {
             fecha: true,
             diaSemana: true,
             tipoSesion: true,
+            numeroSesion: true,
           },
           orderBy: { numeroSesion: 'asc' },
         },
       },
     });
 
+    // PASO 6.1: Insertar ejercicios en ejercicios_sesion para sesiones de entrenamiento
+    // Esto preserva los IDs de ejercicios para analisis de rendimiento por ejercicio
+    // NOTA: El tipo del ejercicio se obtiene via JOIN con catalogo_ejercicios
+    const ejerciciosSesionData: {
+      sesionId: bigint;
+      ejercicioId: bigint;
+      orden: number;
+    }[] = [];
+
+    for (const sesionDB of microcicloConSesiones!.sesiones) {
+      const ejerciciosSesion = ejerciciosPorSesion.get(sesionDB.numeroSesion);
+      if (ejerciciosSesion && ejerciciosSesion.length > 0) {
+        for (const ej of ejerciciosSesion) {
+          ejerciciosSesionData.push({
+            sesionId: sesionDB.id,
+            ejercicioId: ej.ejercicioId,
+            orden: ej.orden,
+          });
+        }
+      }
+    }
+
+    // Insertar todos los ejercicios de sesion en batch
+    if (ejerciciosSesionData.length > 0) {
+      await this.prisma.ejercicioSesion.createMany({
+        data: ejerciciosSesionData,
+      });
+    }
+
     // PASO 7: Crear RECOMENDACION para que COMITE_TECNICO apruebe
     // Siguiendo el flujo Human-in-the-Loop: algoritmo genera -> COMITE aprueba
     const sesionesIds = microcicloConSesiones!.sesiones.map((s) => Number(s.id));
     const sesionesEntrenamiento = resultadoGeneracion.sesiones.filter(
-      (s) => s.tipoSesion === 'ENTRENAMIENTO',
+      (s) => s.tipoSesion === 'ENTRENAMIENTO'
     );
 
     const recomendacion = await this.prisma.recomendacion.create({
@@ -289,18 +326,21 @@ export class MicrociclosService {
         tipo: 'INICIAL' as TipoRecomendacion,
         prioridad: 'MEDIA' as Prioridad,
         titulo: `Planificacion Microciclo ${microciclo.numeroGlobalMicrociclo} para ${atleta.usuario.nombreCompleto}`,
-        mensaje: `El algoritmo ha generado ${sesionesEntrenamiento.length} sesiones de entrenamiento ` +
+        mensaje:
+          `El algoritmo ha generado ${sesionesEntrenamiento.length} sesiones de entrenamiento ` +
           `para el microciclo ${createMicrocicloDto.tipoMicrociclo}. ` +
           `Perfil del atleta: ${perfilAtleta.perfil}. ${resultadoGeneracion.justificacionGeneral}`,
-        datosAnalisis: JSON.parse(JSON.stringify({
-          perfilAtleta: perfilAtleta,
-          tipoMicrociclo: createMicrocicloDto.tipoMicrociclo,
-          ajustesAplicados: resultadoGeneracion.ajustesAplicados,
-          dolenciasActivas: dolenciasActivas,
-          estadoAtleta: estadoAtleta,
-          fechaInicio: fechaInicio.toISOString(),
-          fechaFin: fechaFin.toISOString(),
-        })),
+        datosAnalisis: JSON.parse(
+          JSON.stringify({
+            perfilAtleta: perfilAtleta,
+            tipoMicrociclo: createMicrocicloDto.tipoMicrociclo,
+            ajustesAplicados: resultadoGeneracion.ajustesAplicados,
+            dolenciasActivas: dolenciasActivas,
+            estadoAtleta: estadoAtleta,
+            fechaInicio: fechaInicio.toISOString(),
+            fechaFin: fechaFin.toISOString(),
+          })
+        ),
         accionSugerida: 'Revisar y aprobar las sesiones generadas para activar la planificacion',
         sesionesAfectadas: sesionesIds,
         generoSesiones: true,
@@ -316,7 +356,8 @@ export class MicrociclosService {
         estadoNuevo: 'PENDIENTE',
         usuarioId: userId,
         accion: 'CREADA',
-        comentario: `Recomendacion creada automaticamente por el algoritmo. ` +
+        comentario:
+          `Recomendacion creada automaticamente por el algoritmo. ` +
           `${sesionesEntrenamiento.length} sesiones generadas para perfil ${perfilAtleta.perfil}.`,
         datosAdicionales: {
           microcicloId: microciclo.id.toString(),
@@ -341,7 +382,8 @@ export class MicrociclosService {
           recomendacionId: recomendacion.id,
           tipo: 'RECOMENDACION_ALGORITMO' as const,
           titulo: 'Nueva Planificacion Pendiente de Aprobacion',
-          mensaje: `El algoritmo ha generado una planificacion para ${atleta.usuario.nombreCompleto}. ` +
+          mensaje:
+            `El algoritmo ha generado una planificacion para ${atleta.usuario.nombreCompleto}. ` +
             `Microciclo ${microciclo.numeroGlobalMicrociclo} (${createMicrocicloDto.tipoMicrociclo}). ` +
             `Requiere su revision y aprobacion.`,
           prioridad: 'MEDIA' as Prioridad,

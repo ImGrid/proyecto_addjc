@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { AccessControlService } from '../../common/services/access-control.service';
 import { AuthService } from '../auth/auth.service';
@@ -9,7 +15,7 @@ export class AtletasService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly accessControl: AccessControlService,
-    private readonly authService: AuthService,
+    private readonly authService: AuthService
   ) {}
 
   // Helper para aplanar entrenadorAsignado (consistencia con otros endpoints)
@@ -88,7 +94,9 @@ export class AtletasService {
           edad: createAtletaDto.edad,
           direccion: createAtletaDto.direccion,
           telefono: createAtletaDto.telefono,
-          entrenadorAsignadoId: createAtletaDto.entrenadorAsignadoId ? BigInt(createAtletaDto.entrenadorAsignadoId) : null,
+          entrenadorAsignadoId: createAtletaDto.entrenadorAsignadoId
+            ? BigInt(createAtletaDto.entrenadorAsignadoId)
+            : null,
           categoriaPeso: createAtletaDto.categoriaPeso,
           pesoActual: createAtletaDto.pesoActual,
           fcReposo: createAtletaDto.fcReposo,
@@ -139,7 +147,16 @@ export class AtletasService {
 
   // Listar atletas con filtros y paginacion
   async findAll(queryDto: QueryAtletaDto, currentUserId?: string, currentUserRole?: string) {
-    const { nombreCompleto, club, categoria, categoriaPeso, entrenadorAsignadoId, estado, page = 1, limit = 10 } = queryDto;
+    const {
+      nombreCompleto,
+      club,
+      categoria,
+      categoriaPeso,
+      entrenadorAsignadoId,
+      estado,
+      page = 1,
+      limit = 10,
+    } = queryDto;
 
     // Construir filtros dinamicos
     const where: any = {};
@@ -274,9 +291,8 @@ export class AtletasService {
     // Crear mapa de atletaId -> conteo de dolencias activas
     const dolenciasMap = new Map<bigint, number>();
     for (const registro of registrosConAtleta) {
-      const count = dolenciasCount.find(
-        (d) => d.registroPostEntrenamientoId === registro.id,
-      )?._count || 0;
+      const count =
+        dolenciasCount.find((d) => d.registroPostEntrenamientoId === registro.id)?._count || 0;
       const currentCount = dolenciasMap.get(registro.atletaId) || 0;
       dolenciasMap.set(registro.atletaId, currentCount + count);
     }
@@ -364,7 +380,7 @@ export class AtletasService {
       const hasAccess = await this.accessControl.checkAtletaOwnership(
         BigInt(currentUserId),
         'ENTRENADOR' as any,
-        atleta.id,
+        atleta.id
       );
 
       if (!hasAccess) {

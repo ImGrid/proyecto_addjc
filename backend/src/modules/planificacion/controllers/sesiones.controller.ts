@@ -37,7 +37,7 @@ export class SesionesController {
     @Query('microcicloId') microcicloId?: string,
     @Query('fecha') fecha?: string,
     @Query('page', new ParseIntPipe({ optional: true })) page = 1,
-    @Query('limit', new ParseIntPipe({ optional: true })) limit = 10,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit = 10
   ) {
     return this.sesionesService.findAll(
       BigInt(user.id),
@@ -45,7 +45,7 @@ export class SesionesController {
       microcicloId,
       fecha,
       page,
-      limit,
+      limit
     );
   }
 
@@ -57,7 +57,7 @@ export class SesionesController {
   findByAtleta(
     @Param('atletaId') atletaId: string,
     @Query('tipoSesion') tipoSesion: string | undefined,
-    @CurrentUser() user: any,
+    @CurrentUser() user: any
   ) {
     return this.sesionesService.findByAtleta(atletaId, BigInt(user.id), user.rol, tipoSesion);
   }
@@ -72,10 +72,7 @@ export class SesionesController {
   // PATCH /api/sesiones/:id - Actualizar sesión (COMITE_TECNICO y ENTRENADOR)
   @Patch(':id')
   @Roles('COMITE_TECNICO', 'ENTRENADOR')
-  update(
-    @Param('id') id: string,
-    @Body() updateSesionDto: UpdateSesionDto,
-  ) {
+  update(@Param('id') id: string, @Body() updateSesionDto: UpdateSesionDto) {
     return this.sesionesService.update(id, updateSesionDto);
   }
 

@@ -21,26 +21,18 @@ export class AtletaOwnershipGuard implements CanActivate {
     }
 
     // Extraer atletaId del body o params
-    const atletaId = BigInt(
-      request.body?.atletaId || request.params?.atletaId || 0,
-    );
+    const atletaId = BigInt(request.body?.atletaId || request.params?.atletaId || 0);
 
     if (!atletaId) {
-      throw new BadRequestException(
-        'ID de atleta no proporcionado en la solicitud',
-      );
+      throw new BadRequestException('ID de atleta no proporcionado en la solicitud');
     }
 
     // Delegar la verificacion al servicio centralizado
-    const hasAccess = await this.accessControl.checkAtletaOwnership(
-      user.id,
-      user.rol,
-      atletaId,
-    );
+    const hasAccess = await this.accessControl.checkAtletaOwnership(user.id, user.rol, atletaId);
 
     if (!hasAccess) {
       throw new ForbiddenException(
-        `No tienes permiso para acceder a los datos del atleta ${atletaId}. Solo puedes acceder a tus atletas asignados.`,
+        `No tienes permiso para acceder a los datos del atleta ${atletaId}. Solo puedes acceder a tus atletas asignados.`
       );
     }
 

@@ -1,12 +1,4 @@
-import {
-  IsString,
-  IsInt,
-  Min,
-  Max,
-  IsOptional,
-  IsEnum,
-  MaxLength,
-} from 'class-validator';
+import { IsString, IsInt, Min, Max, IsOptional, IsEnum, MaxLength } from 'class-validator';
 import { TipoLesion } from '@prisma/client';
 
 export class CreateDolenciaDto {

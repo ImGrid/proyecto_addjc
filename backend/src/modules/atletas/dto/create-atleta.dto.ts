@@ -1,4 +1,15 @@
-import { IsString, IsEmail, IsInt, IsEnum, IsOptional, IsDateString, MinLength, MaxLength, Min, IsNumber } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  IsInt,
+  IsEnum,
+  IsOptional,
+  IsDateString,
+  MinLength,
+  MaxLength,
+  Min,
+  IsNumber,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 import { CategoriaPeso } from '@prisma/client';
 
@@ -63,7 +74,10 @@ export class CreateAtletaDto {
   categoriaPeso!: CategoriaPeso;
 
   @Transform(({ value }) => (value ? parseFloat(value) : null))
-  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'Peso actual debe ser un numero con maximo 2 decimales' })
+  @IsNumber(
+    { maxDecimalPlaces: 2 },
+    { message: 'Peso actual debe ser un numero con maximo 2 decimales' }
+  )
   @Min(0, { message: 'Peso actual no puede ser negativo' })
   @IsOptional()
   pesoActual?: number;

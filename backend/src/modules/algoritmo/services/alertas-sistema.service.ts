@@ -36,7 +36,7 @@ export class AlertasSistemaService {
   async procesarAlertasPostEntrenamiento(
     atletaId: bigint,
     registroId: bigint,
-    sesionId: bigint,
+    sesionId: bigint
   ): Promise<ResultadoProcesamiento> {
     // 1. Obtener datos del atleta
     const atleta = await this.prisma.atleta.findUnique({
@@ -169,7 +169,7 @@ export class AlertasSistemaService {
     const toleranciaPeso = await this.obtenerToleranciaPeso(
       atletaId,
       atleta.categoriaPeso,
-      sesionId,
+      sesionId
     );
 
     // 7. Ejecutar analisis de alertas
@@ -181,7 +181,7 @@ export class AlertasSistemaService {
       historialDolenciasParaAlerta,
       atleta.pesoActual ? Number(atleta.pesoActual) : null,
       atleta.categoriaPeso,
-      toleranciaPeso,
+      toleranciaPeso
     );
 
     // 8. Si no hay alertas, retornar
@@ -225,7 +225,8 @@ export class AlertasSistemaService {
       if (alertaExistente) {
         // Alerta ya existe: incrementar contador y actualizar
         // Si la nueva severidad es mayor, actualizar tambien
-        const nuevaSeveridadMayor = this.compararSeveridad(alerta.severidad, alertaExistente.severidad) > 0;
+        const nuevaSeveridadMayor =
+          this.compararSeveridad(alerta.severidad, alertaExistente.severidad) > 0;
 
         await this.prisma.alertaSistema.update({
           where: { id: alertaExistente.id },
@@ -235,15 +236,17 @@ export class AlertasSistemaService {
             // Actualizar severidad solo si es mayor
             ...(nuevaSeveridadMayor && { severidad: alerta.severidad }),
             // Actualizar contexto con datos mas recientes
-            datosContexto: JSON.parse(JSON.stringify({
-              valorDetectado: alerta.valorDetectado,
-              umbral: alerta.umbral,
-              accionSugerida: alerta.accionSugerida,
-              registroPostEntrenamientoId: registroId.toString(),
-              sesionId: sesionId.toString(),
-              acwr: resultado.acwr,
-              ocurrenciasAnteriores: alertaExistente.ocurrencias,
-            })),
+            datosContexto: JSON.parse(
+              JSON.stringify({
+                valorDetectado: alerta.valorDetectado,
+                umbral: alerta.umbral,
+                accionSugerida: alerta.accionSugerida,
+                registroPostEntrenamientoId: registroId.toString(),
+                sesionId: sesionId.toString(),
+                acwr: resultado.acwr,
+                ocurrenciasAnteriores: alertaExistente.ocurrencias,
+              })
+            ),
           },
         });
         alertaFinal = alertaExistente;
@@ -259,14 +262,16 @@ export class AlertasSistemaService {
             severidad: alerta.severidad,
             ocurrencias: 1,
             ultimaOcurrencia: new Date(),
-            datosContexto: JSON.parse(JSON.stringify({
-              valorDetectado: alerta.valorDetectado,
-              umbral: alerta.umbral,
-              accionSugerida: alerta.accionSugerida,
-              registroPostEntrenamientoId: registroId.toString(),
-              sesionId: sesionId.toString(),
-              acwr: resultado.acwr,
-            })),
+            datosContexto: JSON.parse(
+              JSON.stringify({
+                valorDetectado: alerta.valorDetectado,
+                umbral: alerta.umbral,
+                accionSugerida: alerta.accionSugerida,
+                registroPostEntrenamientoId: registroId.toString(),
+                sesionId: sesionId.toString(),
+                acwr: resultado.acwr,
+              })
+            ),
           },
         });
         alertaFinal = alertaCreada;
@@ -374,10 +379,7 @@ export class AlertasSistemaService {
   }
 
   // Obtiene alertas de un atleta (todas, sin filtrar por destinatario)
-  async obtenerAlertasAtleta(
-    atletaId: bigint,
-    soloNoLeidas: boolean = false,
-  ) {
+  async obtenerAlertasAtleta(atletaId: bigint, soloNoLeidas: boolean = false) {
     // Si soloNoLeidas, filtrar por alertas que tengan al menos un destinatario sin leer
     const whereClause: any = { atletaId };
 
@@ -430,7 +432,7 @@ export class AlertasSistemaService {
     destinatarioId: bigint,
     soloNoLeidas: boolean = false,
     page: number = 1,
-    limit: number = 10,
+    limit: number = 10
   ) {
     const skip = (page - 1) * limit;
     const whereClause: any = { destinatarioId };
@@ -561,7 +563,7 @@ export class AlertasSistemaService {
   private async obtenerToleranciaPeso(
     atletaId: bigint,
     categoriaPeso: CategoriaPeso,
-    sesionId: bigint,
+    sesionId: bigint
   ): Promise<DatosTolerancia | undefined> {
     try {
       // 1. Obtener la sesion para saber el dia de la semana

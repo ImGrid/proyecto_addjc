@@ -39,8 +39,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const correlationId = this.generateCorrelationId();
 
     // Determinar status code y mensaje
-    const { statusCode, message, error, details } =
-      this.parseException(exception);
+    const { statusCode, message, error, details } = this.parseException(exception);
 
     // Construir respuesta estructurada
     const errorResponse: ErrorResponse = {
@@ -114,10 +113,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         statusCode: HttpStatus.BAD_REQUEST,
         message: 'Datos de entrada invalidos para la operacion de base de datos',
         error: 'PrismaValidationError',
-        details:
-          process.env.NODE_ENV !== 'production'
-            ? exception.message
-            : undefined,
+        details: process.env.NODE_ENV !== 'production' ? exception.message : undefined,
       };
     }
 
@@ -153,8 +149,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       message: 'Error inesperado del servidor',
       error: 'UnknownError',
-      details:
-        process.env.NODE_ENV !== 'production' ? String(exception) : undefined,
+      details: process.env.NODE_ENV !== 'production' ? String(exception) : undefined,
     };
   }
 
@@ -278,7 +273,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     exception: unknown,
     correlationId: string,
     statusCode: number,
-    request: Request,
+    request: Request
   ): void {
     const logContext = {
       correlationId,
@@ -294,21 +289,21 @@ export class AllExceptionsFilter implements ExceptionFilter {
       this.logger.error(
         `[${correlationId}] Internal Server Error: ${this.getErrorMessage(exception)}`,
         exception instanceof Error ? exception.stack : undefined,
-        JSON.stringify(logContext),
+        JSON.stringify(logContext)
       );
     }
     // Errores 4xx: log como WARN (errores de cliente)
     else if (statusCode >= 400) {
       this.logger.warn(
         `[${correlationId}] Client Error: ${this.getErrorMessage(exception)}`,
-        JSON.stringify(logContext),
+        JSON.stringify(logContext)
       );
     }
     // Otros: log como LOG
     else {
       this.logger.log(
         `[${correlationId}] ${this.getErrorMessage(exception)}`,
-        JSON.stringify(logContext),
+        JSON.stringify(logContext)
       );
     }
   }

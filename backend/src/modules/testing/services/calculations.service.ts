@@ -29,10 +29,7 @@ export class CalculationsService {
 
   // Calcular intensidad como % del 1RM anterior
   // Fuente: docs/analisis_excel_11-12-13.md lineas 541-544
-  calculate1RMIntensity(
-    pesoActual: number,
-    pesoAnterior: number,
-  ): number | null {
+  calculate1RMIntensity(pesoActual: number, pesoAnterior: number): number | null {
     if (!pesoAnterior || pesoAnterior <= 0) return null;
     if (!pesoActual || pesoActual <= 0) return null;
 
@@ -44,7 +41,7 @@ export class CalculationsService {
   // Calcular mejora entre dos valores
   calculateImprovement(
     valorActual: number,
-    valorAnterior: number,
+    valorAnterior: number
   ): { absoluto: number; porcentaje: number } | null {
     if (
       valorAnterior === null ||
@@ -76,8 +73,7 @@ export class CalculationsService {
       mejoras.push(ultimosTres[i] - ultimosTres[i - 1]);
     }
 
-    const promedioDiferencia =
-      mejoras.reduce((a, b) => a + b, 0) / mejoras.length;
+    const promedioDiferencia = mejoras.reduce((a, b) => a + b, 0) / mejoras.length;
 
     // Si mejora mas de 1% en promedio → MEJORANDO
     if (promedioDiferencia > 0.5) return 'MEJORANDO';

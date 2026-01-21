@@ -14,7 +14,7 @@ import { RolUsuario } from '@prisma/client';
 export class DolenciasService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly accessControl: AccessControlService,
+    private readonly accessControl: AccessControlService
   ) {}
 
   // Crear una dolencia asociada a un registro post-entrenamiento
@@ -75,7 +75,7 @@ export class DolenciasService {
     atletaId?: string,
     recuperado?: boolean,
     page = 1,
-    limit = 10,
+    limit = 10
   ) {
     const skip = (page - 1) * limit;
 
@@ -172,11 +172,7 @@ export class DolenciasService {
   }
 
   // Obtener dolencias activas de un atleta
-  async findActiveByAtleta(
-    atletaId: string,
-    userId: bigint,
-    userRole: RolUsuario,
-  ) {
+  async findActiveByAtleta(atletaId: string, userId: bigint, userRole: RolUsuario) {
     const whereClause: any = {
       recuperado: false,
       registroPostEntrenamiento: {
@@ -265,7 +261,7 @@ export class DolenciasService {
       const hasAccess = await this.accessControl.checkAtletaOwnership(
         userId,
         userRole,
-        dolencia.registroPostEntrenamiento.atleta.id,
+        dolencia.registroPostEntrenamiento.atleta.id
       );
 
       if (!hasAccess) {
@@ -291,18 +287,12 @@ export class DolenciasService {
 
   // Marcar dolencia como recuperada (transicion de estado)
   @Transactional()
-  async marcarComoRecuperado(
-    dolenciaId: string,
-    userId: bigint,
-    dto?: MarcarRecuperadoDto,
-  ) {
+  async marcarComoRecuperado(dolenciaId: string, userId: bigint, dto?: MarcarRecuperadoDto) {
     // 1. Buscar el entrenadorId usando el userId
     const entrenadorId = await this.accessControl.getEntrenadorId(userId);
 
     if (!entrenadorId) {
-      throw new BadRequestException(
-        'No se encontró el registro de entrenador para este usuario',
-      );
+      throw new BadRequestException('No se encontró el registro de entrenador para este usuario');
     }
 
     // 2. Verificar que la dolencia existe
@@ -322,15 +312,13 @@ export class DolenciasService {
     });
 
     if (!dolencia) {
-      throw new NotFoundException(
-        `Dolencia con ID ${dolenciaId} no encontrada`,
-      );
+      throw new NotFoundException(`Dolencia con ID ${dolenciaId} no encontrada`);
     }
 
     // 2. Validar transicion de estado
     if (dolencia.recuperado) {
       throw new BadRequestException(
-        `La dolencia ya fue marcada como recuperada el ${dolencia.fechaRecuperacion?.toISOString().split('T')[0]}`,
+        `La dolencia ya fue marcada como recuperada el ${dolencia.fechaRecuperacion?.toISOString().split('T')[0]}`
       );
     }
 
@@ -389,17 +377,14 @@ export class DolenciasService {
   private formatResponse(dolencia: any) {
     return {
       id: dolencia.id.toString(),
-      registroPostEntrenamientoId:
-        dolencia.registroPostEntrenamientoId.toString(),
+      registroPostEntrenamientoId: dolencia.registroPostEntrenamientoId.toString(),
       zona: dolencia.zona,
       nivel: dolencia.nivel,
       descripcion: dolencia.descripcion,
       tipoLesion: dolencia.tipoLesion,
       recuperado: dolencia.recuperado,
       fechaRecuperacion: dolencia.fechaRecuperacion,
-      recuperadoPor: dolencia.recuperadoPor
-        ? dolencia.recuperadoPor.toString()
-        : null,
+      recuperadoPor: dolencia.recuperadoPor ? dolencia.recuperadoPor.toString() : null,
       createdAt: dolencia.createdAt,
       updatedAt: dolencia.updatedAt,
       ...(dolencia.registroPostEntrenamiento && {
@@ -409,16 +394,13 @@ export class DolenciasService {
           ...(dolencia.registroPostEntrenamiento.atleta && {
             atleta: {
               id: dolencia.registroPostEntrenamiento.atleta.id.toString(),
-              nombreCompleto:
-                dolencia.registroPostEntrenamiento.atleta.usuario
-                  ?.nombreCompleto,
+              nombreCompleto: dolencia.registroPostEntrenamiento.atleta.usuario?.nombreCompleto,
             },
           }),
           ...(dolencia.registroPostEntrenamiento.sesion && {
             sesion: {
               fecha: dolencia.registroPostEntrenamiento.sesion.fecha,
-              numeroSesion:
-                dolencia.registroPostEntrenamiento.sesion.numeroSesion,
+              numeroSesion: dolencia.registroPostEntrenamiento.sesion.numeroSesion,
             },
           }),
         },
@@ -426,8 +408,7 @@ export class DolenciasService {
       ...(dolencia.entrenadorRecuperacion && {
         entrenadorRecuperacion: {
           id: dolencia.entrenadorRecuperacion.id.toString(),
-          nombreCompleto:
-            dolencia.entrenadorRecuperacion.usuario?.nombreCompleto,
+          nombreCompleto: dolencia.entrenadorRecuperacion.usuario?.nombreCompleto,
         },
       }),
     };

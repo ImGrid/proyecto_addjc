@@ -1,18 +1,10 @@
-import {
-  Injectable,
-  OnModuleInit,
-  OnModuleDestroy,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 
 @Injectable()
-export class PrismaService
-  extends PrismaClient
-  implements OnModuleInit, OnModuleDestroy
-{
+export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PrismaService.name);
   private readonly pool: Pool;
 
@@ -40,21 +32,17 @@ export class PrismaService
     // Event listeners para debugging (solo en desarrollo)
     if (process.env.NODE_ENV !== 'production') {
       pool.on('connect', () => {
-        this.logger.debug(
-          `Pool: Nueva conexion creada (total: ${pool.totalCount})`,
-        );
+        this.logger.debug(`Pool: Nueva conexion creada (total: ${pool.totalCount})`);
       });
 
       pool.on('acquire', () => {
         this.logger.debug(
-          `Pool: Conexion adquirida (total: ${pool.totalCount}, idle: ${pool.idleCount})`,
+          `Pool: Conexion adquirida (total: ${pool.totalCount}, idle: ${pool.idleCount})`
         );
       });
 
       pool.on('remove', () => {
-        this.logger.debug(
-          `Pool: Conexion removida (total: ${pool.totalCount})`,
-        );
+        this.logger.debug(`Pool: Conexion removida (total: ${pool.totalCount})`);
       });
     }
 
@@ -69,10 +57,7 @@ export class PrismaService
     // Inicializar PrismaClient con el adapter (requerido en Prisma 7)
     super({
       adapter,
-      log:
-        process.env.NODE_ENV === 'production'
-          ? ['error']
-          : ['error', 'warn'],
+      log: process.env.NODE_ENV === 'production' ? ['error'] : ['error', 'warn'],
     });
 
     this.pool = pool;
@@ -82,15 +67,14 @@ export class PrismaService
     try {
       await this.$connect();
       this.logger.log(
-        `Database connected (Pool: max=${this.pool.options.max}, min=${this.pool.options.min})`,
+        `Database connected (Pool: max=${this.pool.options.max}, min=${this.pool.options.min})`
       );
 
       // Test de conexion
       await this.$queryRaw`SELECT 1`;
       this.logger.log('Database health check: OK');
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
       this.logger.error('Failed to connect to database', errorMessage);
       throw error;
     }

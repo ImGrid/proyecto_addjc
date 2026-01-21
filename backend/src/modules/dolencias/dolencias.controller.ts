@@ -40,7 +40,7 @@ export class DolenciasController {
     @Query('recuperado', new ParseBoolPipe({ optional: true }))
     recuperado?: boolean,
     @Query('page', new ParseIntPipe({ optional: true })) page = 1,
-    @Query('limit', new ParseIntPipe({ optional: true })) limit = 10,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit = 10
   ) {
     return this.dolenciasService.findAll(
       BigInt(user.id),
@@ -48,7 +48,7 @@ export class DolenciasController {
       atletaId,
       recuperado,
       page,
-      limit,
+      limit
     );
   }
 
@@ -64,15 +64,8 @@ export class DolenciasController {
   @Get('atleta/:atletaId/activas')
   @Roles('ENTRENADOR', 'COMITE_TECNICO', 'ATLETA')
   @UseGuards(RolesGuard)
-  findActiveByAtleta(
-    @Param('atletaId') atletaId: string,
-    @CurrentUser() user: any,
-  ) {
-    return this.dolenciasService.findActiveByAtleta(
-      atletaId,
-      BigInt(user.id),
-      user.rol,
-    );
+  findActiveByAtleta(@Param('atletaId') atletaId: string, @CurrentUser() user: any) {
+    return this.dolenciasService.findActiveByAtleta(atletaId, BigInt(user.id), user.rol);
   }
 
   // PATCH /api/dolencias/:id/marcar-recuperado - Marcar como recuperado (ENTRENADOR, COMITE_TECNICO)
@@ -82,13 +75,9 @@ export class DolenciasController {
   marcarRecuperado(
     @Param('id') id: string,
     @Body() dto: MarcarRecuperadoDto,
-    @CurrentUser() user: any,
+    @CurrentUser() user: any
   ) {
     // Pasar el userId, el servicio buscará el entrenadorId
-    return this.dolenciasService.marcarComoRecuperado(
-      id,
-      BigInt(user.id),
-      dto,
-    );
+    return this.dolenciasService.marcarComoRecuperado(id, BigInt(user.id), dto);
   }
 }

@@ -38,10 +38,7 @@ export function calcularVO2maxLeger(palier: number, edad: number): number {
   const edadAjustada = edad > 18 ? 18 : edad;
 
   const vo2max =
-    31.025 +
-    3.238 * velocidad -
-    3.248 * edadAjustada +
-    0.1536 * edadAjustada * velocidad;
+    31.025 + 3.238 * velocidad - 3.248 * edadAjustada + 0.1536 * edadAjustada * velocidad;
 
   return Math.round(vo2max * 100) / 100;
 }

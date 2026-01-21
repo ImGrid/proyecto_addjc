@@ -13,6 +13,7 @@ import {
 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { CreateDolenciaDto } from './create-dolencia.dto';
+import { CreateRendimientoEjercicioDto } from './create-rendimiento-ejercicio.dto';
 
 export class CreateRegistroPostEntrenamientoDto {
   // IDs de relaciones (se convierten a BigInt en el servicio)
@@ -38,20 +39,14 @@ export class CreateRegistroPostEntrenamientoDto {
   // NOTA: ejerciciosCompletados e intensidadAlcanzada son Decimal(5,2) en BD
   @IsOptional()
   @Transform(({ value }) => (value !== undefined && value !== null ? parseFloat(value) : undefined))
-  @IsNumber(
-    { maxDecimalPlaces: 2 },
-    { message: 'Ejercicios completados debe ser un numero' },
-  )
+  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'Ejercicios completados debe ser un numero' })
   @Min(0, { message: 'Ejercicios completados no puede ser menor a 0%' })
   @Max(100, { message: 'Ejercicios completados no puede exceder 100%' })
   ejerciciosCompletados?: number;
 
   @IsOptional()
   @Transform(({ value }) => (value !== undefined && value !== null ? parseFloat(value) : undefined))
-  @IsNumber(
-    { maxDecimalPlaces: 2 },
-    { message: 'Intensidad alcanzada debe ser un numero' },
-  )
+  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'Intensidad alcanzada debe ser un numero' })
   @Min(0, { message: 'Intensidad alcanzada no puede ser menor a 0%' })
   @Max(100, { message: 'Intensidad alcanzada no puede exceder 100%' })
   intensidadAlcanzada?: number;
@@ -83,10 +78,7 @@ export class CreateRegistroPostEntrenamientoDto {
   // Horas de sueno (Decimal 3,1 en BD - ejemplo: 7.5)
   @IsOptional()
   @Transform(({ value }) => (value ? parseFloat(value) : null))
-  @IsNumber(
-    { maxDecimalPlaces: 1 },
-    { message: 'Horas de sueno debe ser un numero' },
-  )
+  @IsNumber({ maxDecimalPlaces: 1 }, { message: 'Horas de sueno debe ser un numero' })
   @Min(0, { message: 'Horas de sueno no puede ser negativo' })
   @Max(24, { message: 'Horas de sueno no puede exceder 24 horas' })
   horasSueno?: number;
@@ -113,4 +105,13 @@ export class CreateRegistroPostEntrenamientoDto {
     message: 'Las observaciones no pueden exceder 1000 caracteres',
   })
   observaciones?: string;
+
+  // Rendimiento por ejercicio (opcional)
+  // Permite registrar detalle de rendimiento de cada ejercicio individual
+  // Si se proporciona, el sistema puede generar recomendaciones personalizadas
+  @IsOptional()
+  @IsArray({ message: 'Rendimientos de ejercicios debe ser un array' })
+  @ValidateNested({ each: true })
+  @Type(() => CreateRendimientoEjercicioDto)
+  rendimientosEjercicios?: CreateRendimientoEjercicioDto[];
 }

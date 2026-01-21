@@ -11,8 +11,13 @@ import { Transactional } from '@nestjs-cls/transactional';
 import { PrismaService } from '../../database/prisma.service';
 import { AccessControlService } from '../../common/services/access-control.service';
 import { CreateRegistroPostEntrenamientoDto } from './dto';
-import { RolUsuario } from '@prisma/client';
+import { RolUsuario, TipoRecomendacion, Prioridad, EstadoRecomendacion } from '@prisma/client';
 import { AlertasSistemaService } from '../algoritmo/services/alertas-sistema.service';
+import {
+  AnalisisRendimientoService,
+  CONFIGURACION_ANALISIS,
+} from '../algoritmo/services/analisis-rendimiento.service';
+import { evaluarReglas, ContextoEvaluacion } from '../algoritmo/reglas';
 
 @Injectable()
 export class RegistroPostEntrenamientoService {
@@ -21,6 +26,8 @@ export class RegistroPostEntrenamientoService {
     private readonly accessControl: AccessControlService,
     @Inject(forwardRef(() => AlertasSistemaService))
     private readonly alertasService: AlertasSistemaService,
+    @Inject(forwardRef(() => AnalisisRendimientoService))
+    private readonly analisisService: AnalisisRendimientoService
   ) {}
 
   // Crear registro post-entrenamiento con validacion 1:1
@@ -34,9 +41,7 @@ export class RegistroPostEntrenamientoService {
       });
 
       if (!entrenador) {
-        throw new BadRequestException(
-          'No se encontró el registro de entrenador para este usuario',
-        );
+        throw new BadRequestException('No se encontró el registro de entrenador para este usuario');
       }
 
       const entrenadorRegistroId = entrenador.id;
@@ -61,16 +66,14 @@ export class RegistroPostEntrenamientoService {
       });
 
       if (!sesion) {
-        throw new NotFoundException(
-          `La sesion con ID ${sesionId} no existe`,
-        );
+        throw new NotFoundException(`La sesion con ID ${sesionId} no existe`);
       }
 
       // Validar que la sesion sea de tipo ENTRENAMIENTO, RECUPERACION o COMPETENCIA
       const tiposPermitidos = ['ENTRENAMIENTO', 'RECUPERACION', 'COMPETENCIA'];
       if (!tiposPermitidos.includes(sesion.tipoSesion)) {
         throw new BadRequestException(
-          `Solo se pueden registrar post-entrenamientos en sesiones de tipo ENTRENAMIENTO, RECUPERACION o COMPETENCIA. La sesion ${sesionId} es de tipo ${sesion.tipoSesion}`,
+          `Solo se pueden registrar post-entrenamientos en sesiones de tipo ENTRENAMIENTO, RECUPERACION o COMPETENCIA. La sesion ${sesionId} es de tipo ${sesion.tipoSesion}`
         );
       }
 
@@ -82,10 +85,14 @@ export class RegistroPostEntrenamientoService {
       if (!esCompetencia && dto.asistio) {
         // Si asistio y NO es competencia, validar campos de entrenamiento
         if (dto.ejerciciosCompletados === undefined || dto.ejerciciosCompletados === null) {
-          throw new BadRequestException('ejerciciosCompletados es requerido para sesiones de entrenamiento');
+          throw new BadRequestException(
+            'ejerciciosCompletados es requerido para sesiones de entrenamiento'
+          );
         }
         if (dto.intensidadAlcanzada === undefined || dto.intensidadAlcanzada === null) {
-          throw new BadRequestException('intensidadAlcanzada es requerido para sesiones de entrenamiento');
+          throw new BadRequestException(
+            'intensidadAlcanzada es requerido para sesiones de entrenamiento'
+          );
         }
         if (dto.duracionReal === undefined || dto.duracionReal === null) {
           throw new BadRequestException('duracionReal es requerido para sesiones de entrenamiento');
@@ -97,7 +104,9 @@ export class RegistroPostEntrenamientoService {
           throw new BadRequestException('calidadSueno es requerido para sesiones de entrenamiento');
         }
         if (dto.estadoAnimico === undefined || dto.estadoAnimico === null) {
-          throw new BadRequestException('estadoAnimico es requerido para sesiones de entrenamiento');
+          throw new BadRequestException(
+            'estadoAnimico es requerido para sesiones de entrenamiento'
+          );
         }
       }
 
@@ -112,9 +121,7 @@ export class RegistroPostEntrenamientoService {
       });
 
       if (!atleta) {
-        throw new NotFoundException(
-          `El atleta con ID ${atletaId} no existe`,
-        );
+        throw new NotFoundException(`El atleta con ID ${atletaId} no existe`);
       }
 
       // 3. Validar que el atleta esta asignado al microciclo de la sesion
@@ -127,7 +134,7 @@ export class RegistroPostEntrenamientoService {
 
       if (!asignacion) {
         throw new BadRequestException(
-          `El atleta ${atleta.usuario.nombreCompleto} no esta asignado al microciclo ${sesion.microciclo?.numeroGlobalMicrociclo || 'desconocido'} de esta sesion`,
+          `El atleta ${atleta.usuario.nombreCompleto} no esta asignado al microciclo ${sesion.microciclo?.numeroGlobalMicrociclo || 'desconocido'} de esta sesion`
         );
       }
 
@@ -141,7 +148,7 @@ export class RegistroPostEntrenamientoService {
 
       if (registroExistente) {
         throw new ConflictException(
-          `Ya existe un registro post-entrenamiento para el atleta ${atleta.usuario.nombreCompleto} en la sesion ${sesionId}`,
+          `Ya existe un registro post-entrenamiento para el atleta ${atleta.usuario.nombreCompleto} en la sesion ${sesionId}`
         );
       }
 
@@ -157,8 +164,12 @@ export class RegistroPostEntrenamientoService {
           // Campos de entrenamiento: usar valores del DTO o valores por defecto para COMPETENCIA
           // Para COMPETENCIA: usar valores minimos validos (CHECK constraints requieren >= 1)
           // Para ENTRENAMIENTO/RECUPERACION: ya validamos que existen
-          ejerciciosCompletados: esCompetencia ? (dto.ejerciciosCompletados ?? 0) : (dto.ejerciciosCompletados ?? 0),
-          intensidadAlcanzada: esCompetencia ? (dto.intensidadAlcanzada ?? 0) : (dto.intensidadAlcanzada ?? 0),
+          ejerciciosCompletados: esCompetencia
+            ? (dto.ejerciciosCompletados ?? 0)
+            : (dto.ejerciciosCompletados ?? 0),
+          intensidadAlcanzada: esCompetencia
+            ? (dto.intensidadAlcanzada ?? 0)
+            : (dto.intensidadAlcanzada ?? 0),
           duracionReal: esCompetencia ? (dto.duracionReal ?? 1) : (dto.duracionReal ?? 1),
           rpe: esCompetencia ? (dto.rpe ?? 1) : (dto.rpe ?? 1),
           calidadSueno: esCompetencia ? (dto.calidadSueno ?? 1) : (dto.calidadSueno ?? 1),
@@ -209,11 +220,53 @@ export class RegistroPostEntrenamientoService {
         },
       });
 
+      // 5.1 Guardar rendimientos por ejercicio si se proporcionan
+      // Esto permite el analisis de rendimiento por ejercicio individual
+      let rendimientosGuardados = 0;
+      if (dto.rendimientosEjercicios && dto.rendimientosEjercicios.length > 0) {
+        // Validar que los ejercicioSesionId pertenecen a la sesion
+        const ejerciciosSesionIds = dto.rendimientosEjercicios.map((r) =>
+          BigInt(r.ejercicioSesionId)
+        );
+
+        const ejerciciosValidos = await tx.ejercicioSesion.findMany({
+          where: {
+            id: { in: ejerciciosSesionIds },
+            sesionId: sesionId,
+          },
+          select: { id: true },
+        });
+
+        const idsValidos = new Set(ejerciciosValidos.map((e) => e.id.toString()));
+
+        // Crear rendimientos solo para ejercicios validos
+        const rendimientosData = dto.rendimientosEjercicios
+          .filter((r) => idsValidos.has(BigInt(r.ejercicioSesionId).toString()))
+          .map((r) => ({
+            registroPostEntrenamientoId: registro.id,
+            ejercicioSesionId: BigInt(r.ejercicioSesionId),
+            completado: r.completado,
+            rendimiento: r.rendimiento,
+            dificultadPercibida: r.dificultadPercibida,
+            tiempoReal: r.tiempoReal,
+            observacion: r.observacion,
+            motivoNoCompletado: r.motivoNoCompletado,
+          }));
+
+        if (rendimientosData.length > 0) {
+          await tx.rendimientoEjercicio.createMany({
+            data: rendimientosData,
+          });
+          rendimientosGuardados = rendimientosData.length;
+        }
+      }
+
       // 6. Formatear respuesta con BigInt convertidos a string
       return {
         registro,
         atletaId,
         sesionId,
+        rendimientosGuardados,
       };
     });
 
@@ -225,7 +278,7 @@ export class RegistroPostEntrenamientoService {
         alertasGeneradas = await this.alertasService.procesarAlertasPostEntrenamiento(
           result.atletaId,
           result.registro.id,
-          result.sesionId,
+          result.sesionId
         );
       }
     } catch (error) {
@@ -233,9 +286,93 @@ export class RegistroPostEntrenamientoService {
       console.error('Error procesando alertas:', error);
     }
 
+    // 8. Generar recomendaciones automaticas basadas en analisis de rendimiento
+    // Solo si el atleta asistio y hay suficientes datos historicos
+    let recomendacionesGeneradas: any[] = [];
+    try {
+      if (dto.asistio) {
+        // Ejecutar analisis de rendimiento del atleta
+        const analisis = await this.analisisService.analizarRendimientoAtleta(
+          result.atletaId,
+          30 // Ultimos 30 dias
+        );
+
+        // Solo generar recomendaciones si hay suficientes datos
+        if (analisis.resumenGeneral.totalRegistros >= CONFIGURACION_ANALISIS.MINIMO_REGISTROS_ANALISIS) {
+          // Evaluar reglas para generar recomendaciones
+          const contexto: ContextoEvaluacion = {
+            atletaId: result.atletaId,
+            nombreAtleta: analisis.nombreAtleta,
+            rendimientoPorTipo: analisis.rendimientoPorTipo,
+            ejerciciosProblematicos: analisis.ejerciciosProblematicos,
+            diasAnalizados: analisis.periodoAnalisis.diasAnalizados,
+          };
+
+          const recomendacionesEvaluadas = evaluarReglas(contexto);
+
+          // Si hay recomendaciones, guardarlas en la base de datos
+          if (recomendacionesEvaluadas.length > 0) {
+            // Crear recomendaciones en la base de datos
+            for (const rec of recomendacionesEvaluadas) {
+              const recomendacion = await this.prisma.recomendacion.create({
+                data: {
+                  atletaId: result.atletaId,
+                  tipo: rec.tipoRecomendacion as TipoRecomendacion,
+                  prioridad: rec.prioridad as Prioridad,
+                  titulo: `[${rec.reglaId}] ${rec.titulo}`,
+                  mensaje: rec.mensaje,
+                  accionSugerida: rec.accionSugerida,
+                  datosAnalisis: rec.datosAnalisis as object,
+                  estado: EstadoRecomendacion.PENDIENTE,
+                },
+              });
+
+              recomendacionesGeneradas.push({
+                id: recomendacion.id.toString(),
+                tipo: rec.tipoRecomendacion,
+                prioridad: rec.prioridad,
+                titulo: rec.titulo,
+                mensaje: rec.mensaje,
+                accionSugerida: rec.accionSugerida,
+              });
+            }
+
+            // Notificar al COMITE_TECNICO sobre las nuevas recomendaciones
+            const miembrosComite = await this.prisma.usuario.findMany({
+              where: { rol: RolUsuario.COMITE_TECNICO, estado: true },
+              select: { id: true },
+            });
+
+            // Crear notificaciones para cada miembro del comite
+            if (miembrosComite.length > 0) {
+              await this.prisma.notificacion.createMany({
+                data: miembrosComite.map((miembro) => ({
+                  destinatarioId: miembro.id,
+                  tipo: 'RECOMENDACION_ALGORITMO',
+                  titulo: `Nuevas recomendaciones para ${analisis.nombreAtleta}`,
+                  mensaje: `El sistema ha generado ${recomendacionesGeneradas.length} recomendacion(es) basadas en el analisis de rendimiento del atleta.`,
+                  prioridad: recomendacionesGeneradas.some((r) => r.prioridad === 'CRITICA')
+                    ? 'CRITICA'
+                    : recomendacionesGeneradas.some((r) => r.prioridad === 'ALTA')
+                      ? 'ALTA'
+                      : 'MEDIA',
+                })),
+              });
+            }
+          }
+        }
+      }
+    } catch (error) {
+      // Log del error pero no fallamos la creacion del registro
+      console.error('Error generando recomendaciones automaticas:', error);
+    }
+
     return {
       ...this.formatResponse(result.registro),
       alertas: alertasGeneradas,
+      rendimientosEjerciciosGuardados: result.rendimientosGuardados,
+      recomendacionesGeneradas:
+        recomendacionesGeneradas.length > 0 ? recomendacionesGeneradas : null,
     };
   }
 
@@ -246,7 +383,7 @@ export class RegistroPostEntrenamientoService {
     atletaId?: string,
     sesionId?: string,
     page = 1,
-    limit = 10,
+    limit = 10
   ) {
     const skip = (page - 1) * limit;
 
@@ -369,7 +506,7 @@ export class RegistroPostEntrenamientoService {
       const hasAccess = await this.accessControl.checkAtletaOwnership(
         userId,
         userRole,
-        registro.atleta.id,
+        registro.atleta.id
       );
 
       if (!hasAccess) {
@@ -470,8 +607,7 @@ export class RegistroPostEntrenamientoService {
           tipoSesion: registro.sesion.tipoSesion,
           ...(registro.sesion.microciclo && {
             microciclo: {
-              numeroGlobalMicrociclo:
-                registro.sesion.microciclo.numeroGlobalMicrociclo,
+              numeroGlobalMicrociclo: registro.sesion.microciclo.numeroGlobalMicrociclo,
             },
           }),
         },

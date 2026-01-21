@@ -97,7 +97,7 @@ function promedio(valores: number[]): number {
 // Evalua reglas de fatiga
 export function evaluarFatiga(
   registroActual: DatosRegistroParaAlerta,
-  historial: DatosRegistroParaAlerta[],
+  historial: DatosRegistroParaAlerta[]
 ): AlertaGenerada[] {
   const alertas: AlertaGenerada[] = [];
 
@@ -169,9 +169,10 @@ export function evaluarFatiga(
 }
 
 // Evalua ACWR y genera alertas
-export function evaluarACWR(
-  historial: DatosRegistroParaAlerta[],
-): { alertas: AlertaGenerada[]; acwr: ResultadoACWR | null } {
+export function evaluarACWR(historial: DatosRegistroParaAlerta[]): {
+  alertas: AlertaGenerada[];
+  acwr: ResultadoACWR | null;
+} {
   const alertas: AlertaGenerada[] = [];
 
   // Necesitamos al menos 7 dias de datos para calcular ACWR
@@ -215,13 +216,13 @@ export function evaluarACWR(
 // Evalua reglas de lesion
 export function evaluarLesiones(
   dolenciasActivas: DatosDolencia[],
-  historialDolencias: DatosDolencia[],
+  historialDolencias: DatosDolencia[]
 ): AlertaGenerada[] {
   const alertas: AlertaGenerada[] = [];
 
   // Regla 1: Dolencias activas con nivel alto
   const dolenciasGraves = dolenciasActivas.filter(
-    (d) => d.nivel >= UMBRALES_ALERTA.NIVEL_DOLOR_ALTO,
+    (d) => d.nivel >= UMBRALES_ALERTA.NIVEL_DOLOR_ALTO
   );
 
   if (dolenciasGraves.length > 0) {
@@ -251,7 +252,7 @@ export function evaluarLesiones(
   hace30Dias.setDate(hace30Dias.getDate() - UMBRALES_ALERTA.DIAS_RECURRENCIA);
 
   const dolenciasRecientes = historialDolencias.filter(
-    (d) => new Date(d.fechaCreacion) >= hace30Dias,
+    (d) => new Date(d.fechaCreacion) >= hace30Dias
   );
 
   // Agrupar por zona
@@ -261,7 +262,7 @@ export function evaluarLesiones(
   });
 
   const zonasRecurrentes = Object.entries(zonasCont).filter(
-    ([, count]) => count >= UMBRALES_ALERTA.DOLENCIAS_RECURRENTES,
+    ([, count]) => count >= UMBRALES_ALERTA.DOLENCIAS_RECURRENTES
   );
 
   if (zonasRecurrentes.length > 0) {
@@ -284,7 +285,7 @@ export function evaluarLesiones(
 export function evaluarPeso(
   pesoActual: number | null,
   categoriaPeso: CategoriaPeso,
-  tolerancia?: DatosTolerancia,
+  tolerancia?: DatosTolerancia
 ): AlertaGenerada[] {
   const alertas: AlertaGenerada[] = [];
 
@@ -350,7 +351,7 @@ export function evaluarPeso(
 // - Negativa: Posible fatiga/problema, investigar causa
 export function evaluarDesviacion(
   registro: DatosRegistroParaAlerta,
-  sesion: DatosSesionParaAlerta,
+  sesion: DatosSesionParaAlerta
 ): AlertaGenerada[] {
   const alertas: AlertaGenerada[] = [];
 
@@ -384,7 +385,8 @@ export function evaluarDesviacion(
           mensaje: `Intensidad alcanzada ${registro.intensidadAlcanzada}% supera lo planificado (${sesion.intensidadPlanificada}%) en ${porcentajeDesviacion.toFixed(0)}%.`,
           valorDetectado: registro.intensidadAlcanzada,
           umbral: sesion.intensidadPlanificada,
-          accionSugerida: 'Revisar si el atleta esta bien recuperado. Considerar ajustar planificacion al alza.',
+          accionSugerida:
+            'Revisar si el atleta esta bien recuperado. Considerar ajustar planificacion al alza.',
         });
       } else {
         // DESVIACION NEGATIVA: Atleta no alcanzo lo planificado
@@ -396,7 +398,8 @@ export function evaluarDesviacion(
           mensaje: `Intensidad alcanzada ${registro.intensidadAlcanzada}% por debajo de lo planificado (${sesion.intensidadPlanificada}%) en ${porcentajeDesviacion.toFixed(0)}%.`,
           valorDetectado: registro.intensidadAlcanzada,
           umbral: sesion.intensidadPlanificada,
-          accionSugerida: 'Investigar causa: fatiga, lesion o dificultad excesiva. Considerar reducir carga.',
+          accionSugerida:
+            'Investigar causa: fatiga, lesion o dificultad excesiva. Considerar reducir carga.',
         });
       }
     }
@@ -414,7 +417,7 @@ export function analizarAlertas(
   historialDolencias: DatosDolencia[],
   pesoActual: number | null,
   categoriaPeso: CategoriaPeso,
-  toleranciaPeso?: DatosTolerancia,
+  toleranciaPeso?: DatosTolerancia
 ): ResultadoAlertas {
   const alertas: AlertaGenerada[] = [];
 

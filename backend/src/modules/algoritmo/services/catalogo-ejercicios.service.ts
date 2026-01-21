@@ -80,6 +80,27 @@ export interface SeleccionEjercicios {
   alertas: string[];
 }
 
+// Ejercicio simplificado para guardar en sesion (preserva ID)
+// Usado por: ejercicios_sesion en la BD
+export interface EjercicioParaSesion {
+  ejercicioId: bigint;
+  nombre: string;
+  tipo: TipoEjercicio;
+  orden: number;
+}
+
+// Contenido de sesion extendido con IDs preservados
+// Retorna tanto el texto (para campos existentes) como los IDs (para ejercicios_sesion)
+export interface ContenidoSesionExtendido {
+  // Texto para compatibilidad con campos existentes
+  contenidoFisico: string;
+  contenidoTecnico: string;
+  contenidoTactico: string;
+  partePrincipal: string;
+  // Array de ejercicios con IDs para guardar en ejercicios_sesion
+  ejercicios: EjercicioParaSesion[];
+}
+
 @Injectable()
 export class CatalogoEjerciciosService {
   constructor(private prisma: PrismaService) {}
@@ -109,7 +130,7 @@ export class CatalogoEjerciciosService {
     perfilAtleta: PerfilAtleta,
     tipoMicrociclo: TipoMicrociclo,
     etapa: string | null,
-    dolenciasActivas: DolenciaActiva[],
+    dolenciasActivas: DolenciaActiva[]
   ): Promise<{ ejercicios: EjercicioCatalogo[]; excluidos: string[] }> {
     const zonasAfectadas = this.obtenerZonasAfectadas(dolenciasActivas);
     const excluidos: string[] = [];
@@ -184,7 +205,7 @@ export class CatalogoEjerciciosService {
   // Selecciona ejercicios aleatorios de una lista
   private seleccionarAleatorios(
     ejercicios: EjercicioCatalogo[],
-    cantidad: number,
+    cantidad: number
   ): EjercicioCatalogo[] {
     if (ejercicios.length <= cantidad) {
       return ejercicios;
@@ -201,9 +222,10 @@ export class CatalogoEjerciciosService {
   }
 
   // Ajusta la intensidad segun el estado del atleta
-  private ajustarPorFatiga(
-    estado: EstadoAtleta | null,
-  ): { factorIntensidad: number; alertas: string[] } {
+  private ajustarPorFatiga(estado: EstadoAtleta | null): {
+    factorIntensidad: number;
+    alertas: string[];
+  } {
     const alertas: string[] = [];
     let factorIntensidad = 1.0;
 
@@ -222,7 +244,7 @@ export class CatalogoEjerciciosService {
 
     // Calidad de sueno baja
     if (estado.calidadSuenoPromedio <= 5) {
-      factorIntensidad *= 0.90;
+      factorIntensidad *= 0.9;
       alertas.push('Calidad de sueno baja - reducir intensidad 10%');
     }
 
@@ -234,7 +256,7 @@ export class CatalogoEjerciciosService {
 
     // Poco descanso
     if (estado.diasDesdeUltimoDescanso >= 5) {
-      factorIntensidad *= 0.90;
+      factorIntensidad *= 0.9;
       alertas.push('Muchos dias sin descanso - reducir intensidad 10%');
     }
 
@@ -248,7 +270,7 @@ export class CatalogoEjerciciosService {
     etapa: string | null,
     dolenciasActivas: DolenciaActiva[],
     estadoAtleta: EstadoAtleta | null,
-    cantidadPorTipo: number = 2,
+    cantidadPorTipo: number = 2
   ): Promise<SeleccionEjercicios> {
     const alertas: string[] = [];
     const todosExcluidos: string[] = [];
@@ -258,14 +280,13 @@ export class CatalogoEjerciciosService {
     alertas.push(...ajusteFatiga.alertas);
 
     // Buscar ejercicios de cada tipo
-    const [fisicosRes, tachiRes, neRes, resistenciaRes, velocidadRes] =
-      await Promise.all([
-        this.buscarEjercicios('FISICO', perfilAtleta, tipoMicrociclo, etapa, dolenciasActivas),
-        this.buscarEjercicios('TECNICO_TACHI', perfilAtleta, tipoMicrociclo, etapa, dolenciasActivas),
-        this.buscarEjercicios('TECNICO_NE', perfilAtleta, tipoMicrociclo, etapa, dolenciasActivas),
-        this.buscarEjercicios('RESISTENCIA', perfilAtleta, tipoMicrociclo, etapa, dolenciasActivas),
-        this.buscarEjercicios('VELOCIDAD', perfilAtleta, tipoMicrociclo, etapa, dolenciasActivas),
-      ]);
+    const [fisicosRes, tachiRes, neRes, resistenciaRes, velocidadRes] = await Promise.all([
+      this.buscarEjercicios('FISICO', perfilAtleta, tipoMicrociclo, etapa, dolenciasActivas),
+      this.buscarEjercicios('TECNICO_TACHI', perfilAtleta, tipoMicrociclo, etapa, dolenciasActivas),
+      this.buscarEjercicios('TECNICO_NE', perfilAtleta, tipoMicrociclo, etapa, dolenciasActivas),
+      this.buscarEjercicios('RESISTENCIA', perfilAtleta, tipoMicrociclo, etapa, dolenciasActivas),
+      this.buscarEjercicios('VELOCIDAD', perfilAtleta, tipoMicrociclo, etapa, dolenciasActivas),
+    ]);
 
     // Recolectar excluidos
     todosExcluidos.push(...fisicosRes.excluidos);
@@ -305,28 +326,30 @@ export class CatalogoEjerciciosService {
     const nombresFisicos = seleccion.fisicos.map((e) => e.nombre);
     const nombresResistencia = seleccion.resistencia.map((e) => e.nombre);
     const nombresVelocidad = seleccion.velocidad.map((e) => e.nombre);
-    const contenidoFisico = [
-      ...nombresFisicos,
-      ...nombresResistencia,
-      ...nombresVelocidad,
-    ].join(', ') || 'Trabajo fisico general';
+    const contenidoFisico =
+      [...nombresFisicos, ...nombresResistencia, ...nombresVelocidad].join(', ') ||
+      'Trabajo fisico general';
 
     // Contenido tecnico
     const nombresTachi = seleccion.tecnicosTachi.map((e) => e.nombre);
     const nombresNe = seleccion.tecnicosNe.map((e) => e.nombre);
-    const contenidoTecnico = [
-      nombresTachi.length > 0 ? `Tachi-waza: ${nombresTachi.join(', ')}` : '',
-      nombresNe.length > 0 ? `Ne-waza: ${nombresNe.join(', ')}` : '',
-    ].filter(Boolean).join(' | ') || 'Trabajo tecnico general';
+    const contenidoTecnico =
+      [
+        nombresTachi.length > 0 ? `Tachi-waza: ${nombresTachi.join(', ')}` : '',
+        nombresNe.length > 0 ? `Ne-waza: ${nombresNe.join(', ')}` : '',
+      ]
+        .filter(Boolean)
+        .join(' | ') || 'Trabajo tecnico general';
 
     // Contenido tactico (basado en los tipos de ejercicios seleccionados)
     const categorias = new Set<string>();
     for (const ej of [...seleccion.tecnicosTachi, ...seleccion.tecnicosNe]) {
       if (ej.categoria) categorias.add(ej.categoria);
     }
-    const contenidoTactico = categorias.size > 0
-      ? `Enfoque tactico: ${Array.from(categorias).join(', ')}`
-      : 'Trabajo tactico general';
+    const contenidoTactico =
+      categorias.size > 0
+        ? `Enfoque tactico: ${Array.from(categorias).join(', ')}`
+        : 'Trabajo tactico general';
 
     // Parte principal estructurada
     const partes: string[] = [];
@@ -339,6 +362,73 @@ export class CatalogoEjerciciosService {
       contenidoTecnico,
       contenidoTactico,
       partePrincipal: partes.join(' | '),
+    };
+  }
+
+  // Genera contenido de sesion CON IDs preservados
+  // Este metodo extiende generarContenidoSesion() para incluir los IDs
+  // que se guardaran en la tabla ejercicios_sesion
+  generarContenidoSesionConIds(seleccion: SeleccionEjercicios): ContenidoSesionExtendido {
+    // Obtener el contenido de texto usando el metodo existente
+    const contenidoTexto = this.generarContenidoSesion(seleccion);
+
+    // Construir array de ejercicios con IDs preservados
+    const ejercicios: EjercicioParaSesion[] = [];
+    let orden = 1;
+
+    // Agregar ejercicios fisicos
+    for (const ej of seleccion.fisicos) {
+      ejercicios.push({
+        ejercicioId: ej.id,
+        nombre: ej.nombre,
+        tipo: ej.tipo,
+        orden: orden++,
+      });
+    }
+
+    // Agregar ejercicios de resistencia
+    for (const ej of seleccion.resistencia) {
+      ejercicios.push({
+        ejercicioId: ej.id,
+        nombre: ej.nombre,
+        tipo: ej.tipo,
+        orden: orden++,
+      });
+    }
+
+    // Agregar ejercicios de velocidad
+    for (const ej of seleccion.velocidad) {
+      ejercicios.push({
+        ejercicioId: ej.id,
+        nombre: ej.nombre,
+        tipo: ej.tipo,
+        orden: orden++,
+      });
+    }
+
+    // Agregar ejercicios tecnicos tachi-waza
+    for (const ej of seleccion.tecnicosTachi) {
+      ejercicios.push({
+        ejercicioId: ej.id,
+        nombre: ej.nombre,
+        tipo: ej.tipo,
+        orden: orden++,
+      });
+    }
+
+    // Agregar ejercicios tecnicos ne-waza
+    for (const ej of seleccion.tecnicosNe) {
+      ejercicios.push({
+        ejercicioId: ej.id,
+        nombre: ej.nombre,
+        tipo: ej.tipo,
+        orden: orden++,
+      });
+    }
+
+    return {
+      ...contenidoTexto,
+      ejercicios,
     };
   }
 

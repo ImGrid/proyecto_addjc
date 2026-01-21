@@ -9,14 +9,14 @@ import { EstadoMacrociclo } from '@prisma/client';
 export class MacrociclosService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly accessControl: AccessControlService,
+    private readonly accessControl: AccessControlService
   ) {}
 
   // Crear un nuevo macrociclo
   @Transactional()
   async create(
     createMacrocicloDto: CreateMacrocicloDto,
-    creadoPorUserId: string,
+    creadoPorUserId: string
   ): Promise<MacrocicloResponseDto> {
     // Validar que fechaFin > fechaInicio
     const fechaInicio = new Date(createMacrocicloDto.fechaInicio);
@@ -179,11 +179,7 @@ export class MacrociclosService {
   }
 
   // Obtener un macrociclo por ID (con validacion de ownership para ENTRENADOR)
-  async findOne(
-    id: string,
-    userId: bigint,
-    rol: string,
-  ): Promise<MacrocicloResponseDto> {
+  async findOne(id: string, userId: bigint, rol: string): Promise<MacrocicloResponseDto> {
     const macrociclo = await this.prisma.macrociclo.findUnique({
       where: { id: BigInt(id) },
       select: {
@@ -277,7 +273,7 @@ export class MacrociclosService {
   @Transactional()
   async update(
     id: string,
-    updateMacrocicloDto: UpdateMacrocicloDto,
+    updateMacrocicloDto: UpdateMacrocicloDto
   ): Promise<MacrocicloResponseDto> {
     // Verificar que existe
     const existingMacrociclo = await this.prisma.macrociclo.findUnique({
@@ -310,16 +306,26 @@ export class MacrociclosService {
         ...(updateMacrocicloDto.nombre && { nombre: updateMacrocicloDto.nombre }),
         ...(updateMacrocicloDto.temporada && { temporada: updateMacrocicloDto.temporada }),
         ...(updateMacrocicloDto.equipo && { equipo: updateMacrocicloDto.equipo }),
-        ...(updateMacrocicloDto.categoriaObjetivo && { categoriaObjetivo: updateMacrocicloDto.categoriaObjetivo }),
+        ...(updateMacrocicloDto.categoriaObjetivo && {
+          categoriaObjetivo: updateMacrocicloDto.categoriaObjetivo,
+        }),
         ...(updateMacrocicloDto.objetivo1 && { objetivo1: updateMacrocicloDto.objetivo1 }),
         ...(updateMacrocicloDto.objetivo2 && { objetivo2: updateMacrocicloDto.objetivo2 }),
         ...(updateMacrocicloDto.objetivo3 && { objetivo3: updateMacrocicloDto.objetivo3 }),
-        ...(updateMacrocicloDto.fechaInicio && { fechaInicio: new Date(updateMacrocicloDto.fechaInicio) }),
+        ...(updateMacrocicloDto.fechaInicio && {
+          fechaInicio: new Date(updateMacrocicloDto.fechaInicio),
+        }),
         ...(updateMacrocicloDto.fechaFin && { fechaFin: new Date(updateMacrocicloDto.fechaFin) }),
         ...(updateMacrocicloDto.estado && { estado: updateMacrocicloDto.estado }),
-        ...(updateMacrocicloDto.totalMicrociclos !== undefined && { totalMicrociclos: updateMacrocicloDto.totalMicrociclos }),
-        ...(updateMacrocicloDto.totalSesiones !== undefined && { totalSesiones: updateMacrocicloDto.totalSesiones }),
-        ...(updateMacrocicloDto.totalHoras !== undefined && { totalHoras: updateMacrocicloDto.totalHoras }),
+        ...(updateMacrocicloDto.totalMicrociclos !== undefined && {
+          totalMicrociclos: updateMacrocicloDto.totalMicrociclos,
+        }),
+        ...(updateMacrocicloDto.totalSesiones !== undefined && {
+          totalSesiones: updateMacrocicloDto.totalSesiones,
+        }),
+        ...(updateMacrocicloDto.totalHoras !== undefined && {
+          totalHoras: updateMacrocicloDto.totalHoras,
+        }),
       },
       select: {
         id: true,
@@ -407,7 +413,10 @@ export class MacrociclosService {
   // Eliminar un macrociclo (hard delete con cascade)
   // Las mesociclos, microciclos y sesiones se eliminan automaticamente por CASCADE
   @Transactional()
-  async remove(id: string): Promise<{ message: string; deleted: { mesociclos: number; microciclos: number; sesiones: number } }> {
+  async remove(id: string): Promise<{
+    message: string;
+    deleted: { mesociclos: number; microciclos: number; sesiones: number };
+  }> {
     // Obtener conteos antes de eliminar
     const deleteInfo = await this.getDeleteInfo(id);
 

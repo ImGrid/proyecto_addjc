@@ -56,7 +56,7 @@ export class AsignacionesService {
 
     if (asignacionExistente) {
       throw new ConflictException(
-        `El atleta ya esta asignado al microciclo ${microciclo.numeroGlobalMicrociclo}`,
+        `El atleta ya esta asignado al microciclo ${microciclo.numeroGlobalMicrociclo}`
       );
     }
 

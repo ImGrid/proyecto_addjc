@@ -19,8 +19,8 @@ export const LIMITES_CATEGORIA_PESO: Record<CategoriaPeso, { min: number; max: n
 export const PESOS_SCORE = {
   FUERZA: 0.25,
   RESISTENCIA: 0.25,
-  ESTADO: 0.30,
-  PESO: 0.20,
+  ESTADO: 0.3,
+  PESO: 0.2,
 } as const;
 
 // Datos del ultimo test fisico del atleta
@@ -98,7 +98,7 @@ function normalizar(valor: number, minimo: number, maximo: number): number {
 // IMPORTANTE: Usa ratios relativos al peso corporal para comparacion justa
 export function calcularScoreFuerza(
   datos: DatosTestFisico,
-  pesoAtleta: number,
+  pesoAtleta: number
 ): {
   score: number;
   fuerzaMaxima: number;
@@ -127,7 +127,7 @@ export function calcularScoreFuerza(
     ratios.pressBanca = Math.round(ratio * 100) / 100;
     // Normalizar ratio (0.5x = 0 puntos, 2.0x = 100 puntos)
     valoresFuerzaMaxima.push(
-      normalizar(ratio, RATIOS_FUERZA.PRESS_BANCA.min, RATIOS_FUERZA.PRESS_BANCA.max),
+      normalizar(ratio, RATIOS_FUERZA.PRESS_BANCA.min, RATIOS_FUERZA.PRESS_BANCA.max)
     );
   }
 
@@ -135,9 +135,7 @@ export function calcularScoreFuerza(
     // Tiron es MUY importante en judo (agarre, control)
     const ratio = datos.tiron / pesoValido;
     ratios.tiron = Math.round(ratio * 100) / 100;
-    valoresFuerzaMaxima.push(
-      normalizar(ratio, RATIOS_FUERZA.TIRON.min, RATIOS_FUERZA.TIRON.max),
-    );
+    valoresFuerzaMaxima.push(normalizar(ratio, RATIOS_FUERZA.TIRON.min, RATIOS_FUERZA.TIRON.max));
   }
 
   if (datos.sentadilla !== null && datos.sentadilla > 0) {
@@ -145,7 +143,7 @@ export function calcularScoreFuerza(
     const ratio = datos.sentadilla / pesoValido;
     ratios.sentadilla = Math.round(ratio * 100) / 100;
     valoresFuerzaMaxima.push(
-      normalizar(ratio, RATIOS_FUERZA.SENTADILLA.min, RATIOS_FUERZA.SENTADILLA.max),
+      normalizar(ratio, RATIOS_FUERZA.SENTADILLA.min, RATIOS_FUERZA.SENTADILLA.max)
     );
   }
 
@@ -286,7 +284,7 @@ export function calcularScorePeso(datos: DatosPesoAtleta): {
 export function calcularScoreAtleta(
   datosTest: DatosTestFisico,
   datosEstado: DatosEstadoAtleta,
-  datosPeso: DatosPesoAtleta,
+  datosPeso: DatosPesoAtleta
 ): ResultadoScore {
   // Pasar peso del atleta para calcular fuerza relativa
   const resultadoFuerza = calcularScoreFuerza(datosTest, datosPeso.pesoActual);

@@ -11,16 +11,9 @@ import { RecomendacionesController } from './recomendaciones.controller';
 import { RecomendacionesService } from './recomendaciones.service';
 
 @Module({
-  imports: [
-    DatabaseModule,
-    AuthModule,
-    AlgoritmoModule,
-  ],
+  imports: [DatabaseModule, AuthModule, AlgoritmoModule],
   controllers: [RecomendacionesController],
-  providers: [
-    PrismaService,
-    RecomendacionesService,
-  ],
+  providers: [PrismaService, RecomendacionesService],
   exports: [RecomendacionesService],
 })
 export class RecomendacionesModule {}

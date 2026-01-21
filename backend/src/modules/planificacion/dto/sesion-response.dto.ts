@@ -1,10 +1,4 @@
-import {
-  DiaSemana,
-  TipoSesion,
-  Turno,
-  TipoPlanificacion,
-  CreadoPor,
-} from '@prisma/client';
+import { DiaSemana, TipoSesion, Turno, TipoPlanificacion, CreadoPor } from '@prisma/client';
 
 export interface SesionResponseDto {
   id: string; // BigInt → string

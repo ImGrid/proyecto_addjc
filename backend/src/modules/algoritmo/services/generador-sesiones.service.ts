@@ -86,58 +86,271 @@ const DIAS_SEMANA: DiaSemana[] = [
 // Patrones base segun tipo de microciclo
 const PATRONES_MICROCICLO: Record<TipoMicrociclo, Partial<PlantillaSesion>[]> = {
   CARGA: [
-    { diaSemana: 'LUNES', tipoSesion: 'ENTRENAMIENTO', duracionPlanificada: 120, volumenPlanificado: 80, intensidadPlanificada: 75 },
-    { diaSemana: 'MARTES', tipoSesion: 'ENTRENAMIENTO', duracionPlanificada: 90, volumenPlanificado: 70, intensidadPlanificada: 80 },
-    { diaSemana: 'MIERCOLES', tipoSesion: 'ENTRENAMIENTO', duracionPlanificada: 120, volumenPlanificado: 85, intensidadPlanificada: 70 },
-    { diaSemana: 'JUEVES', tipoSesion: 'RECUPERACION', duracionPlanificada: 60, volumenPlanificado: 40, intensidadPlanificada: 50 },
-    { diaSemana: 'VIERNES', tipoSesion: 'ENTRENAMIENTO', duracionPlanificada: 120, volumenPlanificado: 90, intensidadPlanificada: 85 },
-    { diaSemana: 'SABADO', tipoSesion: 'ENTRENAMIENTO', duracionPlanificada: 90, volumenPlanificado: 75, intensidadPlanificada: 80 },
-    { diaSemana: 'DOMINGO', tipoSesion: 'DESCANSO', duracionPlanificada: 0, volumenPlanificado: 0, intensidadPlanificada: 0 },
+    {
+      diaSemana: 'LUNES',
+      tipoSesion: 'ENTRENAMIENTO',
+      duracionPlanificada: 120,
+      volumenPlanificado: 80,
+      intensidadPlanificada: 75,
+    },
+    {
+      diaSemana: 'MARTES',
+      tipoSesion: 'ENTRENAMIENTO',
+      duracionPlanificada: 90,
+      volumenPlanificado: 70,
+      intensidadPlanificada: 80,
+    },
+    {
+      diaSemana: 'MIERCOLES',
+      tipoSesion: 'ENTRENAMIENTO',
+      duracionPlanificada: 120,
+      volumenPlanificado: 85,
+      intensidadPlanificada: 70,
+    },
+    {
+      diaSemana: 'JUEVES',
+      tipoSesion: 'RECUPERACION',
+      duracionPlanificada: 60,
+      volumenPlanificado: 40,
+      intensidadPlanificada: 50,
+    },
+    {
+      diaSemana: 'VIERNES',
+      tipoSesion: 'ENTRENAMIENTO',
+      duracionPlanificada: 120,
+      volumenPlanificado: 90,
+      intensidadPlanificada: 85,
+    },
+    {
+      diaSemana: 'SABADO',
+      tipoSesion: 'ENTRENAMIENTO',
+      duracionPlanificada: 90,
+      volumenPlanificado: 75,
+      intensidadPlanificada: 80,
+    },
+    {
+      diaSemana: 'DOMINGO',
+      tipoSesion: 'DESCANSO',
+      duracionPlanificada: 0,
+      volumenPlanificado: 0,
+      intensidadPlanificada: 0,
+    },
   ],
   DESCARGA: [
-    { diaSemana: 'LUNES', tipoSesion: 'ENTRENAMIENTO', duracionPlanificada: 90, volumenPlanificado: 60, intensidadPlanificada: 60 },
-    { diaSemana: 'MARTES', tipoSesion: 'RECUPERACION', duracionPlanificada: 60, volumenPlanificado: 40, intensidadPlanificada: 50 },
-    { diaSemana: 'MIERCOLES', tipoSesion: 'ENTRENAMIENTO', duracionPlanificada: 90, volumenPlanificado: 55, intensidadPlanificada: 65 },
-    { diaSemana: 'JUEVES', tipoSesion: 'DESCANSO', duracionPlanificada: 0, volumenPlanificado: 0, intensidadPlanificada: 0 },
-    { diaSemana: 'VIERNES', tipoSesion: 'ENTRENAMIENTO', duracionPlanificada: 75, volumenPlanificado: 50, intensidadPlanificada: 60 },
-    { diaSemana: 'SABADO', tipoSesion: 'RECUPERACION', duracionPlanificada: 45, volumenPlanificado: 30, intensidadPlanificada: 40 },
-    { diaSemana: 'DOMINGO', tipoSesion: 'DESCANSO', duracionPlanificada: 0, volumenPlanificado: 0, intensidadPlanificada: 0 },
+    {
+      diaSemana: 'LUNES',
+      tipoSesion: 'ENTRENAMIENTO',
+      duracionPlanificada: 90,
+      volumenPlanificado: 60,
+      intensidadPlanificada: 60,
+    },
+    {
+      diaSemana: 'MARTES',
+      tipoSesion: 'RECUPERACION',
+      duracionPlanificada: 60,
+      volumenPlanificado: 40,
+      intensidadPlanificada: 50,
+    },
+    {
+      diaSemana: 'MIERCOLES',
+      tipoSesion: 'ENTRENAMIENTO',
+      duracionPlanificada: 90,
+      volumenPlanificado: 55,
+      intensidadPlanificada: 65,
+    },
+    {
+      diaSemana: 'JUEVES',
+      tipoSesion: 'DESCANSO',
+      duracionPlanificada: 0,
+      volumenPlanificado: 0,
+      intensidadPlanificada: 0,
+    },
+    {
+      diaSemana: 'VIERNES',
+      tipoSesion: 'ENTRENAMIENTO',
+      duracionPlanificada: 75,
+      volumenPlanificado: 50,
+      intensidadPlanificada: 60,
+    },
+    {
+      diaSemana: 'SABADO',
+      tipoSesion: 'RECUPERACION',
+      duracionPlanificada: 45,
+      volumenPlanificado: 30,
+      intensidadPlanificada: 40,
+    },
+    {
+      diaSemana: 'DOMINGO',
+      tipoSesion: 'DESCANSO',
+      duracionPlanificada: 0,
+      volumenPlanificado: 0,
+      intensidadPlanificada: 0,
+    },
   ],
   CHOQUE: [
-    { diaSemana: 'LUNES', tipoSesion: 'ENTRENAMIENTO', duracionPlanificada: 120, volumenPlanificado: 90, intensidadPlanificada: 85 },
-    { diaSemana: 'MARTES', tipoSesion: 'ENTRENAMIENTO', duracionPlanificada: 120, volumenPlanificado: 95, intensidadPlanificada: 90 },
-    { diaSemana: 'MIERCOLES', tipoSesion: 'ENTRENAMIENTO', duracionPlanificada: 90, volumenPlanificado: 85, intensidadPlanificada: 85 },
-    { diaSemana: 'JUEVES', tipoSesion: 'RECUPERACION', duracionPlanificada: 60, volumenPlanificado: 40, intensidadPlanificada: 50 },
-    { diaSemana: 'VIERNES', tipoSesion: 'ENTRENAMIENTO', duracionPlanificada: 120, volumenPlanificado: 95, intensidadPlanificada: 90 },
-    { diaSemana: 'SABADO', tipoSesion: 'ENTRENAMIENTO', duracionPlanificada: 90, volumenPlanificado: 80, intensidadPlanificada: 85 },
-    { diaSemana: 'DOMINGO', tipoSesion: 'DESCANSO', duracionPlanificada: 0, volumenPlanificado: 0, intensidadPlanificada: 0 },
+    {
+      diaSemana: 'LUNES',
+      tipoSesion: 'ENTRENAMIENTO',
+      duracionPlanificada: 120,
+      volumenPlanificado: 90,
+      intensidadPlanificada: 85,
+    },
+    {
+      diaSemana: 'MARTES',
+      tipoSesion: 'ENTRENAMIENTO',
+      duracionPlanificada: 120,
+      volumenPlanificado: 95,
+      intensidadPlanificada: 90,
+    },
+    {
+      diaSemana: 'MIERCOLES',
+      tipoSesion: 'ENTRENAMIENTO',
+      duracionPlanificada: 90,
+      volumenPlanificado: 85,
+      intensidadPlanificada: 85,
+    },
+    {
+      diaSemana: 'JUEVES',
+      tipoSesion: 'RECUPERACION',
+      duracionPlanificada: 60,
+      volumenPlanificado: 40,
+      intensidadPlanificada: 50,
+    },
+    {
+      diaSemana: 'VIERNES',
+      tipoSesion: 'ENTRENAMIENTO',
+      duracionPlanificada: 120,
+      volumenPlanificado: 95,
+      intensidadPlanificada: 90,
+    },
+    {
+      diaSemana: 'SABADO',
+      tipoSesion: 'ENTRENAMIENTO',
+      duracionPlanificada: 90,
+      volumenPlanificado: 80,
+      intensidadPlanificada: 85,
+    },
+    {
+      diaSemana: 'DOMINGO',
+      tipoSesion: 'DESCANSO',
+      duracionPlanificada: 0,
+      volumenPlanificado: 0,
+      intensidadPlanificada: 0,
+    },
   ],
   RECUPERACION: [
-    { diaSemana: 'LUNES', tipoSesion: 'RECUPERACION', duracionPlanificada: 60, volumenPlanificado: 40, intensidadPlanificada: 40 },
-    { diaSemana: 'MARTES', tipoSesion: 'DESCANSO', duracionPlanificada: 0, volumenPlanificado: 0, intensidadPlanificada: 0 },
-    { diaSemana: 'MIERCOLES', tipoSesion: 'RECUPERACION', duracionPlanificada: 60, volumenPlanificado: 45, intensidadPlanificada: 45 },
-    { diaSemana: 'JUEVES', tipoSesion: 'DESCANSO', duracionPlanificada: 0, volumenPlanificado: 0, intensidadPlanificada: 0 },
-    { diaSemana: 'VIERNES', tipoSesion: 'ENTRENAMIENTO', duracionPlanificada: 75, volumenPlanificado: 50, intensidadPlanificada: 55 },
-    { diaSemana: 'SABADO', tipoSesion: 'RECUPERACION', duracionPlanificada: 45, volumenPlanificado: 35, intensidadPlanificada: 40 },
-    { diaSemana: 'DOMINGO', tipoSesion: 'DESCANSO', duracionPlanificada: 0, volumenPlanificado: 0, intensidadPlanificada: 0 },
+    {
+      diaSemana: 'LUNES',
+      tipoSesion: 'RECUPERACION',
+      duracionPlanificada: 60,
+      volumenPlanificado: 40,
+      intensidadPlanificada: 40,
+    },
+    {
+      diaSemana: 'MARTES',
+      tipoSesion: 'DESCANSO',
+      duracionPlanificada: 0,
+      volumenPlanificado: 0,
+      intensidadPlanificada: 0,
+    },
+    {
+      diaSemana: 'MIERCOLES',
+      tipoSesion: 'RECUPERACION',
+      duracionPlanificada: 60,
+      volumenPlanificado: 45,
+      intensidadPlanificada: 45,
+    },
+    {
+      diaSemana: 'JUEVES',
+      tipoSesion: 'DESCANSO',
+      duracionPlanificada: 0,
+      volumenPlanificado: 0,
+      intensidadPlanificada: 0,
+    },
+    {
+      diaSemana: 'VIERNES',
+      tipoSesion: 'ENTRENAMIENTO',
+      duracionPlanificada: 75,
+      volumenPlanificado: 50,
+      intensidadPlanificada: 55,
+    },
+    {
+      diaSemana: 'SABADO',
+      tipoSesion: 'RECUPERACION',
+      duracionPlanificada: 45,
+      volumenPlanificado: 35,
+      intensidadPlanificada: 40,
+    },
+    {
+      diaSemana: 'DOMINGO',
+      tipoSesion: 'DESCANSO',
+      duracionPlanificada: 0,
+      volumenPlanificado: 0,
+      intensidadPlanificada: 0,
+    },
   ],
   COMPETITIVO: [
-    { diaSemana: 'LUNES', tipoSesion: 'ENTRENAMIENTO', duracionPlanificada: 90, volumenPlanificado: 70, intensidadPlanificada: 75 },
-    { diaSemana: 'MARTES', tipoSesion: 'ENTRENAMIENTO', duracionPlanificada: 75, volumenPlanificado: 60, intensidadPlanificada: 70 },
-    { diaSemana: 'MIERCOLES', tipoSesion: 'RECUPERACION', duracionPlanificada: 45, volumenPlanificado: 30, intensidadPlanificada: 40 },
-    { diaSemana: 'JUEVES', tipoSesion: 'ENTRENAMIENTO', duracionPlanificada: 60, volumenPlanificado: 50, intensidadPlanificada: 65 },
-    { diaSemana: 'VIERNES', tipoSesion: 'DESCANSO', duracionPlanificada: 0, volumenPlanificado: 0, intensidadPlanificada: 0 },
-    { diaSemana: 'SABADO', tipoSesion: 'COMPETENCIA', duracionPlanificada: 0, volumenPlanificado: 0, intensidadPlanificada: 100 },
-    { diaSemana: 'DOMINGO', tipoSesion: 'DESCANSO', duracionPlanificada: 0, volumenPlanificado: 0, intensidadPlanificada: 0 },
+    {
+      diaSemana: 'LUNES',
+      tipoSesion: 'ENTRENAMIENTO',
+      duracionPlanificada: 90,
+      volumenPlanificado: 70,
+      intensidadPlanificada: 75,
+    },
+    {
+      diaSemana: 'MARTES',
+      tipoSesion: 'ENTRENAMIENTO',
+      duracionPlanificada: 75,
+      volumenPlanificado: 60,
+      intensidadPlanificada: 70,
+    },
+    {
+      diaSemana: 'MIERCOLES',
+      tipoSesion: 'RECUPERACION',
+      duracionPlanificada: 45,
+      volumenPlanificado: 30,
+      intensidadPlanificada: 40,
+    },
+    {
+      diaSemana: 'JUEVES',
+      tipoSesion: 'ENTRENAMIENTO',
+      duracionPlanificada: 60,
+      volumenPlanificado: 50,
+      intensidadPlanificada: 65,
+    },
+    {
+      diaSemana: 'VIERNES',
+      tipoSesion: 'DESCANSO',
+      duracionPlanificada: 0,
+      volumenPlanificado: 0,
+      intensidadPlanificada: 0,
+    },
+    {
+      diaSemana: 'SABADO',
+      tipoSesion: 'COMPETENCIA',
+      duracionPlanificada: 0,
+      volumenPlanificado: 0,
+      intensidadPlanificada: 100,
+    },
+    {
+      diaSemana: 'DOMINGO',
+      tipoSesion: 'DESCANSO',
+      duracionPlanificada: 0,
+      volumenPlanificado: 0,
+      intensidadPlanificada: 0,
+    },
   ],
 };
 
 // Contenidos por perfil de atleta
-const CONTENIDOS_POR_PERFIL: Record<PerfilAtleta, {
-  fisico: string[];
-  tecnico: string[];
-  tactico: string[];
-}> = {
+const CONTENIDOS_POR_PERFIL: Record<
+  PerfilAtleta,
+  {
+    fisico: string[];
+    tecnico: string[];
+    tactico: string[];
+  }
+> = {
   VELOZ: {
     fisico: [
       'Trabajo de potencia y explosividad',
@@ -224,7 +437,7 @@ const CONTENIDOS_POR_PERFIL: Record<PerfilAtleta, {
 function generarContenido(
   perfil: PerfilAtleta,
   tipoSesion: TipoSesion,
-  numeroDia: number,
+  numeroDia: number
 ): { fisico: string; tecnico: string; tactico: string } {
   if (tipoSesion === 'DESCANSO' || tipoSesion === 'COMPETENCIA') {
     return { fisico: '', tecnico: '', tactico: '' };
@@ -251,7 +464,8 @@ function generarContenido(
 // Genera calentamiento estandar
 function generarCalentamiento(tipoSesion: TipoSesion): string {
   if (tipoSesion === 'DESCANSO') return '';
-  if (tipoSesion === 'COMPETENCIA') return 'Calentamiento pre-competencia: activacion neuromuscular, ukemi, uchi-komi';
+  if (tipoSesion === 'COMPETENCIA')
+    return 'Calentamiento pre-competencia: activacion neuromuscular, ukemi, uchi-komi';
   if (tipoSesion === 'RECUPERACION') return 'Movilidad articular suave, 10 min trote ligero';
   return 'Trote 10 min, movilidad articular, juegos de activacion, ukemi progresivo';
 }
@@ -260,7 +474,7 @@ function generarCalentamiento(tipoSesion: TipoSesion): string {
 function generarPartePrincipal(
   perfil: PerfilAtleta,
   tipoSesion: TipoSesion,
-  contenido: { fisico: string; tecnico: string; tactico: string },
+  contenido: { fisico: string; tecnico: string; tactico: string }
 ): string {
   if (tipoSesion === 'DESCANSO') return '';
   if (tipoSesion === 'COMPETENCIA') return 'Competencia oficial';
@@ -283,15 +497,15 @@ function generarVueltaCalma(tipoSesion: TipoSesion): string {
 // Aplica ajustes segun perfil del atleta
 function aplicarAjustesPerfil(
   plantilla: Partial<PlantillaSesion>,
-  perfil: ResultadoPerfil,
+  perfil: ResultadoPerfil
 ): { volumen: number; intensidad: number; duracion: number } {
   const volumenBase = plantilla.volumenPlanificado ?? 70;
   const intensidadBase = plantilla.intensidadPlanificada ?? 70;
   const duracionBase = plantilla.duracionPlanificada ?? 90;
 
   // Aplicar ajustes del perfil
-  const factorVolumen = 1 + (perfil.ajustes.volumen / 100);
-  const factorIntensidad = 1 + (perfil.ajustes.intensidad / 100);
+  const factorVolumen = 1 + perfil.ajustes.volumen / 100;
+  const factorIntensidad = 1 + perfil.ajustes.intensidad / 100;
 
   return {
     volumen: Math.round(volumenBase * factorVolumen),
@@ -318,10 +532,14 @@ export function generarSesiones(datos: DatosGeneracionSesiones): ResultadoGenera
 
   // Registrar ajustes aplicados
   if (perfil.ajustes.volumen !== 0) {
-    ajustesAplicados.push(`Volumen ${perfil.ajustes.volumen > 0 ? '+' : ''}${perfil.ajustes.volumen}%`);
+    ajustesAplicados.push(
+      `Volumen ${perfil.ajustes.volumen > 0 ? '+' : ''}${perfil.ajustes.volumen}%`
+    );
   }
   if (perfil.ajustes.intensidad !== 0) {
-    ajustesAplicados.push(`Intensidad ${perfil.ajustes.intensidad > 0 ? '+' : ''}${perfil.ajustes.intensidad}%`);
+    ajustesAplicados.push(
+      `Intensidad ${perfil.ajustes.intensidad > 0 ? '+' : ''}${perfil.ajustes.intensidad}%`
+    );
   }
   if (perfil.ajustes.enfasis.length > 0) {
     ajustesAplicados.push(`Enfasis: ${perfil.ajustes.enfasis.join(', ')}`);
@@ -365,7 +583,8 @@ export function generarSesiones(datos: DatosGeneracionSesiones): ResultadoGenera
     };
   });
 
-  const justificacionGeneral = `Se generaron ${sesiones.length} sesiones para microciclo ${datos.tipoMicrociclo} ` +
+  const justificacionGeneral =
+    `Se generaron ${sesiones.length} sesiones para microciclo ${datos.tipoMicrociclo} ` +
     `con perfil ${perfil.perfil}. ${perfil.justificacion}`;
 
   return {

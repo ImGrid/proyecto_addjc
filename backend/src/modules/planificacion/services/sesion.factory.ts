@@ -1,11 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  DiaSemana,
-  TipoSesion,
-  Turno,
-  TipoPlanificacion,
-  CreadoPor,
-} from '@prisma/client';
+import { DiaSemana, TipoSesion, Turno, TipoPlanificacion, CreadoPor } from '@prisma/client';
 
 export interface SesionTemplate {
   numeroSesion: number;
@@ -31,7 +25,7 @@ export class SesionFactory {
   generateWeeklySessions(
     fechaInicio: Date,
     objetivoSemanal: string,
-    esSemanaDeTeste: boolean = false,
+    esSemanaDeTeste: boolean = false
   ): SesionTemplate[] {
     const sessions: SesionTemplate[] = [];
     const diasSemana: DiaSemana[] = [

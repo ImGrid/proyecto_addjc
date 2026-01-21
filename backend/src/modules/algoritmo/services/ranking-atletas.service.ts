@@ -17,9 +17,7 @@ export class RankingAtletasService {
   constructor(private prisma: PrismaService) {}
 
   // Genera ranking de atletas para una categoria de peso especifica
-  async generarRankingPorCategoria(
-    categoriaPeso: CategoriaPeso,
-  ): Promise<ResultadoRanking> {
+  async generarRankingPorCategoria(categoriaPeso: CategoriaPeso): Promise<ResultadoRanking> {
     // 1. Obtener atletas de la categoria con sus datos completos
     const atletas = await this.obtenerAtletasConDatos(categoriaPeso);
 
@@ -60,10 +58,7 @@ export class RankingAtletasService {
   }
 
   // Obtiene los mejores N atletas de una categoria
-  async obtenerMejoresAtletas(
-    categoriaPeso: CategoriaPeso,
-    cantidad: number = 5,
-  ) {
+  async obtenerMejoresAtletas(categoriaPeso: CategoriaPeso, cantidad: number = 5) {
     const ranking = await this.generarRankingPorCategoria(categoriaPeso);
 
     return {
@@ -95,7 +90,7 @@ export class RankingAtletasService {
 
     // 3. Buscar al atleta en el ranking
     const atletaEnRanking = ranking.ranking.find(
-      (a) => a.atletaId.toString() === atletaId.toString(),
+      (a) => a.atletaId.toString() === atletaId.toString()
     );
 
     if (!atletaEnRanking) {
@@ -128,7 +123,7 @@ export class RankingAtletasService {
 
   // Obtiene atletas con todos sus datos necesarios para ranking
   private async obtenerAtletasConDatos(
-    categoriaPeso: CategoriaPeso | null,
+    categoriaPeso: CategoriaPeso | null
   ): Promise<DatosAtletaParaRanking[]> {
     const whereClause: any = {};
     if (categoriaPeso) {
@@ -198,7 +193,9 @@ export class RankingAtletasService {
                 barraFija: ultimoTest.barraFija,
                 paralelas: ultimoTest.paralelas,
                 navetteVO2max: ultimoTest.navetteVO2max ? Number(ultimoTest.navetteVO2max) : null,
-                test1500mVO2max: ultimoTest.test1500mVO2max ? Number(ultimoTest.test1500mVO2max) : null,
+                test1500mVO2max: ultimoTest.test1500mVO2max
+                  ? Number(ultimoTest.test1500mVO2max)
+                  : null,
               }
             : null,
           ultimosRegistros: atleta.registrosPostEntrenamiento.map((r) => ({
@@ -208,7 +205,7 @@ export class RankingAtletasService {
           })),
           dolenciasActivas,
         };
-      }),
+      })
     );
 
     return atletasConDolencias;
@@ -258,7 +255,7 @@ export class RankingAtletasService {
           noAptos,
           mejorPuntuacion: ranking.mejorAtleta?.puntuacion || 0,
         };
-      }),
+      })
     );
 
     return {

@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-} from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
@@ -18,15 +13,12 @@ import { AUDIT_LOG_KEY, AuditLogMetadata } from '../decorators/audit-log.decorat
 export class AuditLogInterceptor implements NestInterceptor {
   constructor(
     private readonly reflector: Reflector,
-    private readonly auditLogService: AuditLogService,
+    private readonly auditLogService: AuditLogService
   ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     // Leer metadata del decorador @AuditLog
-    const auditMetadata = this.reflector.get<AuditLogMetadata>(
-      AUDIT_LOG_KEY,
-      context.getHandler(),
-    );
+    const auditMetadata = this.reflector.get<AuditLogMetadata>(AUDIT_LOG_KEY, context.getHandler());
 
     // Si no tiene decorador @AuditLog, no interceptar
     if (!auditMetadata) {
@@ -78,7 +70,7 @@ export class AuditLogInterceptor implements NestInterceptor {
 
         // Re-lanzar el error para que lo maneje el filter de excepciones
         return throwError(() => error);
-      }),
+      })
     );
   }
 

@@ -1,4 +1,15 @@
-import { IsString, IsNotEmpty, MinLength, MaxLength, IsDateString, IsEnum, IsInt, Min, IsNumber, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  MinLength,
+  MaxLength,
+  IsDateString,
+  IsEnum,
+  IsInt,
+  Min,
+  IsNumber,
+  IsOptional,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 import { EstadoMacrociclo } from '@prisma/client';
 
@@ -74,7 +85,10 @@ export class CreateMacrocicloDto {
 
   // totalHoras - Decimal @db.Decimal(10, 2)
   @Transform(({ value }) => (value ? parseFloat(value) : null))
-  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'Total horas debe ser un numero con maximo 2 decimales' })
+  @IsNumber(
+    { maxDecimalPlaces: 2 },
+    { message: 'Total horas debe ser un numero con maximo 2 decimales' }
+  )
   @IsOptional()
   totalHoras?: number;
 

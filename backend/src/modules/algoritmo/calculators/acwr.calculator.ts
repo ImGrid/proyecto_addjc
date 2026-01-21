@@ -39,13 +39,11 @@ export function calcularCargaAguda(sesiones: CargaSesion[]): number {
   const hace7Dias = new Date(hoy);
   hace7Dias.setDate(hace7Dias.getDate() - 7);
 
-  const sesionesUltimaSemana = sesiones.filter(
-    (s) => s.fecha >= hace7Dias && s.fecha <= hoy,
-  );
+  const sesionesUltimaSemana = sesiones.filter((s) => s.fecha >= hace7Dias && s.fecha <= hoy);
 
   return sesionesUltimaSemana.reduce(
     (total, s) => total + calcularCargaSesion(s.duracionMinutos, s.rpe),
-    0,
+    0
   );
 }
 
@@ -55,9 +53,7 @@ export function calcularCargaCronica(sesiones: CargaSesion[]): number {
   const hace28Dias = new Date(hoy);
   hace28Dias.setDate(hace28Dias.getDate() - 28);
 
-  const sesionesUltimas4Semanas = sesiones.filter(
-    (s) => s.fecha >= hace28Dias && s.fecha <= hoy,
-  );
+  const sesionesUltimas4Semanas = sesiones.filter((s) => s.fecha >= hace28Dias && s.fecha <= hoy);
 
   if (sesionesUltimas4Semanas.length === 0) {
     return 0;
@@ -67,9 +63,7 @@ export function calcularCargaCronica(sesiones: CargaSesion[]): number {
   const cargasPorSemana: number[] = [0, 0, 0, 0];
 
   sesionesUltimas4Semanas.forEach((s) => {
-    const diasDesdeHoy = Math.floor(
-      (hoy.getTime() - s.fecha.getTime()) / (1000 * 60 * 60 * 24),
-    );
+    const diasDesdeHoy = Math.floor((hoy.getTime() - s.fecha.getTime()) / (1000 * 60 * 60 * 24));
     const semana = Math.min(Math.floor(diasDesdeHoy / 7), 3);
     cargasPorSemana[semana] += calcularCargaSesion(s.duracionMinutos, s.rpe);
   });
@@ -134,7 +128,7 @@ export function calcularACWRDesdeRegistros(
     duracionReal: number;
     rpe: number;
     fechaRegistro: Date;
-  }>,
+  }>
 ): ResultadoACWR {
   const sesiones: CargaSesion[] = registros.map((r) => ({
     duracionMinutos: r.duracionReal,

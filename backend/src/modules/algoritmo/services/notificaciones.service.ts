@@ -40,7 +40,7 @@ export class NotificacionesService {
     usuarioId: bigint,
     soloNoLeidas: boolean = false,
     page: number = 1,
-    limit: number = 10,
+    limit: number = 10
   ) {
     const skip = (page - 1) * limit;
     const whereClause: any = { destinatarioId: usuarioId };
@@ -54,10 +54,7 @@ export class NotificacionesService {
         where: whereClause,
         skip,
         take: limit,
-        orderBy: [
-          { prioridad: 'asc' },
-          { createdAt: 'desc' },
-        ],
+        orderBy: [{ prioridad: 'asc' }, { createdAt: 'desc' }],
         include: {
           recomendacion: {
             select: {
@@ -205,7 +202,7 @@ export class NotificacionesService {
   async notificarPlanificacionAprobada(
     atletaUsuarioId: bigint,
     entrenadorUsuarioId: bigint | null,
-    microcicloNumero: number,
+    microcicloNumero: number
   ) {
     const notificaciones: CreateNotificacionDto[] = [];
 
@@ -238,11 +235,7 @@ export class NotificacionesService {
   }
 
   // Crear notificacion de sesion proxima
-  async notificarSesionProxima(
-    atletaUsuarioId: bigint,
-    sesionFecha: Date,
-    tipoSesion: string,
-  ) {
+  async notificarSesionProxima(atletaUsuarioId: bigint, sesionFecha: Date, tipoSesion: string) {
     return await this.crear({
       destinatarioId: atletaUsuarioId,
       tipo: 'SESION_PROXIMA',
@@ -256,7 +249,7 @@ export class NotificacionesService {
   async notificarTestPendiente(
     atletaUsuarioId: bigint,
     entrenadorUsuarioId: bigint | null,
-    fechaTest: Date,
+    fechaTest: Date
   ) {
     const notificaciones: CreateNotificacionDto[] = [];
 

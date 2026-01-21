@@ -154,10 +154,10 @@ export function evaluarFuerza(datos: DatosTestParaPerfil): EvaluacionFuerza {
 // Evalua la resistencia del atleta basada en los tests
 export function evaluarResistencia(
   datos: DatosTestParaPerfil,
-  edadAtleta: number,
+  edadAtleta: number
 ): EvaluacionResistencia {
   let vo2max: number | null = null;
-  let palier: number | null = datos.navettePalier;
+  const palier: number | null = datos.navettePalier;
 
   // Calcular VO2max si tenemos palier
   if (datos.navettePalier !== null) {
@@ -212,10 +212,13 @@ export function evaluarResistencia(
 // Funcion principal que clasifica el perfil del atleta
 export function clasificarPerfilAtleta(
   datosTest: DatosTestParaPerfil | null,
-  edadAtleta: number,
+  edadAtleta: number
 ): ResultadoPerfil {
   // Si no hay test o el test es muy antiguo, es atleta NUEVO
-  if (datosTest === null || !esTestReciente(datosTest.fechaTest, UMBRALES_PERFIL.MESES_TEST_VALIDO)) {
+  if (
+    datosTest === null ||
+    !esTestReciente(datosTest.fechaTest, UMBRALES_PERFIL.MESES_TEST_VALIDO)
+  ) {
     return {
       perfil: 'NUEVO',
       fortalezas: [],
@@ -348,7 +351,7 @@ export function convertirTestPrismaADatos(
     navettePalier: unknown;
     navetteVO2max: unknown;
     test1500mVO2max: unknown;
-  } | null,
+  } | null
 ): DatosTestParaPerfil | null {
   if (test === null) return null;
 

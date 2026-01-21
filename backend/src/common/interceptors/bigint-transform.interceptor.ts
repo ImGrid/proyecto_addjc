@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-} from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Prisma } from '@prisma/client';
@@ -34,7 +29,10 @@ export class BigIntTransformInterceptor implements NestInterceptor {
     }
 
     // Si es Prisma.Decimal, convertir a number
-    if (data instanceof Prisma.Decimal || (data.constructor && data.constructor.name === 'Decimal')) {
+    if (
+      data instanceof Prisma.Decimal ||
+      (data.constructor && data.constructor.name === 'Decimal')
+    ) {
       return parseFloat(data.toString());
     }
 

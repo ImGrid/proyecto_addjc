@@ -38,7 +38,7 @@ export class RecomendacionesController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('prioridad') prioridad?: Prioridad,
-    @Query('atletaId') atletaId?: string,
+    @Query('atletaId') atletaId?: string
   ) {
     return this.recomendacionesService.findPendientes(page, limit, prioridad, atletaId);
   }
@@ -55,9 +55,7 @@ export class RecomendacionesController {
   // Solo COMITE_TECNICO
   @Get('feedback')
   @Roles('COMITE_TECNICO')
-  async obtenerFeedback(
-    @Query('limit', new DefaultValuePipe(50), ParseIntPipe) limit: number,
-  ) {
+  async obtenerFeedback(@Query('limit', new DefaultValuePipe(50), ParseIntPipe) limit: number) {
     return this.recomendacionesService.getFeedbackRechazos(limit);
   }
 
@@ -68,7 +66,7 @@ export class RecomendacionesController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('estado') estado?: EstadoRecomendacion,
-    @Query('atletaId') atletaId?: string,
+    @Query('atletaId') atletaId?: string
   ) {
     return this.recomendacionesService.findAll(page, limit, estado, atletaId);
   }
@@ -76,10 +74,7 @@ export class RecomendacionesController {
   // GET /api/recomendaciones/:id - Obtener una recomendacion por ID
   @Get(':id')
   @Roles('COMITE_TECNICO', 'ENTRENADOR')
-  async obtenerPorId(
-    @Param('id') id: string,
-    @CurrentUser() user: any,
-  ) {
+  async obtenerPorId(@Param('id') id: string, @CurrentUser() user: any) {
     return this.recomendacionesService.findOne(id, BigInt(user.id), user.rol);
   }
 
@@ -93,10 +88,7 @@ export class RecomendacionesController {
   // POST /api/recomendaciones/:id/revisar - Iniciar revision (cambiar a EN_PROCESO)
   @Post(':id/revisar')
   @Roles('COMITE_TECNICO')
-  async iniciarRevision(
-    @Param('id') id: string,
-    @CurrentUser() user: any,
-  ) {
+  async iniciarRevision(@Param('id') id: string, @CurrentUser() user: any) {
     return this.recomendacionesService.iniciarRevision(id, BigInt(user.id));
   }
 
@@ -107,7 +99,7 @@ export class RecomendacionesController {
   async aprobar(
     @Param('id') id: string,
     @Body() dto: AprobarRecomendacionDto,
-    @CurrentUser() user: any,
+    @CurrentUser() user: any
   ) {
     return this.recomendacionesService.aprobar(id, BigInt(user.id), dto);
   }
@@ -119,7 +111,7 @@ export class RecomendacionesController {
   async rechazar(
     @Param('id') id: string,
     @Body() dto: RechazarRecomendacionDto,
-    @CurrentUser() user: any,
+    @CurrentUser() user: any
   ) {
     return this.recomendacionesService.rechazar(id, BigInt(user.id), dto);
   }
@@ -131,7 +123,7 @@ export class RecomendacionesController {
   async modificar(
     @Param('id') id: string,
     @Body() dto: ModificarRecomendacionDto,
-    @CurrentUser() user: any,
+    @CurrentUser() user: any
   ) {
     return this.recomendacionesService.modificar(id, BigInt(user.id), dto);
   }

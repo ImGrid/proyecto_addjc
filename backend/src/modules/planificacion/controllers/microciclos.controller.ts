@@ -38,15 +38,9 @@ export class MicrociclosController {
     @CurrentUser() user: any,
     @Query('mesocicloId') mesocicloId?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number
   ) {
-    return this.microciclosService.findAll(
-      BigInt(user.id),
-      user.rol,
-      mesocicloId,
-      page,
-      limit,
-    );
+    return this.microciclosService.findAll(BigInt(user.id), user.rol, mesocicloId, page, limit);
   }
 
   // GET /api/microciclos/:id - Obtener microciclo por ID (con sus 7 sesiones)
@@ -59,10 +53,7 @@ export class MicrociclosController {
   // PATCH /api/microciclos/:id - Actualizar microciclo (solo COMITE_TECNICO)
   @Patch(':id')
   @Roles('COMITE_TECNICO')
-  update(
-    @Param('id') id: string,
-    @Body() updateMicrocicloDto: UpdateMicrocicloDto,
-  ) {
+  update(@Param('id') id: string, @Body() updateMicrocicloDto: UpdateMicrocicloDto) {
     return this.microciclosService.update(id, updateMicrocicloDto);
   }
 

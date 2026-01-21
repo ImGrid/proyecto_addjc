@@ -19,7 +19,7 @@ import { CatalogoEjerciciosService } from '../algoritmo/services/catalogo-ejerci
 @Module({
   imports: [
     DatabaseModule, // Para PrismaService
-    AuthModule,     // Para autenticación y autorización
+    AuthModule, // Para autenticación y autorización
   ],
   controllers: [
     MacrociclosController,

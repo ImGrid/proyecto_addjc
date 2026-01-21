@@ -8,7 +8,7 @@ import { PrismaService } from '../../../database/prisma.service';
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private readonly configService: ConfigService,
-    private readonly prisma: PrismaService,
+    private readonly prisma: PrismaService
   ) {
     super({
       // Extraer el token JWT del header Authorization: Bearer <token>

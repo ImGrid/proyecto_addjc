@@ -37,15 +37,9 @@ export class MesociclosController {
     @CurrentUser() user: any,
     @Query('macrocicloId') macrocicloId?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number
   ) {
-    return this.mesociclosService.findAll(
-      BigInt(user.id),
-      user.rol,
-      macrocicloId,
-      page,
-      limit,
-    );
+    return this.mesociclosService.findAll(BigInt(user.id), user.rol, macrocicloId, page, limit);
   }
 
   // GET /api/mesociclos/:id - Obtener mesociclo por ID
@@ -58,10 +52,7 @@ export class MesociclosController {
   // PATCH /api/mesociclos/:id - Actualizar mesociclo (solo COMITE_TECNICO)
   @Patch(':id')
   @Roles('COMITE_TECNICO')
-  update(
-    @Param('id') id: string,
-    @Body() updateMesocicloDto: UpdateMesocicloDto,
-  ) {
+  update(@Param('id') id: string, @Body() updateMesocicloDto: UpdateMesocicloDto) {
     return this.mesociclosService.update(id, updateMesocicloDto);
   }
 

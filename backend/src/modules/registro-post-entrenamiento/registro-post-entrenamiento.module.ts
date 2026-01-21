@@ -14,17 +14,9 @@ import { AlgoritmoModule } from '../algoritmo/algoritmo.module';
 // - Asistencia y observaciones
 // Integra con el modulo de Algoritmo para generar alertas automaticas
 @Module({
-  imports: [
-    DatabaseModule,
-    AuthModule,
-    forwardRef(() => AlgoritmoModule),
-  ],
+  imports: [DatabaseModule, AuthModule, forwardRef(() => AlgoritmoModule)],
   controllers: [RegistroPostEntrenamientoController],
-  providers: [
-    RegistroPostEntrenamientoService,
-    PrismaService,
-    AtletaOwnershipGuard,
-  ],
+  providers: [RegistroPostEntrenamientoService, PrismaService, AtletaOwnershipGuard],
   exports: [RegistroPostEntrenamientoService],
 })
 export class RegistroPostEntrenamientoModule {}

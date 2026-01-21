@@ -7,7 +7,7 @@ import * as bcrypt from 'bcrypt';
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly jwtService: JwtService,
+    private readonly jwtService: JwtService
   ) {}
 
   // Valida las credenciales del usuario (email y contraseña)
@@ -40,16 +40,16 @@ export class AuthService {
     // Crear el payload (datos que irán dentro del token)
     // IMPORTANTE: Convertir BigInt a String porque JWT no puede serializar BigInt
     const payload = {
-      sub: user.id.toString(),  // ID del usuario (BigInt convertido a String)
-      email: user.email,         // Email del usuario
-      rol: user.rol,             // Rol del usuario (ADMIN, ENTRENADOR, etc.)
+      sub: user.id.toString(), // ID del usuario (BigInt convertido a String)
+      email: user.email, // Email del usuario
+      rol: user.rol, // Rol del usuario (ADMIN, ENTRENADOR, etc.)
     };
 
     // Generar y devolver el token JWT
     return {
       access_token: this.jwtService.sign(payload),
       user: {
-        id: user.id.toString(),  // Convertir BigInt a String para JSON
+        id: user.id.toString(), // Convertir BigInt a String para JSON
         email: user.email,
         nombreCompleto: user.nombreCompleto,
         rol: user.rol,

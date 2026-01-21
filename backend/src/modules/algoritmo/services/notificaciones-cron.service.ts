@@ -12,7 +12,7 @@ export class NotificacionesCronService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly notificacionesService: NotificacionesService,
+    private readonly notificacionesService: NotificacionesService
   ) {}
 
   // Ejecuta todos los dias a las 7:00 AM
@@ -65,7 +65,7 @@ export class NotificacionesCronService {
             await this.notificacionesService.notificarSesionProxima(
               asignacion.atleta.usuarioId,
               sesion.fecha,
-              sesion.tipoSesion,
+              sesion.tipoSesion
             );
             notificacionesEnviadas++;
           }
@@ -73,7 +73,7 @@ export class NotificacionesCronService {
       }
 
       this.logger.log(
-        `Tarea completada: ${notificacionesEnviadas} notificaciones de sesion enviadas`,
+        `Tarea completada: ${notificacionesEnviadas} notificaciones de sesion enviadas`
       );
     } catch (error) {
       this.logger.error('Error en tarea notificar-sesiones-hoy:', error);
@@ -133,7 +133,7 @@ export class NotificacionesCronService {
             await this.notificacionesService.notificarTestPendiente(
               asignacion.atleta.usuarioId,
               asignacion.atleta.entrenadorAsignado?.usuarioId || null,
-              sesion.fecha,
+              sesion.fecha
             );
             notificacionesEnviadas++;
           }
@@ -141,7 +141,7 @@ export class NotificacionesCronService {
       }
 
       this.logger.log(
-        `Tarea completada: ${notificacionesEnviadas} notificaciones de test enviadas`,
+        `Tarea completada: ${notificacionesEnviadas} notificaciones de test enviadas`
       );
     } catch (error) {
       this.logger.error('Error en tarea notificar-tests-pendientes:', error);
@@ -158,7 +158,7 @@ export class NotificacionesCronService {
       const resultado = await this.notificacionesService.limpiarNotificacionesAntiguas();
 
       this.logger.log(
-        `Tarea completada: ${resultado.eliminadas} notificaciones antiguas eliminadas`,
+        `Tarea completada: ${resultado.eliminadas} notificaciones antiguas eliminadas`
       );
     } catch (error) {
       this.logger.error('Error en tarea limpiar-notificaciones-antiguas:', error);

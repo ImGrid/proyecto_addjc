@@ -206,6 +206,7 @@ model Sesion {
   sesionBase                 Sesion?                     @relation("SesionAjustes", fields: [sesionBaseId], references: [id])
   ajustesGenerados           Sesion[]                    @relation("SesionAjustes")
   testsFisicos               TestFisico[]
+  ejerciciosSesion           EjercicioSesion[]
 
   @@index([microcicloId])
   @@index([fecha])
@@ -271,11 +272,12 @@ model RegistroPostEntrenamiento {
   observaciones         String?
   createdAt             DateTime        @default(now())
   updatedAt             DateTime        @updatedAt
-  dolencias             Dolencia[]
-  recomendaciones       Recomendacion[]
-  atleta                Atleta          @relation(fields: [atletaId], references: [id], onDelete: Cascade)
-  entrenador            Entrenador      @relation(fields: [entrenadorRegistroId], references: [id])
-  sesion                Sesion          @relation(fields: [sesionId], references: [id])
+  dolencias              Dolencia[]
+  recomendaciones        Recomendacion[]
+  atleta                 Atleta          @relation(fields: [atletaId], references: [id], onDelete: Cascade)
+  entrenador             Entrenador      @relation(fields: [entrenadorRegistroId], references: [id])
+  sesion                 Sesion          @relation(fields: [sesionId], references: [id])
+  rendimientosEjercicios RendimientoEjercicio[]
 
   @@index([atletaId])
   @@index([sesionId])
@@ -467,6 +469,7 @@ model CatalogoEjercicios {
   intensidadMinima     Decimal?      @db.Decimal(5, 2)
   intensidadMaxima     Decimal?      @db.Decimal(5, 2)
   activo               Boolean?      @default(true)
+  ejerciciosSesion     EjercicioSesion[]
 
   @@index([tipo])
   @@index([subtipo])
@@ -575,6 +578,54 @@ model AuditoriaAcceso {
   @@index([createdAt])
   @@index([recurso, recursoId])
   @@map("auditorias_acceso")
+}
+
+// Vinculacion de ejercicios del catalogo a sesiones especificas
+// Permite rastrear que ejercicios se asignaron a cada sesion
+model EjercicioSesion {
+  id              BigInt   @id @default(autoincrement())
+  sesionId        BigInt   @map("sesion_id")
+  ejercicioId     BigInt   @map("ejercicio_id")
+  orden           Int
+  duracionMinutos Int?     @map("duracion_minutos")
+  repeticiones    Int?
+  series          Int?
+  intensidad      Decimal? @db.Decimal(5, 2)
+  observaciones   String?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  sesion       Sesion             @relation(fields: [sesionId], references: [id], onDelete: Cascade)
+  ejercicio    CatalogoEjercicios @relation(fields: [ejercicioId], references: [id])
+  rendimientos RendimientoEjercicio[]
+
+  @@unique([sesionId, ejercicioId, orden])
+  @@index([sesionId])
+  @@index([ejercicioId])
+  @@map("ejercicios_sesion")
+}
+
+// Rendimiento individual por ejercicio en un registro post-entrenamiento
+// Permite analizar el desempeno especifico en cada ejercicio
+model RendimientoEjercicio {
+  id                          BigInt   @id @default(autoincrement())
+  registroPostEntrenamientoId BigInt   @map("registro_post_entrenamiento_id")
+  ejercicioSesionId           BigInt   @map("ejercicio_sesion_id")
+  completado                  Boolean  @default(false)
+  rendimiento                 Int?
+  dificultadPercibida         Int?     @map("dificultad_percibida")
+  tiempoReal                  Int?     @map("tiempo_real")
+  observacion                 String?
+  motivoNoCompletado          String?  @map("motivo_no_completado")
+  createdAt                   DateTime @default(now()) @map("created_at")
+
+  registro        RegistroPostEntrenamiento @relation(fields: [registroPostEntrenamientoId], references: [id], onDelete: Cascade)
+  ejercicioSesion EjercicioSesion           @relation(fields: [ejercicioSesionId], references: [id])
+
+  @@unique([registroPostEntrenamientoId, ejercicioSesionId])
+  @@index([registroPostEntrenamientoId])
+  @@index([ejercicioSesionId])
+  @@index([rendimiento])
+  @@map("rendimiento_ejercicio")
 }
 
 enum RolUsuario {

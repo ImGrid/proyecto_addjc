@@ -23,13 +23,10 @@ export class AccessControlService {
   async checkAtletaOwnership(
     userId: bigint,
     userRole: RolUsuario,
-    atletaId: bigint,
+    atletaId: bigint
   ): Promise<boolean> {
     // COMITE_TECNICO y ADMINISTRADOR: acceso total (sin query a BD)
-    if (
-      userRole === RolUsuario.COMITE_TECNICO ||
-      userRole === RolUsuario.ADMINISTRADOR
-    ) {
+    if (userRole === RolUsuario.COMITE_TECNICO || userRole === RolUsuario.ADMINISTRADOR) {
       return true;
     }
 
@@ -96,10 +93,7 @@ export class AccessControlService {
    * @param atletaId - ID del atleta
    * @returns true si el atleta esta asignado al entrenador, false si no
    */
-  async isAtletaAssignedToEntrenador(
-    entrenadorId: bigint,
-    atletaId: bigint,
-  ): Promise<boolean> {
+  async isAtletaAssignedToEntrenador(entrenadorId: bigint, atletaId: bigint): Promise<boolean> {
     const atleta = await this.prisma.atleta.findFirst({
       where: {
         id: atletaId,

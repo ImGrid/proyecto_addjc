@@ -69,9 +69,7 @@ function promedio(valores: number[]): number {
 }
 
 // Prepara los datos del test para el calculator
-function prepararDatosTest(
-  test: DatosAtletaParaRanking['ultimoTest'],
-): DatosTestFisico {
+function prepararDatosTest(test: DatosAtletaParaRanking['ultimoTest']): DatosTestFisico {
   if (test === null) {
     return {
       pressBanca: null,
@@ -97,7 +95,7 @@ function prepararDatosTest(
 
 // Prepara los datos de estado del atleta
 function prepararDatosEstado(
-  registros: DatosAtletaParaRanking['ultimosRegistros'],
+  registros: DatosAtletaParaRanking['ultimosRegistros']
 ): DatosEstadoAtleta {
   if (registros.length === 0) {
     return {
@@ -115,10 +113,7 @@ function prepararDatosEstado(
 }
 
 // Genera alertas para un atleta
-function generarAlertasAtleta(
-  atleta: DatosAtletaParaRanking,
-  score: ResultadoScore,
-): string[] {
+function generarAlertasAtleta(atleta: DatosAtletaParaRanking, score: ResultadoScore): string[] {
   const alertas: string[] = [];
 
   // Alerta si no tiene test reciente
@@ -127,7 +122,7 @@ function generarAlertasAtleta(
   } else {
     const mesesDesdeTest = Math.floor(
       (new Date().getTime() - new Date(atleta.ultimoTest.fechaTest).getTime()) /
-        (1000 * 60 * 60 * 24 * 30),
+        (1000 * 60 * 60 * 24 * 30)
     );
     if (mesesDesdeTest > 2) {
       alertas.push(`Test fisico tiene ${mesesDesdeTest} meses`);
@@ -161,7 +156,7 @@ function generarAlertasAtleta(
 function determinarAptitud(
   score: ResultadoScore,
   alertas: string[],
-  dolenciasActivas: number,
+  dolenciasActivas: number
 ): 'COMPETIR' | 'RESERVA' | 'NO_APTO' {
   // No apto si tiene dolencias graves o score muy bajo
   if (dolenciasActivas > 0 || score.scoreEstado < 30 || score.scorePeso < 50) {
@@ -179,7 +174,7 @@ function determinarAptitud(
 // Genera justificacion del ranking
 function generarJustificacion(
   score: ResultadoScore,
-  aptoPara: 'COMPETIR' | 'RESERVA' | 'NO_APTO',
+  aptoPara: 'COMPETIR' | 'RESERVA' | 'NO_APTO'
 ): string {
   const partes: string[] = [];
 
@@ -222,7 +217,7 @@ function generarJustificacion(
 // Funcion principal: genera ranking de atletas
 export function generarRanking(
   atletas: DatosAtletaParaRanking[],
-  categoriaPeso: CategoriaPeso,
+  categoriaPeso: CategoriaPeso
 ): ResultadoRanking {
   // Filtrar atletas de la categoria
   const atletasCategoria = atletas.filter((a) => a.categoriaPeso === categoriaPeso);
@@ -304,7 +299,7 @@ export function generarRanking(
 
 // Genera ranking para todas las categorias
 export function generarRankingGlobal(
-  atletas: DatosAtletaParaRanking[],
+  atletas: DatosAtletaParaRanking[]
 ): Map<CategoriaPeso, ResultadoRanking> {
   const categorias: CategoriaPeso[] = [
     'MENOS_60K',

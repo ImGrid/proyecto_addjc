@@ -9,7 +9,7 @@ export class DateRangeValidator {
   async validateMesocicloInMacrociclo(
     macrocicloId: bigint,
     fechaInicio: Date,
-    fechaFin: Date,
+    fechaFin: Date
   ): Promise<void> {
     const macrociclo = await this.prisma.macrociclo.findUnique({
       where: { id: macrocicloId },
@@ -24,8 +24,8 @@ export class DateRangeValidator {
     if (fechaInicio < macrociclo.fechaInicio) {
       throw new BadRequestException(
         `La fecha de inicio del mesociclo (${fechaInicio.toISOString().split('T')[0]}) ` +
-        `debe ser mayor o igual a la fecha de inicio del macrociclo "${macrociclo.nombre}" ` +
-        `(${macrociclo.fechaInicio.toISOString().split('T')[0]})`
+          `debe ser mayor o igual a la fecha de inicio del macrociclo "${macrociclo.nombre}" ` +
+          `(${macrociclo.fechaInicio.toISOString().split('T')[0]})`
       );
     }
 
@@ -33,8 +33,8 @@ export class DateRangeValidator {
     if (fechaFin > macrociclo.fechaFin) {
       throw new BadRequestException(
         `La fecha de fin del mesociclo (${fechaFin.toISOString().split('T')[0]}) ` +
-        `debe ser menor o igual a la fecha de fin del macrociclo "${macrociclo.nombre}" ` +
-        `(${macrociclo.fechaFin.toISOString().split('T')[0]})`
+          `debe ser menor o igual a la fecha de fin del macrociclo "${macrociclo.nombre}" ` +
+          `(${macrociclo.fechaFin.toISOString().split('T')[0]})`
       );
     }
   }
@@ -43,7 +43,7 @@ export class DateRangeValidator {
   async validateMicrocicloInMesociclo(
     mesocicloId: bigint,
     fechaInicio: Date,
-    fechaFin: Date,
+    fechaFin: Date
   ): Promise<void> {
     const mesociclo = await this.prisma.mesociclo.findUnique({
       where: { id: mesocicloId },
@@ -58,8 +58,8 @@ export class DateRangeValidator {
     if (fechaInicio < mesociclo.fechaInicio) {
       throw new BadRequestException(
         `La fecha de inicio del microciclo (${fechaInicio.toISOString().split('T')[0]}) ` +
-        `debe ser mayor o igual a la fecha de inicio del mesociclo "${mesociclo.nombre}" ` +
-        `(${mesociclo.fechaInicio.toISOString().split('T')[0]})`
+          `debe ser mayor o igual a la fecha de inicio del mesociclo "${mesociclo.nombre}" ` +
+          `(${mesociclo.fechaInicio.toISOString().split('T')[0]})`
       );
     }
 
@@ -67,8 +67,8 @@ export class DateRangeValidator {
     if (fechaFin > mesociclo.fechaFin) {
       throw new BadRequestException(
         `La fecha de fin del microciclo (${fechaFin.toISOString().split('T')[0]}) ` +
-        `debe ser menor o igual a la fecha de fin del mesociclo "${mesociclo.nombre}" ` +
-        `(${mesociclo.fechaFin.toISOString().split('T')[0]})`
+          `debe ser menor o igual a la fecha de fin del mesociclo "${mesociclo.nombre}" ` +
+          `(${mesociclo.fechaFin.toISOString().split('T')[0]})`
       );
     }
   }

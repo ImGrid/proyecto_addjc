@@ -36,7 +36,7 @@ const CATEGORIAS_VALIDAS: CategoriaPeso[] = [
 export class RankingController {
   constructor(
     private readonly rankingService: RankingAtletasService,
-    private readonly accessControl: AccessControlService,
+    private readonly accessControl: AccessControlService
   ) {}
 
   // GET /api/ranking - Obtener ranking global (todas las categorias)
@@ -77,18 +77,16 @@ export class RankingController {
   // GET /api/ranking/categoria/:categoria - Ranking de una categoria especifica
   @Get('categoria/:categoria')
   @Roles('COMITE_TECNICO', 'ENTRENADOR')
-  async obtenerRankingPorCategoria(
-    @Param('categoria') categoria: string,
-  ) {
+  async obtenerRankingPorCategoria(@Param('categoria') categoria: string) {
     // Validar categoria
     if (!CATEGORIAS_VALIDAS.includes(categoria as CategoriaPeso)) {
       throw new BadRequestException(
-        `Categoria invalida. Categorias validas: ${CATEGORIAS_VALIDAS.join(', ')}`,
+        `Categoria invalida. Categorias validas: ${CATEGORIAS_VALIDAS.join(', ')}`
       );
     }
 
     const ranking = await this.rankingService.generarRankingPorCategoria(
-      categoria as CategoriaPeso,
+      categoria as CategoriaPeso
     );
 
     // Formatear para serializar BigInt
@@ -112,12 +110,12 @@ export class RankingController {
   @Roles('COMITE_TECNICO', 'ENTRENADOR')
   async obtenerMejoresAtletas(
     @Param('categoria') categoria: string,
-    @Query('cantidad', new DefaultValuePipe(5), ParseIntPipe) cantidad: number,
+    @Query('cantidad', new DefaultValuePipe(5), ParseIntPipe) cantidad: number
   ) {
     // Validar categoria
     if (!CATEGORIAS_VALIDAS.includes(categoria as CategoriaPeso)) {
       throw new BadRequestException(
-        `Categoria invalida. Categorias validas: ${CATEGORIAS_VALIDAS.join(', ')}`,
+        `Categoria invalida. Categorias validas: ${CATEGORIAS_VALIDAS.join(', ')}`
       );
     }
 
@@ -128,7 +126,7 @@ export class RankingController {
 
     const resultado = await this.rankingService.obtenerMejoresAtletas(
       categoria as CategoriaPeso,
-      cantidad,
+      cantidad
     );
 
     return {
@@ -143,10 +141,7 @@ export class RankingController {
   // GET /api/ranking/atleta/:id - Ranking de un atleta especifico
   @Get('atleta/:id')
   @Roles('COMITE_TECNICO', 'ENTRENADOR', 'ATLETA')
-  async obtenerRankingAtleta(
-    @Param('id') id: string,
-    @CurrentUser() user: any,
-  ) {
+  async obtenerRankingAtleta(@Param('id') id: string, @CurrentUser() user: any) {
     // Si es ATLETA, solo puede ver su propio ranking
     if (user.rol === 'ATLETA') {
       const atletaId = await this.accessControl.getAtletaId(BigInt(user.id));

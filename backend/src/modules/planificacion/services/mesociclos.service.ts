@@ -10,7 +10,7 @@ export class MesociclosService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly accessControl: AccessControlService,
-    private readonly dateRangeValidator: DateRangeValidator,
+    private readonly dateRangeValidator: DateRangeValidator
   ) {}
 
   // Crear un nuevo mesociclo
@@ -28,7 +28,7 @@ export class MesociclosService {
     await this.dateRangeValidator.validateMesocicloInMacrociclo(
       macrocicloId,
       fechaInicio,
-      fechaFin,
+      fechaFin
     );
 
     // Crear mesociclo
@@ -73,13 +73,7 @@ export class MesociclosService {
   }
 
   // Listar mesociclos con filtros opcionales
-  async findAll(
-    userId: bigint,
-    rol: string,
-    macrocicloId?: string,
-    page = 1,
-    limit = 10,
-  ) {
+  async findAll(userId: bigint, rol: string, macrocicloId?: string, page = 1, limit = 10) {
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -173,11 +167,7 @@ export class MesociclosService {
   }
 
   // Obtener un mesociclo por ID (con validacion de ownership para ENTRENADOR)
-  async findOne(
-    id: string,
-    userId: bigint,
-    rol: string,
-  ): Promise<MesocicloResponseDto> {
+  async findOne(id: string, userId: bigint, rol: string): Promise<MesocicloResponseDto> {
     const mesociclo = await this.prisma.mesociclo.findUnique({
       where: { id: BigInt(id) },
       select: {
@@ -261,10 +251,7 @@ export class MesociclosService {
 
   // Actualizar un mesociclo
   @Transactional()
-  async update(
-    id: string,
-    updateMesocicloDto: UpdateMesocicloDto,
-  ): Promise<MesocicloResponseDto> {
+  async update(id: string, updateMesocicloDto: UpdateMesocicloDto): Promise<MesocicloResponseDto> {
     // Verificar que existe
     const existingMesociclo = await this.prisma.mesociclo.findUnique({
       where: { id: BigInt(id) },
@@ -291,7 +278,7 @@ export class MesociclosService {
       await this.dateRangeValidator.validateMesocicloInMacrociclo(
         existingMesociclo.macrocicloId,
         fechaInicio,
-        fechaFin,
+        fechaFin
       );
     }
 
@@ -300,14 +287,26 @@ export class MesociclosService {
       where: { id: BigInt(id) },
       data: {
         ...(updateMesocicloDto.nombre && { nombre: updateMesocicloDto.nombre }),
-        ...(updateMesocicloDto.numeroMesociclo && { numeroMesociclo: updateMesocicloDto.numeroMesociclo }),
+        ...(updateMesocicloDto.numeroMesociclo && {
+          numeroMesociclo: updateMesocicloDto.numeroMesociclo,
+        }),
         ...(updateMesocicloDto.etapa && { etapa: updateMesocicloDto.etapa }),
-        ...(updateMesocicloDto.fechaInicio && { fechaInicio: new Date(updateMesocicloDto.fechaInicio) }),
+        ...(updateMesocicloDto.fechaInicio && {
+          fechaInicio: new Date(updateMesocicloDto.fechaInicio),
+        }),
         ...(updateMesocicloDto.fechaFin && { fechaFin: new Date(updateMesocicloDto.fechaFin) }),
-        ...(updateMesocicloDto.objetivoFisico && { objetivoFisico: updateMesocicloDto.objetivoFisico }),
-        ...(updateMesocicloDto.objetivoTecnico && { objetivoTecnico: updateMesocicloDto.objetivoTecnico }),
-        ...(updateMesocicloDto.objetivoTactico && { objetivoTactico: updateMesocicloDto.objetivoTactico }),
-        ...(updateMesocicloDto.totalMicrociclos !== undefined && { totalMicrociclos: updateMesocicloDto.totalMicrociclos }),
+        ...(updateMesocicloDto.objetivoFisico && {
+          objetivoFisico: updateMesocicloDto.objetivoFisico,
+        }),
+        ...(updateMesocicloDto.objetivoTecnico && {
+          objetivoTecnico: updateMesocicloDto.objetivoTecnico,
+        }),
+        ...(updateMesocicloDto.objetivoTactico && {
+          objetivoTactico: updateMesocicloDto.objetivoTactico,
+        }),
+        ...(updateMesocicloDto.totalMicrociclos !== undefined && {
+          totalMicrociclos: updateMesocicloDto.totalMicrociclos,
+        }),
       },
       select: {
         id: true,
@@ -380,7 +379,9 @@ export class MesociclosService {
   // Eliminar un mesociclo (hard delete con cascade)
   // Los microciclos y sesiones se eliminan automaticamente por CASCADE
   @Transactional()
-  async remove(id: string): Promise<{ message: string; deleted: { microciclos: number; sesiones: number } }> {
+  async remove(
+    id: string
+  ): Promise<{ message: string; deleted: { microciclos: number; sesiones: number } }> {
     // Obtener conteos antes de eliminar
     const deleteInfo = await this.getDeleteInfo(id);
 

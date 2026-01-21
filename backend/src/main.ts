@@ -15,7 +15,7 @@ async function bootstrap() {
       whitelist: true, // Eliminar propiedades que no estan en el DTO
       forbidNonWhitelisted: true, // Lanzar error si hay propiedades no permitidas
       transform: true, // Transformar payloads a instancias de DTO
-    }),
+    })
   );
 
   // Configurar filtro global de excepciones
@@ -31,7 +31,7 @@ async function bootstrap() {
   // IMPORTANTE: credentials: true es necesario para HttpOnly cookies
   app.enableCors({
     origin: 'http://localhost:5000', // URL del frontend Next.js
-    credentials: true,                // Permite enviar y recibir cookies
+    credentials: true, // Permite enviar y recibir cookies
   });
 
   // Agregar prefijo global 'api' a todas las rutas
