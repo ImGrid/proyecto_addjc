@@ -147,7 +147,14 @@ export class AnalisisRendimientoService {
 
     // 4. Si no hay datos suficientes, retornar analisis vacio
     if (rendimientos.length < CONFIGURACION_ANALISIS.MINIMO_REGISTROS_ANALISIS) {
-      return this.crearAnalisisVacio(atletaId, atleta, desde, hasta, diasAtras, rendimientos.length);
+      return this.crearAnalisisVacio(
+        atletaId,
+        atleta,
+        desde,
+        hasta,
+        diasAtras,
+        rendimientos.length
+      );
     }
 
     // 5. Agrupar por tipo de ejercicio

@@ -51,6 +51,7 @@ model Atleta {
   categoriaPeso              CategoriaPeso
   pesoActual                 Decimal?                     @db.Decimal(5, 2)
   fcReposo                   Int?
+  perfilActual               PerfilAtleta?
   createdAt                  DateTime                     @default(now())
   updatedAt                  DateTime                     @updatedAt
   alertas                    AlertaSistema[]
@@ -134,37 +135,28 @@ model Mesociclo {
 }
 
 model Microciclo {
-  id                     BigInt                       @id @default(autoincrement())
-  mesocicloId            BigInt?
-  numeroMicrociclo       Int?
-  numeroGlobalMicrociclo Int
-  fechaInicio            DateTime                     @db.Date
-  fechaFin               DateTime                     @db.Date
-  tipoMicrociclo         TipoMicrociclo
-  volumenTotal           Decimal                      @db.Decimal(10, 2)
-  intensidadPromedio     Decimal                      @db.Decimal(5, 2)
-  objetivoSemanal        String
-  observaciones          String?
-  creadoPor              CreadoPor                    @default(COMITE_TECNICO)
-  mediaVolumen           Decimal?                     @db.Decimal(5, 2)
-  mediaIntensidad        Decimal?                     @db.Decimal(5, 2)
-  sentidoVolumen         SentidoCarga?
-  sentidoIntensidad      SentidoCarga?
-  createdAt              DateTime                     @default(now())
-  updatedAt              DateTime                     @updatedAt
-  iCarga1                Decimal?                     @db.Decimal(5, 2)
-  iCarga1Nivel           Int?                         @db.SmallInt
-  iCarga2                Decimal?                     @db.Decimal(5, 2)
-  iCarga2Nivel           Int?                         @db.SmallInt
-  vCarga1                Decimal?                     @db.Decimal(5, 2)
-  vCarga1Nivel           Int?                         @db.SmallInt
-  vCarga2                Decimal?                     @db.Decimal(5, 2)
-  vCarga2Nivel           Int?                         @db.SmallInt
-  asignacionesAtletas    AsignacionAtletaMicrociclo[]
-  mesociclo              Mesociclo?                   @relation(fields: [mesocicloId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  recomendaciones        Recomendacion[]
-  sesiones               Sesion[]
-  testsFisicos           TestFisico[]
+  id                  BigInt                       @id @default(autoincrement())
+  mesocicloId         BigInt?
+  codigoMicrociclo    String                       @db.VarChar(50)
+  fechaInicio         DateTime                     @db.Date
+  fechaFin            DateTime                     @db.Date
+  tipoMicrociclo      TipoMicrociclo
+  volumenTotal        Decimal                      @db.Decimal(10, 2)
+  intensidadPromedio  Decimal                      @db.Decimal(5, 2)
+  objetivoSemanal     String
+  observaciones       String?
+  creadoPor           CreadoPor                    @default(COMITE_TECNICO)
+  mediaVolumen        Decimal?                     @db.Decimal(5, 2)
+  mediaIntensidad     Decimal?                     @db.Decimal(5, 2)
+  sentidoVolumen      SentidoCarga?
+  sentidoIntensidad   SentidoCarga?
+  createdAt           DateTime                     @default(now())
+  updatedAt           DateTime                     @updatedAt
+  asignacionesAtletas AsignacionAtletaMicrociclo[]
+  mesociclo           Mesociclo?                   @relation(fields: [mesocicloId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  recomendaciones     Recomendacion[]
+  sesiones            Sesion[]
+  testsFisicos        TestFisico[]
 
   @@index([mesocicloId])
   @@index([fechaInicio])

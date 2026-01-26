@@ -36,7 +36,7 @@ export class AsignacionesService {
       where: { id: microcicloId },
       select: {
         id: true,
-        numeroGlobalMicrociclo: true,
+        codigoMicrociclo: true,
         fechaInicio: true,
         fechaFin: true,
       },
@@ -56,7 +56,7 @@ export class AsignacionesService {
 
     if (asignacionExistente) {
       throw new ConflictException(
-        `El atleta ya esta asignado al microciclo ${microciclo.numeroGlobalMicrociclo}`
+        `El atleta ya esta asignado al microciclo ${microciclo.codigoMicrociclo}`
       );
     }
 
@@ -78,7 +78,7 @@ export class AsignacionesService {
         microciclo: {
           select: {
             id: true,
-            numeroGlobalMicrociclo: true,
+            codigoMicrociclo: true,
             fechaInicio: true,
             fechaFin: true,
           },
@@ -125,7 +125,7 @@ export class AsignacionesService {
           microciclo: {
             select: {
               id: true,
-              numeroGlobalMicrociclo: true,
+              codigoMicrociclo: true,
               fechaInicio: true,
               fechaFin: true,
             },
@@ -166,7 +166,7 @@ export class AsignacionesService {
         microciclo: {
           select: {
             id: true,
-            numeroGlobalMicrociclo: true,
+            codigoMicrociclo: true,
             fechaInicio: true,
             fechaFin: true,
           },
@@ -215,7 +215,7 @@ export class AsignacionesService {
         microciclo: {
           select: {
             id: true,
-            numeroGlobalMicrociclo: true,
+            codigoMicrociclo: true,
             fechaInicio: true,
             fechaFin: true,
           },
@@ -271,7 +271,7 @@ export class AsignacionesService {
       ...(asignacion.microciclo && {
         microciclo: {
           id: asignacion.microciclo.id.toString(),
-          numeroGlobalMicrociclo: asignacion.microciclo.numeroGlobalMicrociclo,
+          codigoMicrociclo: asignacion.microciclo.codigoMicrociclo,
           fechaInicio: asignacion.microciclo.fechaInicio,
           fechaFin: asignacion.microciclo.fechaFin,
         },

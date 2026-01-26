@@ -100,6 +100,7 @@ export class AtletasService {
           categoriaPeso: createAtletaDto.categoriaPeso,
           pesoActual: createAtletaDto.pesoActual,
           fcReposo: createAtletaDto.fcReposo,
+          perfilActual: 'NUEVO',
         },
         select: {
           id: true,

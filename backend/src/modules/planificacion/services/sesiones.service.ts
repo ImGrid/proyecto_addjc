@@ -7,7 +7,14 @@ import {
 import { Transactional } from '@nestjs-cls/transactional';
 import { PrismaService } from '../../../database/prisma.service';
 import { AccessControlService } from '../../../common/services/access-control.service';
-import { CreateSesionDto, UpdateSesionDto, SesionResponseDto } from '../dto';
+import {
+  CreateSesionDto,
+  UpdateSesionDto,
+  SesionResponseDto,
+  UpdateEjerciciosSesionDto,
+  UpdateEjerciciosSesionSimpleDto,
+} from '../dto';
+import { TipoEjercicio } from '@prisma/client';
 
 @Injectable()
 export class SesionesService {
@@ -40,6 +47,12 @@ export class SesionesService {
       );
     }
 
+    // Determinar creadoPor y aprobado
+    // Si lo crea COMITE_TECNICO (manual), se aprueba automaticamente
+    // Si lo crea SISTEMA_ALGORITMO, necesita aprobacion explicita
+    const creadoPor = createSesionDto.creadoPor || 'COMITE_TECNICO';
+    const aprobado = creadoPor === 'COMITE_TECNICO';
+
     // Crear sesión
     const sesion = await this.prisma.sesion.create({
       data: {
@@ -51,7 +64,8 @@ export class SesionesService {
         turno: createSesionDto.turno || 'COMPLETO',
         tipoPlanificacion: createSesionDto.tipoPlanificacion || 'INICIAL',
         sesionBaseId: createSesionDto.sesionBaseId ? BigInt(createSesionDto.sesionBaseId) : null,
-        creadoPor: createSesionDto.creadoPor || 'COMITE_TECNICO',
+        creadoPor,
+        aprobado,
         duracionPlanificada: createSesionDto.duracionPlanificada,
         volumenPlanificado: createSesionDto.volumenPlanificado,
         intensidadPlanificada: createSesionDto.intensidadPlanificada,
@@ -70,7 +84,7 @@ export class SesionesService {
         microciclo: {
           select: {
             id: true,
-            numeroGlobalMicrociclo: true,
+            codigoMicrociclo: true,
             fechaInicio: true,
             fechaFin: true,
           },
@@ -118,6 +132,9 @@ export class SesionesService {
           },
         },
       };
+
+      // Solo mostrar sesiones aprobadas por el comite tecnico
+      where.aprobado = true;
     }
 
     // Si es ATLETA, usar nested filter de Prisma
@@ -136,6 +153,9 @@ export class SesionesService {
           },
         },
       };
+
+      // Solo mostrar sesiones aprobadas por el comite tecnico
+      where.aprobado = true;
     }
 
     const [sesiones, total] = await Promise.all([
@@ -148,7 +168,7 @@ export class SesionesService {
           microciclo: {
             select: {
               id: true,
-              numeroGlobalMicrociclo: true,
+              codigoMicrociclo: true,
               fechaInicio: true,
               fechaFin: true,
             },
@@ -177,7 +197,7 @@ export class SesionesService {
         microciclo: {
           select: {
             id: true,
-            numeroGlobalMicrociclo: true,
+            codigoMicrociclo: true,
             fechaInicio: true,
             fechaFin: true,
           },
@@ -210,6 +230,11 @@ export class SesionesService {
       if (!asignacion) {
         throw new NotFoundException('Sesión no encontrada o no autorizada');
       }
+
+      // Solo permitir ver sesiones aprobadas por el comite tecnico
+      if (!sesion.aprobado) {
+        throw new NotFoundException('Sesión no encontrada');
+      }
     }
 
     // Si es ATLETA, validar que esta asignado al microciclo de esta sesion
@@ -229,6 +254,11 @@ export class SesionesService {
 
       if (!asignacion) {
         throw new ForbiddenException('No tienes permiso para ver esta sesion');
+      }
+
+      // Solo permitir ver sesiones aprobadas por el comite tecnico
+      if (!sesion.aprobado) {
+        throw new NotFoundException('Sesion no encontrada');
       }
     }
 
@@ -321,7 +351,7 @@ export class SesionesService {
         microciclo: {
           select: {
             id: true,
-            numeroGlobalMicrociclo: true,
+            codigoMicrociclo: true,
             fechaInicio: true,
             fechaFin: true,
           },
@@ -409,17 +439,19 @@ export class SesionesService {
     }
 
     // Buscar sesiones de esos microciclos con filtro opcional de tipo
+    // ENTRENADOR solo ve sesiones aprobadas, COMITE_TECNICO ve todas
     const sesiones = await this.prisma.sesion.findMany({
       where: {
         microcicloId: { in: microcicloIds },
         ...(tipoSesionFilter && { tipoSesion: tipoSesionFilter }),
+        ...(rol === 'ENTRENADOR' && { aprobado: true }),
       },
       orderBy: [{ fecha: 'asc' }, { numeroSesion: 'asc' }],
       include: {
         microciclo: {
           select: {
             id: true,
-            numeroGlobalMicrociclo: true,
+            codigoMicrociclo: true,
             fechaInicio: true,
             fechaFin: true,
           },
@@ -434,6 +466,289 @@ export class SesionesService {
         microciclosAsignados: microcicloIds.map((id) => id.toString()),
         totalSesiones: sesiones.length,
       },
+    };
+  }
+
+  // Actualizar ejercicios de una sesion usando IDs del catalogo
+  // Este metodo:
+  // 1. Valida que todos los IDs existen en catalogo_ejercicios
+  // 2. Elimina ejercicios anteriores de ejercicios_sesion
+  // 3. Inserta los nuevos ejercicios
+  // 4. Regenera los campos de texto (contenidoFisico, contenidoTecnico, contenidoTactico)
+  @Transactional()
+  async updateEjerciciosSesion(
+    id: string,
+    dto: UpdateEjerciciosSesionDto
+  ): Promise<SesionResponseDto> {
+    const sesionId = BigInt(id);
+
+    // Verificar que la sesion existe
+    const sesion = await this.prisma.sesion.findUnique({
+      where: { id: sesionId },
+    });
+
+    if (!sesion) {
+      throw new NotFoundException('Sesion no encontrada');
+    }
+
+    // Validar que todos los IDs de ejercicios existen en el catalogo
+    const ejercicioIds = dto.ejercicios.map((e) => BigInt(e.ejercicioId));
+    const ejerciciosExistentes = await this.prisma.catalogoEjercicios.findMany({
+      where: {
+        id: { in: ejercicioIds },
+        activo: true,
+      },
+      select: {
+        id: true,
+        nombre: true,
+        tipo: true,
+      },
+    });
+
+    // Verificar que todos los IDs fueron encontrados
+    const idsEncontrados = new Set(ejerciciosExistentes.map((e) => e.id.toString()));
+    const idsNoEncontrados = dto.ejercicios
+      .filter((e) => !idsEncontrados.has(e.ejercicioId))
+      .map((e) => e.ejercicioId);
+
+    if (idsNoEncontrados.length > 0) {
+      throw new BadRequestException(
+        `Los siguientes IDs de ejercicios no existen o no estan activos: ${idsNoEncontrados.join(', ')}`
+      );
+    }
+
+    // Eliminar ejercicios anteriores de esta sesion
+    await this.prisma.ejercicioSesion.deleteMany({
+      where: { sesionId },
+    });
+
+    // Insertar nuevos ejercicios
+    const ejerciciosData = dto.ejercicios.map((e) => ({
+      sesionId,
+      ejercicioId: BigInt(e.ejercicioId),
+      orden: e.orden,
+      duracionMinutos: e.duracionMinutos ?? null,
+      repeticiones: e.repeticiones ?? null,
+      series: e.series ?? null,
+      intensidad: e.intensidad ?? null,
+      observaciones: e.observaciones ?? null,
+    }));
+
+    await this.prisma.ejercicioSesion.createMany({
+      data: ejerciciosData,
+    });
+
+    // Regenerar campos de texto desde los ejercicios
+    const contenidoGenerado = this.generarContenidoDesdeEjercicios(ejerciciosExistentes);
+
+    // Actualizar sesion con el contenido generado
+    const sesionActualizada = await this.prisma.sesion.update({
+      where: { id: sesionId },
+      data: {
+        contenidoFisico: contenidoGenerado.contenidoFisico,
+        contenidoTecnico: contenidoGenerado.contenidoTecnico,
+        contenidoTactico: contenidoGenerado.contenidoTactico,
+        partePrincipal: contenidoGenerado.partePrincipal,
+      },
+      include: {
+        microciclo: {
+          select: {
+            id: true,
+            codigoMicrociclo: true,
+            fechaInicio: true,
+            fechaFin: true,
+          },
+        },
+      },
+    });
+
+    return this.formatSesionResponse(sesionActualizada);
+  }
+
+  // Actualizar ejercicios usando DTO simplificado (solo IDs agrupados por tipo)
+  // Convierte automaticamente a formato completo con orden secuencial
+  @Transactional()
+  async updateEjerciciosSesionSimple(
+    id: string,
+    dto: UpdateEjerciciosSesionSimpleDto
+  ): Promise<SesionResponseDto> {
+    // Construir lista de ejercicios con orden automatico
+    const ejercicios: Array<{ ejercicioId: string; orden: number }> = [];
+    let orden = 1;
+
+    // Agregar ejercicios fisicos
+    if (dto.ejerciciosFisicos) {
+      for (const ejercicioId of dto.ejerciciosFisicos) {
+        ejercicios.push({ ejercicioId, orden: orden++ });
+      }
+    }
+
+    // Agregar ejercicios de resistencia
+    if (dto.ejerciciosResistencia) {
+      for (const ejercicioId of dto.ejerciciosResistencia) {
+        ejercicios.push({ ejercicioId, orden: orden++ });
+      }
+    }
+
+    // Agregar ejercicios de velocidad
+    if (dto.ejerciciosVelocidad) {
+      for (const ejercicioId of dto.ejerciciosVelocidad) {
+        ejercicios.push({ ejercicioId, orden: orden++ });
+      }
+    }
+
+    // Agregar ejercicios tecnicos
+    if (dto.ejerciciosTecnicos) {
+      for (const ejercicioId of dto.ejerciciosTecnicos) {
+        ejercicios.push({ ejercicioId, orden: orden++ });
+      }
+    }
+
+    if (ejercicios.length === 0) {
+      throw new BadRequestException('Debe incluir al menos un ejercicio');
+    }
+
+    // Delegar al metodo completo
+    return this.updateEjerciciosSesion(id, { ejercicios });
+  }
+
+  // Obtener ejercicios actuales de una sesion
+  async getEjerciciosSesion(id: string) {
+    const sesionId = BigInt(id);
+
+    // Verificar que la sesion existe
+    const sesion = await this.prisma.sesion.findUnique({
+      where: { id: sesionId },
+      select: {
+        id: true,
+        contenidoFisico: true,
+        contenidoTecnico: true,
+        contenidoTactico: true,
+      },
+    });
+
+    if (!sesion) {
+      throw new NotFoundException('Sesion no encontrada');
+    }
+
+    // Obtener ejercicios de la tabla relacional
+    const ejercicios = await this.prisma.ejercicioSesion.findMany({
+      where: { sesionId },
+      include: {
+        ejercicio: {
+          select: {
+            id: true,
+            nombre: true,
+            tipo: true,
+            subtipo: true,
+            categoria: true,
+          },
+        },
+      },
+      orderBy: { orden: 'asc' },
+    });
+
+    return {
+      sesionId: sesion.id.toString(),
+      // Campos de texto actuales (pueden estar desincronizados si se editaron manualmente)
+      contenidoTexto: {
+        fisico: sesion.contenidoFisico,
+        tecnico: sesion.contenidoTecnico,
+        tactico: sesion.contenidoTactico,
+      },
+      // Ejercicios relacionales (fuente de verdad)
+      ejercicios: ejercicios.map((e) => ({
+        id: e.id.toString(),
+        ejercicioId: e.ejercicioId.toString(),
+        nombre: e.ejercicio.nombre,
+        tipo: e.ejercicio.tipo,
+        subtipo: e.ejercicio.subtipo,
+        categoria: e.ejercicio.categoria,
+        orden: e.orden,
+        duracionMinutos: e.duracionMinutos,
+        repeticiones: e.repeticiones,
+        series: e.series,
+        intensidad: e.intensidad ? Number(e.intensidad) : null,
+        observaciones: e.observaciones,
+      })),
+      meta: {
+        totalEjercicios: ejercicios.length,
+        tieneEjerciciosRelacionales: ejercicios.length > 0,
+      },
+    };
+  }
+
+  // Genera contenido de texto desde lista de ejercicios del catalogo
+  // Usado internamente para sincronizar campos de texto con ejercicios_sesion
+  private generarContenidoDesdeEjercicios(
+    ejercicios: Array<{ id: bigint; nombre: string; tipo: TipoEjercicio }>
+  ): {
+    contenidoFisico: string;
+    contenidoTecnico: string;
+    contenidoTactico: string;
+    partePrincipal: string;
+  } {
+    // Agrupar por tipo
+    const fisicos: string[] = [];
+    const tecnicosTachi: string[] = [];
+    const tecnicosNe: string[] = [];
+    const resistencia: string[] = [];
+    const velocidad: string[] = [];
+
+    for (const ej of ejercicios) {
+      switch (ej.tipo) {
+        case 'FISICO':
+          fisicos.push(ej.nombre);
+          break;
+        case 'TECNICO_TACHI':
+          tecnicosTachi.push(ej.nombre);
+          break;
+        case 'TECNICO_NE':
+          tecnicosNe.push(ej.nombre);
+          break;
+        case 'RESISTENCIA':
+          resistencia.push(ej.nombre);
+          break;
+        case 'VELOCIDAD':
+          velocidad.push(ej.nombre);
+          break;
+      }
+    }
+
+    // Generar contenido fisico
+    const contenidoFisico =
+      [...fisicos, ...resistencia, ...velocidad].join(', ') || 'Trabajo fisico general';
+
+    // Generar contenido tecnico
+    const partesTecnico: string[] = [];
+    if (tecnicosTachi.length > 0) {
+      partesTecnico.push(`Tachi-waza: ${tecnicosTachi.join(', ')}`);
+    }
+    if (tecnicosNe.length > 0) {
+      partesTecnico.push(`Ne-waza: ${tecnicosNe.join(', ')}`);
+    }
+    const contenidoTecnico = partesTecnico.join(' | ') || 'Trabajo tecnico general';
+
+    // Generar contenido tactico (basado en tipos de ejercicios tecnicos)
+    const contenidoTactico =
+      tecnicosTachi.length > 0 || tecnicosNe.length > 0
+        ? 'Trabajo tactico integrado'
+        : 'Trabajo tactico general';
+
+    // Generar parte principal estructurada
+    const partes: string[] = [];
+    if (contenidoFisico !== 'Trabajo fisico general') {
+      partes.push(`FISICO: ${contenidoFisico}`);
+    }
+    if (contenidoTecnico !== 'Trabajo tecnico general') {
+      partes.push(`TECNICO: ${contenidoTecnico}`);
+    }
+
+    return {
+      contenidoFisico,
+      contenidoTecnico,
+      contenidoTactico,
+      partePrincipal: partes.join(' | ') || 'Sesion de entrenamiento',
     };
   }
 
@@ -468,7 +783,7 @@ export class SesionesService {
       ...(sesion.microciclo && {
         microciclo: {
           id: sesion.microciclo.id.toString(),
-          numeroGlobalMicrociclo: sesion.microciclo.numeroGlobalMicrociclo,
+          codigoMicrociclo: sesion.microciclo.codigoMicrociclo,
           fechaInicio: sesion.microciclo.fechaInicio,
           fechaFin: sesion.microciclo.fechaFin,
         },

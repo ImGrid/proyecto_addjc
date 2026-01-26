@@ -5,26 +5,36 @@ import {
   ForbiddenException,
   ConflictException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Transactional } from '@nestjs-cls/transactional';
 import { PrismaService } from '../../../database/prisma.service';
 import { AccessControlService } from '../../../common/services/access-control.service';
 import { CalculationsService } from './calculations.service';
 import { CreateTestFisicoDto, UpdateTestFisicoDto } from '../dto';
-import { RolUsuario } from '@prisma/client';
+import { RolUsuario, TipoRecomendacion, Prioridad, EstadoRecomendacion } from '@prisma/client';
+import {
+  evaluarReglasTestFisico,
+  construirComparaciones,
+  ContextoTestFisico,
+  DatosTestFisico,
+  CONFIGURACION_TESTS,
+} from '../../algoritmo/reglas';
+import { TEST_FISICO_EVENTS, TestFisicoCreatedPayload } from '../../../events/test-fisico.events';
 
 @Injectable()
 export class TestsFisicosService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly accessControl: AccessControlService,
-    private readonly calculations: CalculationsService
+    private readonly calculations: CalculationsService,
+    private readonly eventEmitter: EventEmitter2
   ) {}
 
   // ===== CREATE =====
 
   @Transactional()
   async create(dto: CreateTestFisicoDto, userId: bigint) {
-    return await this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       // 1. Buscar el entrenadorId usando el userId
       const entrenador = await tx.entrenador.findUnique({
         where: { usuarioId: userId },
@@ -64,7 +74,7 @@ export class TestsFisicosService {
           microciclo: {
             select: {
               id: true,
-              numeroGlobalMicrociclo: true,
+              codigoMicrociclo: true,
             },
           },
         },
@@ -91,7 +101,7 @@ export class TestsFisicosService {
 
       if (!asignacion) {
         throw new BadRequestException(
-          `El atleta no esta asignado al microciclo ${sesion.microciclo?.numeroGlobalMicrociclo || sesion.microcicloId} de esta sesion`
+          `El atleta no esta asignado al microciclo ${sesion.microciclo?.codigoMicrociclo || sesion.microcicloId} de esta sesion`
         );
       }
 
@@ -128,6 +138,7 @@ export class TestsFisicosService {
       });
 
       // Calcular intensidades como % del 1RM anterior
+      // Si el valor nuevo supera al anterior, es un nuevo record personal (intensidad = 100%)
       const pressBancaIntensidad =
         dto.pressBanca && testAnterior?.pressBanca
           ? this.calculations.calculate1RMIntensity(dto.pressBanca, Number(testAnterior.pressBanca))
@@ -142,6 +153,25 @@ export class TestsFisicosService {
         dto.sentadilla && testAnterior?.sentadilla
           ? this.calculations.calculate1RMIntensity(dto.sentadilla, Number(testAnterior.sentadilla))
           : null;
+
+      // Detectar nuevos records personales
+      const nuevosRecords = {
+        pressBanca:
+          dto.pressBanca && testAnterior?.pressBanca
+            ? this.calculations.esNuevoRecord(dto.pressBanca, Number(testAnterior.pressBanca))
+            : false,
+        tiron:
+          dto.tiron && testAnterior?.tiron
+            ? this.calculations.esNuevoRecord(dto.tiron, Number(testAnterior.tiron))
+            : false,
+        sentadilla:
+          dto.sentadilla && testAnterior?.sentadilla
+            ? this.calculations.esNuevoRecord(dto.sentadilla, Number(testAnterior.sentadilla))
+            : false,
+      };
+
+      const tieneNuevoRecord =
+        nuevosRecords.pressBanca || nuevosRecords.tiron || nuevosRecords.sentadilla;
 
       // 7. Crear el test fisico
       // fechaTest y microcicloId se derivan de la sesion
@@ -173,7 +203,6 @@ export class TestsFisicosService {
           navettePalier: dto.navettePalier,
           navetteVO2max,
           test1500m: dto.test1500m || null,
-          test1500mVO2max: null,
 
           // Observaciones
           observaciones: dto.observaciones,
@@ -204,15 +233,69 @@ export class TestsFisicosService {
           microciclo: {
             select: {
               id: true,
-              numeroGlobalMicrociclo: true,
+              codigoMicrociclo: true,
             },
           },
         },
       });
 
-      // 8. Formatear respuesta con clasificacion VO2max
-      return this.formatResponse(test);
+      // 8. Retornar datos necesarios para evaluacion de reglas y records
+      return {
+        test,
+        atleta,
+        testAnterior,
+        nuevosRecords,
+        tieneNuevoRecord,
+      };
     });
+
+    // 9. Evaluar reglas de tests fisicos y generar recomendaciones
+    // (Fuera de la transaccion para no bloquear la creacion del test)
+    let recomendacionesGeneradas: any[] = [];
+    try {
+      recomendacionesGeneradas = await this.evaluarReglasYGenerarRecomendaciones(
+        result.test,
+        result.atleta,
+        result.testAnterior
+      );
+    } catch (error) {
+      // Log del error pero no fallamos la creacion del test
+      console.error('Error evaluando reglas de test fisico:', error);
+    }
+
+    // 10. Emitir evento para actualizar perfil del atleta
+    const payload: TestFisicoCreatedPayload = {
+      testId: result.test.id,
+      atletaId: result.test.atletaId,
+      fechaTest: result.test.fechaTest,
+      datosTest: {
+        pressBanca: this.extractNumericValueNullable(result.test.pressBanca),
+        tiron: this.extractNumericValueNullable(result.test.tiron),
+        sentadilla: this.extractNumericValueNullable(result.test.sentadilla),
+        barraFija: result.test.barraFija,
+        paralelas: result.test.paralelas,
+        navettePalier: this.extractNumericValueNullable(result.test.navettePalier),
+        navetteVO2max: this.extractNumericValueNullable(result.test.navetteVO2max),
+      },
+    };
+    this.eventEmitter.emit(TEST_FISICO_EVENTS.CREATED, payload);
+
+    // 11. Formatear respuesta con clasificacion VO2max, recomendaciones y records
+    return {
+      ...this.formatResponse(result.test),
+      recomendacionesGeneradas:
+        recomendacionesGeneradas.length > 0 ? recomendacionesGeneradas : null,
+      nuevosRecordsPersonales: result.tieneNuevoRecord
+        ? {
+            tieneNuevoRecord: true,
+            detalles: {
+              pressBanca: result.nuevosRecords.pressBanca,
+              tiron: result.nuevosRecords.tiron,
+              sentadilla: result.nuevosRecords.sentadilla,
+            },
+          }
+        : null,
+    };
   }
 
   // ===== READ =====
@@ -271,7 +354,7 @@ export class TestsFisicosService {
           microciclo: {
             select: {
               id: true,
-              numeroGlobalMicrociclo: true,
+              codigoMicrociclo: true,
             },
           },
         },
@@ -317,7 +400,7 @@ export class TestsFisicosService {
         microciclo: {
           select: {
             id: true,
-            numeroGlobalMicrociclo: true,
+            codigoMicrociclo: true,
           },
         },
       },
@@ -400,7 +483,7 @@ export class TestsFisicosService {
         microciclo: {
           select: {
             id: true,
-            numeroGlobalMicrociclo: true,
+            codigoMicrociclo: true,
           },
         },
       },
@@ -688,6 +771,171 @@ export class TestsFisicosService {
   // ===== HELPER METHODS =====
 
   /**
+   * Evalua las reglas de tests fisicos y genera recomendaciones
+   * @param test - Test fisico recien creado
+   * @param atleta - Datos del atleta (con usuario)
+   * @param testAnterior - Test anterior del atleta (puede ser null)
+   */
+  private async evaluarReglasYGenerarRecomendaciones(
+    test: any,
+    atleta: any,
+    testAnterior: any
+  ): Promise<any[]> {
+    // Convertir test actual a DatosTestFisico (number o null)
+    const testActualDatos: DatosTestFisico = {
+      pressBanca: this.extractNumericValueNullable(test.pressBanca),
+      tiron: this.extractNumericValueNullable(test.tiron),
+      sentadilla: this.extractNumericValueNullable(test.sentadilla),
+      barraFija: test.barraFija,
+      paralelas: test.paralelas,
+      navettePalier: this.extractNumericValueNullable(test.navettePalier),
+      navetteVO2max: this.extractNumericValueNullable(test.navetteVO2max),
+      test1500m: test.test1500m,
+    };
+
+    // Convertir test anterior si existe
+    // NOTA: testAnterior de la transaccion solo tiene pressBanca, tiron, sentadilla
+    // Necesitamos buscar el test anterior completo para las reglas
+    let testAnteriorDatos: DatosTestFisico | null = null;
+    let testAnteriorId: bigint | null = null;
+    let fechaTestAnterior: Date | null = null;
+
+    // Solo buscar test anterior completo si hay indicacion de que existe
+    if (testAnterior) {
+      // Buscar el test anterior completo (el mas reciente que NO sea el recien creado)
+      const testAnteriorCompleto = await this.prisma.testFisico.findFirst({
+        where: {
+          atletaId: test.atletaId,
+          id: { not: test.id }, // Excluir el test recien creado
+        },
+        orderBy: { fechaTest: 'desc' },
+        select: {
+          id: true,
+          fechaTest: true,
+          pressBanca: true,
+          tiron: true,
+          sentadilla: true,
+          barraFija: true,
+          paralelas: true,
+          navettePalier: true,
+          navetteVO2max: true,
+          test1500m: true,
+        },
+      });
+
+      if (testAnteriorCompleto) {
+        testAnteriorId = testAnteriorCompleto.id;
+        fechaTestAnterior = testAnteriorCompleto.fechaTest;
+        testAnteriorDatos = {
+          pressBanca: this.extractNumericValueNullable(testAnteriorCompleto.pressBanca),
+          tiron: this.extractNumericValueNullable(testAnteriorCompleto.tiron),
+          sentadilla: this.extractNumericValueNullable(testAnteriorCompleto.sentadilla),
+          barraFija: testAnteriorCompleto.barraFija,
+          paralelas: testAnteriorCompleto.paralelas,
+          navettePalier: this.extractNumericValueNullable(testAnteriorCompleto.navettePalier),
+          navetteVO2max: this.extractNumericValueNullable(testAnteriorCompleto.navetteVO2max),
+          test1500m: testAnteriorCompleto.test1500m,
+        };
+      }
+    }
+
+    // Construir comparaciones entre tests
+    const comparaciones = construirComparaciones(testActualDatos, testAnteriorDatos);
+
+    // Crear contexto para evaluar reglas
+    const contexto: ContextoTestFisico = {
+      atletaId: test.atletaId,
+      nombreAtleta: atleta.usuario.nombreCompleto,
+      testActualId: test.id,
+      testActual: testActualDatos,
+      testAnterior: testAnteriorDatos,
+      testAnteriorId,
+      comparaciones,
+      tieneTestAnterior: testAnteriorDatos !== null,
+      objetivoVO2max: CONFIGURACION_TESTS.VO2MAX_OBJETIVO_MASCULINO, // TODO: Obtener del perfil del atleta
+      fechaTestActual: test.fechaTest,
+      fechaTestAnterior,
+    };
+
+    // Evaluar reglas
+    const recomendacionesEvaluadas = evaluarReglasTestFisico(contexto);
+
+    // Si no hay recomendaciones, retornar array vacio
+    if (recomendacionesEvaluadas.length === 0) {
+      return [];
+    }
+
+    // Guardar recomendaciones en la base de datos
+    const recomendacionesGeneradas: any[] = [];
+    for (const rec of recomendacionesEvaluadas) {
+      const recomendacion = await this.prisma.recomendacion.create({
+        data: {
+          atletaId: test.atletaId,
+          testFisicoId: test.id, // Vincular al test fisico
+          tipo: rec.tipoRecomendacion as TipoRecomendacion,
+          prioridad: rec.prioridad as Prioridad,
+          titulo: `[${rec.reglaId}] ${rec.titulo}`,
+          mensaje: rec.mensaje,
+          accionSugerida: rec.accionSugerida,
+          datosAnalisis: rec.datosAnalisis as object,
+          estado: EstadoRecomendacion.PENDIENTE,
+        },
+      });
+
+      recomendacionesGeneradas.push({
+        id: recomendacion.id.toString(),
+        tipo: rec.tipoRecomendacion,
+        prioridad: rec.prioridad,
+        titulo: rec.titulo,
+        mensaje: rec.mensaje,
+        accionSugerida: rec.accionSugerida,
+      });
+    }
+
+    // Notificar al COMITE_TECNICO sobre las nuevas recomendaciones
+    const miembrosComite = await this.prisma.usuario.findMany({
+      where: { rol: RolUsuario.COMITE_TECNICO, estado: true },
+      select: { id: true },
+    });
+
+    if (miembrosComite.length > 0) {
+      await this.prisma.notificacion.createMany({
+        data: miembrosComite.map((miembro) => ({
+          destinatarioId: miembro.id,
+          tipo: 'RECOMENDACION_ALGORITMO',
+          titulo: `Nuevas recomendaciones de test fisico para ${atleta.usuario.nombreCompleto}`,
+          mensaje: `El sistema ha generado ${recomendacionesGeneradas.length} recomendacion(es) basadas en el analisis del test fisico del atleta.`,
+          prioridad: recomendacionesGeneradas.some((r) => r.prioridad === 'CRITICA')
+            ? 'CRITICA'
+            : recomendacionesGeneradas.some((r) => r.prioridad === 'ALTA')
+              ? 'ALTA'
+              : 'MEDIA',
+        })),
+      });
+    }
+
+    return recomendacionesGeneradas;
+  }
+
+  /**
+   * Extrae valor numerico de un campo que puede ser Decimal, number, o null
+   * Retorna null si el valor es null/undefined (para reglas de tests fisicos)
+   */
+  private extractNumericValueNullable(value: unknown): number | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
+    if (typeof value === 'object' && value !== null && 'toNumber' in value) {
+      return (value as any).toNumber();
+    }
+    if (typeof value === 'number') {
+      return value;
+    }
+    const parsed = Number(value);
+    return isNaN(parsed) ? null : parsed;
+  }
+
+  /**
    * Extrae valor numerico de un campo que puede ser Decimal, number, o null
    * Util para acceso dinamico a campos (t[field])
    */
@@ -750,7 +998,6 @@ export class TestsFisicosService {
       clasificacionVO2max,
       objetivoVO2max,
       test1500m: test.test1500m,
-      test1500mVO2max: test.test1500mVO2max ? test.test1500mVO2max.toString() : null,
 
       // Observaciones
       observaciones: test.observaciones,
@@ -782,7 +1029,7 @@ export class TestsFisicosService {
       ...(test.microciclo && {
         microciclo: {
           id: test.microciclo.id.toString(),
-          numeroGlobalMicrociclo: test.microciclo.numeroGlobalMicrociclo,
+          codigoMicrociclo: test.microciclo.codigoMicrociclo,
         },
       }),
     };

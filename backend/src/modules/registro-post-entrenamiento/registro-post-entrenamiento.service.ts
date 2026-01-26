@@ -57,7 +57,7 @@ export class RegistroPostEntrenamientoService {
           microciclo: {
             select: {
               id: true,
-              numeroGlobalMicrociclo: true,
+              codigoMicrociclo: true,
               fechaInicio: true,
               fechaFin: true,
             },
@@ -134,7 +134,7 @@ export class RegistroPostEntrenamientoService {
 
       if (!asignacion) {
         throw new BadRequestException(
-          `El atleta ${atleta.usuario.nombreCompleto} no esta asignado al microciclo ${sesion.microciclo?.numeroGlobalMicrociclo || 'desconocido'} de esta sesion`
+          `El atleta ${atleta.usuario.nombreCompleto} no esta asignado al microciclo ${sesion.microciclo?.codigoMicrociclo || 'desconocido'} de esta sesion`
         );
       }
 
@@ -204,7 +204,7 @@ export class RegistroPostEntrenamientoService {
               tipoSesion: true,
               microciclo: {
                 select: {
-                  numeroGlobalMicrociclo: true,
+                  codigoMicrociclo: true,
                 },
               },
             },
@@ -288,7 +288,7 @@ export class RegistroPostEntrenamientoService {
 
     // 8. Generar recomendaciones automaticas basadas en analisis de rendimiento
     // Solo si el atleta asistio y hay suficientes datos historicos
-    let recomendacionesGeneradas: any[] = [];
+    const recomendacionesGeneradas: any[] = [];
     try {
       if (dto.asistio) {
         // Ejecutar analisis de rendimiento del atleta
@@ -298,7 +298,9 @@ export class RegistroPostEntrenamientoService {
         );
 
         // Solo generar recomendaciones si hay suficientes datos
-        if (analisis.resumenGeneral.totalRegistros >= CONFIGURACION_ANALISIS.MINIMO_REGISTROS_ANALISIS) {
+        if (
+          analisis.resumenGeneral.totalRegistros >= CONFIGURACION_ANALISIS.MINIMO_REGISTROS_ANALISIS
+        ) {
           // Evaluar reglas para generar recomendaciones
           const contexto: ContextoEvaluacion = {
             atletaId: result.atletaId,
@@ -481,7 +483,7 @@ export class RegistroPostEntrenamientoService {
           include: {
             microciclo: {
               select: {
-                numeroGlobalMicrociclo: true,
+                codigoMicrociclo: true,
                 fechaInicio: true,
                 fechaFin: true,
               },
@@ -607,7 +609,7 @@ export class RegistroPostEntrenamientoService {
           tipoSesion: registro.sesion.tipoSesion,
           ...(registro.sesion.microciclo && {
             microciclo: {
-              numeroGlobalMicrociclo: registro.sesion.microciclo.numeroGlobalMicrociclo,
+              codigoMicrociclo: registro.sesion.microciclo.codigoMicrociclo,
             },
           }),
         },

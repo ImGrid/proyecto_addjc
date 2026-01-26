@@ -31,7 +31,6 @@ export interface DatosTestFisico {
   barraFija: number | null;
   paralelas: number | null;
   navetteVO2max: number | null;
-  test1500mVO2max: number | null;
 }
 
 // Ratios de fuerza relativa al peso corporal (bodyweight multipliers)
@@ -191,11 +190,6 @@ export function calcularScoreResistencia(datos: DatosTestFisico): {
   if (datos.navetteVO2max !== null) {
     // Normalizar VO2max de navette (rango esperado: 30-65 ml/kg/min)
     valoresResistencia.push(normalizar(datos.navetteVO2max, 30, 65));
-  }
-
-  if (datos.test1500mVO2max !== null) {
-    // Normalizar VO2max de 1500m (rango esperado: 30-65 ml/kg/min)
-    valoresResistencia.push(normalizar(datos.test1500mVO2max, 30, 65));
   }
 
   const resistenciaAerobica =

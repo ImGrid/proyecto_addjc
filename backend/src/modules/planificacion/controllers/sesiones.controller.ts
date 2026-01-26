@@ -11,7 +11,12 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { SesionesService } from '../services/sesiones.service';
-import { CreateSesionDto, UpdateSesionDto } from '../dto';
+import {
+  CreateSesionDto,
+  UpdateSesionDto,
+  UpdateEjerciciosSesionDto,
+  UpdateEjerciciosSesionSimpleDto,
+} from '../dto';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -74,6 +79,32 @@ export class SesionesController {
   @Roles('COMITE_TECNICO', 'ENTRENADOR')
   update(@Param('id') id: string, @Body() updateSesionDto: UpdateSesionDto) {
     return this.sesionesService.update(id, updateSesionDto);
+  }
+
+  // GET /api/sesiones/:id/ejercicios - Obtener ejercicios de una sesion
+  // Retorna tanto los campos de texto como los ejercicios relacionales
+  @Get(':id/ejercicios')
+  @Roles('COMITE_TECNICO', 'ENTRENADOR')
+  getEjercicios(@Param('id') id: string) {
+    return this.sesionesService.getEjerciciosSesion(id);
+  }
+
+  // PATCH /api/sesiones/:id/ejercicios - Actualizar ejercicios de una sesion (formato completo)
+  // Recibe lista de ejercicios con IDs del catalogo y metadatos opcionales
+  // Valida IDs, actualiza ejercicios_sesion y regenera campos de texto automaticamente
+  @Patch(':id/ejercicios')
+  @Roles('COMITE_TECNICO', 'ENTRENADOR')
+  updateEjercicios(@Param('id') id: string, @Body() dto: UpdateEjerciciosSesionDto) {
+    return this.sesionesService.updateEjerciciosSesion(id, dto);
+  }
+
+  // PATCH /api/sesiones/:id/ejercicios-simple - Actualizar ejercicios (formato simplificado)
+  // Recibe IDs agrupados por tipo, asigna orden automaticamente
+  // Util para interfaces donde se seleccionan ejercicios por categoria
+  @Patch(':id/ejercicios-simple')
+  @Roles('COMITE_TECNICO', 'ENTRENADOR')
+  updateEjerciciosSimple(@Param('id') id: string, @Body() dto: UpdateEjerciciosSesionSimpleDto) {
+    return this.sesionesService.updateEjerciciosSesionSimple(id, dto);
   }
 
   // DELETE /api/sesiones/:id - Eliminar sesión (COMITE_TECNICO y ENTRENADOR) - HARD DELETE

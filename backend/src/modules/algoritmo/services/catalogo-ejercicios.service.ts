@@ -37,6 +37,15 @@ export const MAPEO_ZONAS_DOLENCIAS: Record<string, string[]> = {
   general: ['GENERAL'],
 };
 
+// Mapeo de EtapaMesociclo (enum de planificacion) a etapas del catalogo de ejercicios
+// El catalogo tiene valores mas granulares que el enum de mesociclos
+export const MAPEO_ETAPAS_MESOCICLO: Record<string, string[]> = {
+  PREPARACION_GENERAL: ['GENERAL'],
+  PREPARACION_ESPECIFICA: ['ESPECIFICA', 'ESPECIFICA_I', 'ESPECIFICA_II'],
+  COMPETITIVA: ['COMPETITIVA', 'PRE_COMPETITIVA'],
+  TRANSICION: ['TRANSICION'],
+};
+
 // Dolencia activa del atleta
 export interface DolenciaActiva {
   zona: string;
@@ -124,6 +133,20 @@ export class CatalogoEjerciciosService {
     return zonasAfectadas;
   }
 
+  // Convierte etapa de mesociclo a etapas compatibles del catalogo
+  private convertirEtapaMesociclo(etapaMesociclo: string): string[] {
+    return MAPEO_ETAPAS_MESOCICLO[etapaMesociclo] || [etapaMesociclo];
+  }
+
+  // Verifica si un ejercicio es compatible con la etapa del mesociclo
+  private esCompatibleConEtapa(etapasEjercicio: string[], etapaMesociclo: string): boolean {
+    if (etapasEjercicio.length === 0) {
+      return true; // Sin restriccion de etapa = compatible con todas
+    }
+    const etapasCompatibles = this.convertirEtapaMesociclo(etapaMesociclo);
+    return etapasEjercicio.some((etapa) => etapasCompatibles.includes(etapa));
+  }
+
   // Busca ejercicios compatibles con el perfil y filtra por dolencias
   async buscarEjercicios(
     tipo: TipoEjercicio,
@@ -172,10 +195,10 @@ export class CatalogoEjerciciosService {
           continue; // Saltar si no es compatible con el tipo de microciclo
         }
 
-        // Verificar etapa si aplica
+        // Verificar etapa si aplica (usa mapeo de EtapaMesociclo a etapas del catalogo)
         if (etapa) {
           const etapas = ej.etapasRecomendadas || [];
-          if (etapas.length > 0 && !etapas.includes(etapa)) {
+          if (!this.esCompatibleConEtapa(etapas, etapa)) {
             continue; // Saltar si no es compatible con la etapa
           }
         }
@@ -270,7 +293,7 @@ export class CatalogoEjerciciosService {
     etapa: string | null,
     dolenciasActivas: DolenciaActiva[],
     estadoAtleta: EstadoAtleta | null,
-    cantidadPorTipo: number = 2
+    cantidadPorTipo: number = 1
   ): Promise<SeleccionEjercicios> {
     const alertas: string[] = [];
     const todosExcluidos: string[] = [];
@@ -303,13 +326,13 @@ export class CatalogoEjerciciosService {
       alertas.push(`Solo ${tachiRes.ejercicios.length} ejercicios tachi-waza disponibles`);
     }
 
-    // Seleccionar ejercicios aleatorios
+    // Seleccionar ejercicios aleatorios (1 de cada tipo = 5 ejercicios por sesion)
     return {
       fisicos: this.seleccionarAleatorios(fisicosRes.ejercicios, cantidadPorTipo),
-      tecnicosTachi: this.seleccionarAleatorios(tachiRes.ejercicios, cantidadPorTipo + 1),
+      tecnicosTachi: this.seleccionarAleatorios(tachiRes.ejercicios, cantidadPorTipo),
       tecnicosNe: this.seleccionarAleatorios(neRes.ejercicios, cantidadPorTipo),
-      resistencia: this.seleccionarAleatorios(resistenciaRes.ejercicios, 1),
-      velocidad: this.seleccionarAleatorios(velocidadRes.ejercicios, 1),
+      resistencia: this.seleccionarAleatorios(resistenciaRes.ejercicios, cantidadPorTipo),
+      velocidad: this.seleccionarAleatorios(velocidadRes.ejercicios, cantidadPorTipo),
       ejerciciosExcluidos: todosExcluidos,
       alertas,
     };

@@ -11,6 +11,8 @@ import { NotificacionesService } from './services/notificaciones.service';
 import { NotificacionesCronService } from './services/notificaciones-cron.service';
 import { AnalisisRendimientoService } from './services/analisis-rendimiento.service';
 import { AnalisisRendimientoController } from './controllers/analisis-rendimiento.controller';
+import { CatalogoEjerciciosController } from './controllers/catalogo-ejercicios.controller';
+import { PerfilAtletaListener } from './listeners/perfil-atleta.listener';
 
 // Modulo de Algoritmo de Recomendaciones
 // Incluye:
@@ -19,9 +21,15 @@ import { AnalisisRendimientoController } from './controllers/analisis-rendimient
 // - Ranking de atletas para competencias
 // - Notificaciones del sistema
 // - Analisis de rendimiento por ejercicio con recomendaciones personalizadas
+// - Listener para actualizar perfil del atleta cuando se crea un test fisico
 @Module({
   imports: [DatabaseModule, AuthModule],
-  controllers: [RankingController, NotificacionesController, AnalisisRendimientoController],
+  controllers: [
+    RankingController,
+    NotificacionesController,
+    AnalisisRendimientoController,
+    CatalogoEjerciciosController,
+  ],
   providers: [
     PrismaService,
     CatalogoEjerciciosService,
@@ -30,6 +38,7 @@ import { AnalisisRendimientoController } from './controllers/analisis-rendimient
     NotificacionesService,
     NotificacionesCronService,
     AnalisisRendimientoService,
+    PerfilAtletaListener,
   ],
   exports: [
     CatalogoEjerciciosService,

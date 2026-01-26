@@ -22,14 +22,9 @@ export class CreateMicrocicloDto {
   @IsOptional()
   mesocicloId?: string; // BigInt como string (opcional en v1.0)
 
-  @IsInt()
-  @Min(1)
-  @IsOptional()
-  numeroMicrociclo?: number; // Opcional si no hay mesociclo
-
-  @IsInt()
-  @Min(1)
-  numeroGlobalMicrociclo!: number; // Número global único
+  @IsString()
+  @IsNotEmpty({ message: 'El codigo de microciclo es obligatorio' })
+  codigoMicrociclo!: string; // Codigo identificador del microciclo
 
   @IsDateString()
   @IsNotEmpty()
@@ -84,41 +79,4 @@ export class CreateMicrocicloDto {
   @IsEnum(SentidoCarga)
   @IsOptional()
   sentidoIntensidad?: SentidoCarga;
-
-  // Cargas semanales (opcionales)
-  @Transform(({ value }) => (value ? parseFloat(value) : null))
-  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'vCarga1 debe ser un numero' })
-  @IsOptional()
-  vCarga1?: number;
-
-  @IsInt()
-  @IsOptional()
-  vCarga1Nivel?: number;
-
-  @Transform(({ value }) => (value ? parseFloat(value) : null))
-  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'iCarga1 debe ser un numero' })
-  @IsOptional()
-  iCarga1?: number;
-
-  @IsInt()
-  @IsOptional()
-  iCarga1Nivel?: number;
-
-  @Transform(({ value }) => (value ? parseFloat(value) : null))
-  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'vCarga2 debe ser un numero' })
-  @IsOptional()
-  vCarga2?: number;
-
-  @IsInt()
-  @IsOptional()
-  vCarga2Nivel?: number;
-
-  @Transform(({ value }) => (value ? parseFloat(value) : null))
-  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'iCarga2 debe ser un numero' })
-  @IsOptional()
-  iCarga2?: number;
-
-  @IsInt()
-  @IsOptional()
-  iCarga2Nivel?: number;
 }

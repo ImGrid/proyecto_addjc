@@ -17,3 +17,8 @@ export type { MicrocicloResponseDto } from './microciclo-response.dto';
 export { CreateSesionDto } from './create-sesion.dto';
 export { UpdateSesionDto } from './update-sesion.dto';
 export type { SesionResponseDto } from './sesion-response.dto';
+export {
+  UpdateEjerciciosSesionDto,
+  UpdateEjerciciosSesionSimpleDto,
+  EjercicioSesionItemDto,
+} from './update-ejercicios-sesion.dto';

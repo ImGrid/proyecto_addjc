@@ -28,7 +28,7 @@ export interface SesionResponseDto {
   updatedAt: Date;
   microciclo?: {
     id: string;
-    numeroGlobalMicrociclo: number;
+    codigoMicrociclo: string;
     fechaInicio: Date;
     fechaFin: Date;
   };

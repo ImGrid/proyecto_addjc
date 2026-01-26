@@ -29,11 +29,30 @@ export class CalculationsService {
 
   // Calcular intensidad como % del 1RM anterior
   // Fuente: docs/analisis_excel_11-12-13.md lineas 541-544
+  // Si el peso actual supera al anterior, es un nuevo record personal (PR)
+  // En ese caso, el nuevo peso se convierte en el nuevo 1RM y la intensidad es 100%
   calculate1RMIntensity(pesoActual: number, pesoAnterior: number): number | null {
     if (!pesoAnterior || pesoAnterior <= 0) return null;
     if (!pesoActual || pesoActual <= 0) return null;
 
-    return (pesoActual / pesoAnterior) * 100;
+    const intensidad = (pesoActual / pesoAnterior) * 100;
+
+    // Si supera el 1RM anterior, es nuevo record personal = 100%
+    // El nuevo valor se convierte en el nuevo 1RM de referencia
+    if (intensidad > 100) {
+      return 100;
+    }
+
+    return intensidad;
+  }
+
+  // Detectar si un peso es un nuevo record personal
+  // Retorna true si el peso actual supera al anterior
+  esNuevoRecord(pesoActual: number, pesoAnterior: number): boolean {
+    if (!pesoAnterior || pesoAnterior <= 0) return false;
+    if (!pesoActual || pesoActual <= 0) return false;
+
+    return pesoActual > pesoAnterior;
   }
 
   // ===== IMPROVEMENT CALCULATIONS =====

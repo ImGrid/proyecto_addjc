@@ -27,7 +27,6 @@ export interface DatosAtletaParaRanking {
     barraFija: number | null;
     paralelas: number | null;
     navetteVO2max: number | null;
-    test1500mVO2max: number | null;
   } | null;
   // Ultimos registros post-entrenamiento (para estado)
   ultimosRegistros: Array<{
@@ -78,7 +77,6 @@ function prepararDatosTest(test: DatosAtletaParaRanking['ultimoTest']): DatosTes
       barraFija: null,
       paralelas: null,
       navetteVO2max: null,
-      test1500mVO2max: null,
     };
   }
 
@@ -89,7 +87,6 @@ function prepararDatosTest(test: DatosAtletaParaRanking['ultimoTest']): DatosTes
     barraFija: test.barraFija,
     paralelas: test.paralelas,
     navetteVO2max: test.navetteVO2max,
-    test1500mVO2max: test.test1500mVO2max,
   };
 }
 

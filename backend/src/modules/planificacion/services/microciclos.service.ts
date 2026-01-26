@@ -112,8 +112,7 @@ export class MicrociclosService {
         mesocicloId: createMicrocicloDto.mesocicloId
           ? BigInt(createMicrocicloDto.mesocicloId)
           : null,
-        numeroMicrociclo: createMicrocicloDto.numeroMicrociclo,
-        numeroGlobalMicrociclo: createMicrocicloDto.numeroGlobalMicrociclo,
+        codigoMicrociclo: createMicrocicloDto.codigoMicrociclo,
         fechaInicio,
         fechaFin,
         tipoMicrociclo: createMicrocicloDto.tipoMicrociclo,
@@ -130,22 +129,6 @@ export class MicrociclosService {
           : null,
         sentidoVolumen: createMicrocicloDto.sentidoVolumen,
         sentidoIntensidad: createMicrocicloDto.sentidoIntensidad,
-        vCarga1: createMicrocicloDto.vCarga1
-          ? new Prisma.Decimal(createMicrocicloDto.vCarga1)
-          : null,
-        vCarga1Nivel: createMicrocicloDto.vCarga1Nivel,
-        iCarga1: createMicrocicloDto.iCarga1
-          ? new Prisma.Decimal(createMicrocicloDto.iCarga1)
-          : null,
-        iCarga1Nivel: createMicrocicloDto.iCarga1Nivel,
-        vCarga2: createMicrocicloDto.vCarga2
-          ? new Prisma.Decimal(createMicrocicloDto.vCarga2)
-          : null,
-        vCarga2Nivel: createMicrocicloDto.vCarga2Nivel,
-        iCarga2: createMicrocicloDto.iCarga2
-          ? new Prisma.Decimal(createMicrocicloDto.iCarga2)
-          : null,
-        iCarga2Nivel: createMicrocicloDto.iCarga2Nivel,
       },
       include: {
         mesociclo: {
@@ -325,7 +308,7 @@ export class MicrociclosService {
         microcicloAfectadoId: microciclo.id,
         tipo: 'INICIAL' as TipoRecomendacion,
         prioridad: 'MEDIA' as Prioridad,
-        titulo: `Planificacion Microciclo ${microciclo.numeroGlobalMicrociclo} para ${atleta.usuario.nombreCompleto}`,
+        titulo: `Planificacion Microciclo ${microciclo.codigoMicrociclo} para ${atleta.usuario.nombreCompleto}`,
         mensaje:
           `El algoritmo ha generado ${sesionesEntrenamiento.length} sesiones de entrenamiento ` +
           `para el microciclo ${createMicrocicloDto.tipoMicrociclo}. ` +
@@ -384,7 +367,7 @@ export class MicrociclosService {
           titulo: 'Nueva Planificacion Pendiente de Aprobacion',
           mensaje:
             `El algoritmo ha generado una planificacion para ${atleta.usuario.nombreCompleto}. ` +
-            `Microciclo ${microciclo.numeroGlobalMicrociclo} (${createMicrocicloDto.tipoMicrociclo}). ` +
+            `Microciclo ${microciclo.codigoMicrociclo} (${createMicrocicloDto.tipoMicrociclo}). ` +
             `Requiere su revision y aprobacion.`,
           prioridad: 'MEDIA' as Prioridad,
         })),
@@ -450,7 +433,7 @@ export class MicrociclosService {
         where,
         skip,
         take: limit,
-        orderBy: { numeroGlobalMicrociclo: 'asc' },
+        orderBy: { fechaInicio: 'asc' },
         include: {
           mesociclo: {
             select: {
@@ -605,11 +588,8 @@ export class MicrociclosService {
     const microciclo = await this.prisma.microciclo.update({
       where: { id: BigInt(id) },
       data: {
-        ...(updateMicrocicloDto.numeroMicrociclo && {
-          numeroMicrociclo: updateMicrocicloDto.numeroMicrociclo,
-        }),
-        ...(updateMicrocicloDto.numeroGlobalMicrociclo && {
-          numeroGlobalMicrociclo: updateMicrocicloDto.numeroGlobalMicrociclo,
+        ...(updateMicrocicloDto.codigoMicrociclo && {
+          codigoMicrociclo: updateMicrocicloDto.codigoMicrociclo,
         }),
         ...(updateMicrocicloDto.fechaInicio && {
           fechaInicio: new Date(updateMicrocicloDto.fechaInicio),
@@ -647,38 +627,6 @@ export class MicrociclosService {
         ...(updateMicrocicloDto.sentidoIntensidad !== undefined && {
           sentidoIntensidad: updateMicrocicloDto.sentidoIntensidad,
         }),
-        ...(updateMicrocicloDto.vCarga1 !== undefined && {
-          vCarga1: updateMicrocicloDto.vCarga1
-            ? new Prisma.Decimal(updateMicrocicloDto.vCarga1)
-            : null,
-        }),
-        ...(updateMicrocicloDto.vCarga1Nivel !== undefined && {
-          vCarga1Nivel: updateMicrocicloDto.vCarga1Nivel,
-        }),
-        ...(updateMicrocicloDto.iCarga1 !== undefined && {
-          iCarga1: updateMicrocicloDto.iCarga1
-            ? new Prisma.Decimal(updateMicrocicloDto.iCarga1)
-            : null,
-        }),
-        ...(updateMicrocicloDto.iCarga1Nivel !== undefined && {
-          iCarga1Nivel: updateMicrocicloDto.iCarga1Nivel,
-        }),
-        ...(updateMicrocicloDto.vCarga2 !== undefined && {
-          vCarga2: updateMicrocicloDto.vCarga2
-            ? new Prisma.Decimal(updateMicrocicloDto.vCarga2)
-            : null,
-        }),
-        ...(updateMicrocicloDto.vCarga2Nivel !== undefined && {
-          vCarga2Nivel: updateMicrocicloDto.vCarga2Nivel,
-        }),
-        ...(updateMicrocicloDto.iCarga2 !== undefined && {
-          iCarga2: updateMicrocicloDto.iCarga2
-            ? new Prisma.Decimal(updateMicrocicloDto.iCarga2)
-            : null,
-        }),
-        ...(updateMicrocicloDto.iCarga2Nivel !== undefined && {
-          iCarga2Nivel: updateMicrocicloDto.iCarga2Nivel,
-        }),
       },
       include: {
         mesociclo: {
@@ -706,13 +654,13 @@ export class MicrociclosService {
   // Obtener informacion de eliminacion (conteo de registros hijos)
   // Usado por el frontend para mostrar advertencia antes de eliminar
   async getDeleteInfo(id: string): Promise<{
-    numeroMicrociclo: number | null;
+    codigoMicrociclo: string;
     sesiones: number;
   }> {
     const microciclo = await this.prisma.microciclo.findUnique({
       where: { id: BigInt(id) },
       select: {
-        numeroMicrociclo: true,
+        codigoMicrociclo: true,
         _count: {
           select: { sesiones: true },
         },
@@ -724,7 +672,7 @@ export class MicrociclosService {
     }
 
     return {
-      numeroMicrociclo: microciclo.numeroMicrociclo,
+      codigoMicrociclo: microciclo.codigoMicrociclo,
       sesiones: microciclo._count.sesiones,
     };
   }
@@ -741,9 +689,7 @@ export class MicrociclosService {
       where: { id: BigInt(id) },
     });
 
-    const microcicloLabel = deleteInfo.numeroMicrociclo
-      ? `#${deleteInfo.numeroMicrociclo}`
-      : `ID ${id}`;
+    const microcicloLabel = deleteInfo.codigoMicrociclo || `ID ${id}`;
 
     return {
       message: `Microciclo ${microcicloLabel} eliminado permanentemente`,
@@ -850,8 +796,7 @@ export class MicrociclosService {
     return {
       id: microciclo.id.toString(),
       mesocicloId: microciclo.mesocicloId ? microciclo.mesocicloId.toString() : null,
-      numeroMicrociclo: microciclo.numeroMicrociclo,
-      numeroGlobalMicrociclo: microciclo.numeroGlobalMicrociclo,
+      codigoMicrociclo: microciclo.codigoMicrociclo,
       fechaInicio: microciclo.fechaInicio,
       fechaFin: microciclo.fechaFin,
       tipoMicrociclo: microciclo.tipoMicrociclo,
@@ -866,14 +811,6 @@ export class MicrociclosService {
         : null,
       sentidoVolumen: microciclo.sentidoVolumen,
       sentidoIntensidad: microciclo.sentidoIntensidad,
-      vCarga1: microciclo.vCarga1 ? parseFloat(microciclo.vCarga1.toString()) : null,
-      vCarga1Nivel: microciclo.vCarga1Nivel,
-      iCarga1: microciclo.iCarga1 ? parseFloat(microciclo.iCarga1.toString()) : null,
-      iCarga1Nivel: microciclo.iCarga1Nivel,
-      vCarga2: microciclo.vCarga2 ? parseFloat(microciclo.vCarga2.toString()) : null,
-      vCarga2Nivel: microciclo.vCarga2Nivel,
-      iCarga2: microciclo.iCarga2 ? parseFloat(microciclo.iCarga2.toString()) : null,
-      iCarga2Nivel: microciclo.iCarga2Nivel,
       createdAt: microciclo.createdAt,
       updatedAt: microciclo.updatedAt,
       ...(microciclo.mesociclo && {

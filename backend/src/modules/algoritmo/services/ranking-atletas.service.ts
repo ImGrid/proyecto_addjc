@@ -148,7 +148,6 @@ export class RankingAtletasService {
             barraFija: true,
             paralelas: true,
             navetteVO2max: true,
-            test1500mVO2max: true,
           },
         },
         registrosPostEntrenamiento: {
@@ -193,9 +192,6 @@ export class RankingAtletasService {
                 barraFija: ultimoTest.barraFija,
                 paralelas: ultimoTest.paralelas,
                 navetteVO2max: ultimoTest.navetteVO2max ? Number(ultimoTest.navetteVO2max) : null,
-                test1500mVO2max: ultimoTest.test1500mVO2max
-                  ? Number(ultimoTest.test1500mVO2max)
-                  : null,
               }
             : null,
           ultimosRegistros: atleta.registrosPostEntrenamiento.map((r) => ({

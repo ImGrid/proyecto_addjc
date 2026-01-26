@@ -202,7 +202,7 @@ export class NotificacionesService {
   async notificarPlanificacionAprobada(
     atletaUsuarioId: bigint,
     entrenadorUsuarioId: bigint | null,
-    microcicloNumero: number
+    codigoMicrociclo: string
   ) {
     const notificaciones: CreateNotificacionDto[] = [];
 
@@ -211,7 +211,7 @@ export class NotificacionesService {
       destinatarioId: atletaUsuarioId,
       tipo: 'PLANIFICACION_APROBADA',
       titulo: 'Nueva planificacion disponible',
-      mensaje: `Tu microciclo ${microcicloNumero} ha sido aprobado y esta listo para ejecutar.`,
+      mensaje: `Tu microciclo ${codigoMicrociclo} ha sido aprobado y esta listo para ejecutar.`,
       prioridad: 'MEDIA',
     });
 
@@ -221,7 +221,7 @@ export class NotificacionesService {
         destinatarioId: entrenadorUsuarioId,
         tipo: 'PLANIFICACION_APROBADA',
         titulo: 'Planificacion aprobada',
-        mensaje: `El microciclo ${microcicloNumero} ha sido aprobado para tu atleta.`,
+        mensaje: `El microciclo ${codigoMicrociclo} ha sido aprobado para tu atleta.`,
         prioridad: 'BAJA',
       });
     }

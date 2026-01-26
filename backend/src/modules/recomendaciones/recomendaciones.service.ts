@@ -83,7 +83,7 @@ export class RecomendacionesService {
         microcicloAfectado: {
           select: {
             id: true,
-            numeroGlobalMicrociclo: true,
+            codigoMicrociclo: true,
             fechaInicio: true,
             fechaFin: true,
             tipoMicrociclo: true,
@@ -152,7 +152,7 @@ export class RecomendacionesService {
           },
           microcicloAfectado: {
             select: {
-              numeroGlobalMicrociclo: true,
+              codigoMicrociclo: true,
               tipoMicrociclo: true,
             },
           },
@@ -201,7 +201,7 @@ export class RecomendacionesService {
           },
           microcicloAfectado: {
             select: {
-              numeroGlobalMicrociclo: true,
+              codigoMicrociclo: true,
               tipoMicrociclo: true,
             },
           },
@@ -314,7 +314,7 @@ export class RecomendacionesService {
           microcicloAfectado: {
             select: {
               id: true,
-              numeroGlobalMicrociclo: true,
+              codigoMicrociclo: true,
             },
           },
         },
@@ -355,13 +355,13 @@ export class RecomendacionesService {
 
     // Notificar al atleta y entrenador
     try {
-      const microcicloNumero = resultado.microcicloAfectado?.numeroGlobalMicrociclo || 0;
+      const codigoMicrociclo = resultado.microcicloAfectado?.codigoMicrociclo || 'desconocido';
       const entrenadorUsuarioId = resultado.atleta.entrenadorAsignado?.usuarioId || null;
 
       await this.notificacionesService.notificarPlanificacionAprobada(
         resultado.atleta.usuario.id,
         entrenadorUsuarioId,
-        microcicloNumero
+        codigoMicrociclo
       );
     } catch (error) {
       // No fallar si la notificacion no se puede crear
@@ -375,6 +375,7 @@ export class RecomendacionesService {
   }
 
   // RECHAZAR recomendacion (Feedback Loop - el algoritmo aprende)
+  // Al rechazar, se eliminan las sesiones generadas por el algoritmo
   async rechazar(id: string, userId: bigint, dto: RechazarRecomendacionDto) {
     const recomendacion = await this.prisma.recomendacion.findUnique({
       where: { id: BigInt(id) },
@@ -401,26 +402,55 @@ export class RecomendacionesService {
       prioridadOriginal: recomendacion.prioridad,
     };
 
-    const actualizada = await this.prisma.recomendacion.update({
-      where: { id: BigInt(id) },
-      data: {
-        estado: 'RECHAZADA',
-        revisadoPor: userId,
-        fechaRevision: new Date(),
-        comentarioRevision: dto.motivo,
-        // Guardar feedback en datosAnalisis para que el algoritmo lo use
-        datosAnalisis: {
-          ...((recomendacion.datosAnalisis as object) || {}),
-          feedback: feedbackData,
+    // Transaccion: eliminar sesiones y actualizar recomendacion
+    let sesionesEliminadas = 0;
+    const resultado = await this.prisma.$transaction(async (tx) => {
+      // Eliminar sesion generada individual si existe
+      if (recomendacion.sesionGeneradaId) {
+        await tx.sesion.delete({
+          where: { id: recomendacion.sesionGeneradaId },
+        });
+        sesionesEliminadas++;
+      }
+
+      // Eliminar sesiones afectadas (JSON array) si existen
+      if (recomendacion.sesionesAfectadas) {
+        const sesionesIds = recomendacion.sesionesAfectadas as number[];
+        if (Array.isArray(sesionesIds) && sesionesIds.length > 0) {
+          const deleted = await tx.sesion.deleteMany({
+            where: { id: { in: sesionesIds.map((sid) => BigInt(sid)) } },
+          });
+          sesionesEliminadas += deleted.count;
+        }
+      }
+
+      // Actualizar recomendacion a RECHAZADA
+      const actualizada = await tx.recomendacion.update({
+        where: { id: BigInt(id) },
+        data: {
+          estado: 'RECHAZADA',
+          revisadoPor: userId,
+          fechaRevision: new Date(),
+          comentarioRevision: dto.motivo,
+          // Guardar feedback en datosAnalisis para que el algoritmo lo use
+          datosAnalisis: {
+            ...((recomendacion.datosAnalisis as object) || {}),
+            feedback: feedbackData,
+          },
+          // Limpiar referencias a sesiones eliminadas
+          sesionGeneradaId: null,
+          sesionesAfectadas: [],
         },
-      },
-      include: {
-        atleta: {
-          include: {
-            usuario: { select: { nombreCompleto: true } },
+        include: {
+          atleta: {
+            include: {
+              usuario: { select: { nombreCompleto: true } },
+            },
           },
         },
-      },
+      });
+
+      return actualizada;
     });
 
     // Registrar en historial con detalles del rechazo
@@ -434,13 +464,15 @@ export class RecomendacionesService {
       {
         accionAlternativa: dto.accionAlternativa,
         tipoRecomendacion: recomendacion.tipo,
+        sesionesEliminadas,
       }
     );
 
     return {
-      ...this.formatResponse(actualizada),
-      mensaje: 'Recomendacion rechazada. El COMITE debe crear la planificacion manualmente.',
+      ...this.formatResponse(resultado),
+      mensaje: `Recomendacion rechazada. Se eliminaron ${sesionesEliminadas} sesiones. El COMITE debe crear la planificacion manualmente.`,
       feedbackRegistrado: true,
+      sesionesEliminadas,
     };
   }
 
@@ -488,7 +520,7 @@ export class RecomendacionesService {
           microcicloAfectado: {
             select: {
               id: true,
-              numeroGlobalMicrociclo: true,
+              codigoMicrociclo: true,
             },
           },
         },
@@ -536,13 +568,13 @@ export class RecomendacionesService {
 
     // Notificar al atleta y entrenador
     try {
-      const microcicloNumero = resultado.microcicloAfectado?.numeroGlobalMicrociclo || 0;
+      const codigoMicrociclo = resultado.microcicloAfectado?.codigoMicrociclo || 'desconocido';
       const entrenadorUsuarioId = resultado.atleta.entrenadorAsignado?.usuarioId || null;
 
       await this.notificacionesService.notificarPlanificacionAprobada(
         resultado.atleta.usuario.id,
         entrenadorUsuarioId,
-        microcicloNumero
+        codigoMicrociclo
       );
     } catch (error) {
       console.error('Error creando notificaciones de modificacion:', error);
@@ -692,7 +724,7 @@ export class RecomendacionesService {
       ...(recomendacion.microcicloAfectado && {
         microcicloAfectado: {
           id: recomendacion.microcicloAfectado.id?.toString(),
-          numeroGlobalMicrociclo: recomendacion.microcicloAfectado.numeroGlobalMicrociclo,
+          codigoMicrociclo: recomendacion.microcicloAfectado.codigoMicrociclo,
           tipoMicrociclo: recomendacion.microcicloAfectado.tipoMicrociclo,
         },
       }),

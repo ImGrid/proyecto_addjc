@@ -33,7 +33,6 @@ export interface DatosTestParaPerfil {
   // Resistencia aerobica
   navettePalier: number | null;
   navetteVO2max: number | null;
-  test1500mVO2max: number | null;
 }
 
 // Resultado de la evaluacion de fuerza
@@ -165,8 +164,6 @@ export function evaluarResistencia(
     vo2max = resultado.vo2max;
   } else if (datos.navetteVO2max !== null) {
     vo2max = datos.navetteVO2max;
-  } else if (datos.test1500mVO2max !== null) {
-    vo2max = datos.test1500mVO2max;
   }
 
   // Calcular score basado en palier y/o VO2max
@@ -350,7 +347,6 @@ export function convertirTestPrismaADatos(
     paralelas: number | null;
     navettePalier: unknown;
     navetteVO2max: unknown;
-    test1500mVO2max: unknown;
   } | null
 ): DatosTestParaPerfil | null {
   if (test === null) return null;
@@ -364,6 +360,5 @@ export function convertirTestPrismaADatos(
     paralelas: test.paralelas,
     navettePalier: test.navettePalier !== null ? Number(test.navettePalier) : null,
     navetteVO2max: test.navetteVO2max !== null ? Number(test.navetteVO2max) : null,
-    test1500mVO2max: test.test1500mVO2max !== null ? Number(test.test1500mVO2max) : null,
   };
 }

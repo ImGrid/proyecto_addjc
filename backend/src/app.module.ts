@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ClsModule } from 'nestjs-cls';
 import { ClsPluginTransactional } from '@nestjs-cls/transactional';
@@ -40,6 +41,8 @@ import { databaseConfig, jwtConfig, appConfig, validationSchema } from './config
     }),
     // Modulo para tareas programadas (cron jobs)
     ScheduleModule.forRoot(),
+    // Modulo para eventos internos (Event-Driven Architecture)
+    EventEmitterModule.forRoot(),
     // Configuracion de transacciones declarativas con CLS
     ClsModule.forRoot({
       global: true,
