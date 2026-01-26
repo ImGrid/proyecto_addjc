@@ -115,7 +115,7 @@ export default async function SesionDetalleComiteTecnicoPage({ params }: PagePro
           {sesion.microciclo && (
             <div>
               <p className="text-sm text-muted-foreground">Microciclo</p>
-              <p className="font-medium">#{sesion.microciclo.numeroGlobalMicrociclo}</p>
+              <p className="font-medium">#{sesion.microciclo.codigoMicrociclo}</p>
             </div>
           )}
         </CardContent>

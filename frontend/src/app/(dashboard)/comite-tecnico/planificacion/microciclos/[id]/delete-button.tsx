@@ -27,7 +27,7 @@ import { COMITE_TECNICO_ROUTES } from '@/lib/routes';
 
 interface DeleteMicrocicloButtonProps {
   microcicloId: string;
-  microcicloNumero: number;
+  microcicloNumero: string;
 }
 
 export function DeleteMicrocicloButton({ microcicloId, microcicloNumero }: DeleteMicrocicloButtonProps) {

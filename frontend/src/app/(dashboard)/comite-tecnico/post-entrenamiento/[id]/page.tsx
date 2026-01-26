@@ -91,7 +91,7 @@ export default async function RegistroDetallePage({ params }: RegistroDetallePag
                 <p className="text-sm text-muted-foreground">
                   {registro.sesion.tipoSesion}
                   {registro.sesion.microciclo && (
-                    <span> - Microciclo {registro.sesion.microciclo.numeroGlobalMicrociclo}</span>
+                    <span> - Microciclo {registro.sesion.microciclo.codigoMicrociclo}</span>
                   )}
                 </p>
               </>

@@ -324,7 +324,7 @@ export interface SesionCompleta {
   updatedAt: string;
   microciclo?: {
     id: string;
-    numeroGlobalMicrociclo: number;
+    codigoMicrociclo: string;
     fechaInicio: string;
     fechaFin: string;
   };
@@ -402,7 +402,7 @@ export async function fetchSesion(id: string): Promise<SesionCompleta | null> {
 export interface MicrocicloParaSelector {
   id: string;
   label: string;
-  numeroGlobalMicrociclo: number;
+  codigoMicrociclo: string;
   fechaInicio: string;
   fechaFin: string;
 }
@@ -430,8 +430,8 @@ export async function fetchMicrociclosParaSelector(
 
     return microciclos.map((m) => ({
       id: m.id,
-      label: `Micro #${m.numeroGlobalMicrociclo} (${new Date(m.fechaInicio).toLocaleDateString('es-BO')} - ${new Date(m.fechaFin).toLocaleDateString('es-BO')})`,
-      numeroGlobalMicrociclo: m.numeroGlobalMicrociclo,
+      label: `Micro #${m.codigoMicrociclo} (${new Date(m.fechaInicio).toLocaleDateString('es-BO')} - ${new Date(m.fechaFin).toLocaleDateString('es-BO')})`,
+      codigoMicrociclo: m.codigoMicrociclo,
       fechaInicio: m.fechaInicio.toString(),
       fechaFin: m.fechaFin.toString(),
     }));

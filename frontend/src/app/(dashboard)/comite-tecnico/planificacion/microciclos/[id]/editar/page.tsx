@@ -30,7 +30,7 @@ export default async function EditarMicrocicloPage({ params }: EditarMicrocicloP
         <div>
           <h1 className="text-3xl font-bold">Editar Microciclo</h1>
           <p className="text-muted-foreground">
-            Modifica los datos del Microciclo #{microciclo.numeroGlobalMicrociclo}
+            Modifica los datos del Microciclo #{microciclo.codigoMicrociclo}
           </p>
         </div>
       </div>

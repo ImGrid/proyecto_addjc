@@ -29,7 +29,7 @@ export interface RegistroPostEntrenamiento {
     numeroSesion: number;
     tipoSesion: string;
     microciclo?: {
-      numeroGlobalMicrociclo: number;
+      codigoMicrociclo: string;
     };
   };
   entrenador?: {

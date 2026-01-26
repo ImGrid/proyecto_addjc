@@ -27,7 +27,6 @@ export function TestHistoryCard({ test }: TestHistoryCardProps) {
   if (test.navettePalier) resistenciaAerobica.push({ nombre: 'Course Navette', valor: `Palier ${test.navettePalier}` });
   if (test.navetteVO2max) resistenciaAerobica.push({ nombre: 'VO2max', valor: `${test.navetteVO2max} ml/kg/min` });
   if (test.test1500m) resistenciaAerobica.push({ nombre: 'Test 1500m', valor: test.test1500m });
-  if (test.test1500mVO2max) resistenciaAerobica.push({ nombre: 'VO2max 1500m', valor: `${test.test1500mVO2max} ml/kg/min` });
 
   const tieneValores = fuerzaMaxima.length > 0 || fuerzaResistencia.length > 0 || resistenciaAerobica.length > 0;
 
@@ -45,7 +44,7 @@ export function TestHistoryCard({ test }: TestHistoryCardProps) {
           </CardTitle>
           {test.microciclo && (
             <Badge variant="secondary" className="text-xs">
-              Microciclo {test.microciclo.numeroGlobalMicrociclo}
+              Microciclo {test.microciclo.codigoMicrociclo}
             </Badge>
           )}
         </div>

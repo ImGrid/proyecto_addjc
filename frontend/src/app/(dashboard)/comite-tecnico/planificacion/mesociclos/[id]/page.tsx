@@ -203,7 +203,7 @@ export default async function MesocicloDetallePage({ params }: MesocicloDetalleP
                       <CardContent className="pt-4">
                         <div className="flex items-start justify-between mb-2">
                           <div>
-                            <p className="font-medium">Microciclo #{microciclo.numeroGlobalMicrociclo}</p>
+                            <p className="font-medium">Microciclo #{microciclo.codigoMicrociclo}</p>
                             <p className="text-sm text-muted-foreground">
                               {microInicio} - {microFin}
                             </p>

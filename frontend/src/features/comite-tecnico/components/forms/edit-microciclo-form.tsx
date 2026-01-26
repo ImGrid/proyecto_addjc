@@ -102,36 +102,18 @@ export function EditMicrocicloForm({ microciclo }: EditMicrocicloFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="numeroGlobalMicrociclo">Numero Global *</Label>
+            <Label htmlFor="codigoMicrociclo">Codigo de Microciclo *</Label>
             <Input
-              type="number"
-              id="numeroGlobalMicrociclo"
-              name="numeroGlobalMicrociclo"
-              min="1"
-              defaultValue={getPreviousValue('numeroGlobalMicrociclo', String(microciclo.numeroGlobalMicrociclo))}
-              className={getFieldError('numeroGlobalMicrociclo') ? 'border-destructive' : ''}
+              type="text"
+              id="codigoMicrociclo"
+              name="codigoMicrociclo"
+              defaultValue={getPreviousValue('codigoMicrociclo', microciclo.codigoMicrociclo)}
+              className={getFieldError('codigoMicrociclo') ? 'border-destructive' : ''}
             />
-            {getFieldError('numeroGlobalMicrociclo') && (
-              <p className="text-sm text-destructive">{getFieldError('numeroGlobalMicrociclo')}</p>
+            {getFieldError('codigoMicrociclo') && (
+              <p className="text-sm text-destructive">{getFieldError('codigoMicrociclo')}</p>
             )}
           </div>
-
-          {microciclo.mesocicloId && (
-            <div className="space-y-2">
-              <Label htmlFor="numeroMicrociclo">Numero en Mesociclo</Label>
-              <Input
-                type="number"
-                id="numeroMicrociclo"
-                name="numeroMicrociclo"
-                min="1"
-                defaultValue={getPreviousValue('numeroMicrociclo', microciclo.numeroMicrociclo ? String(microciclo.numeroMicrociclo) : '')}
-                className={getFieldError('numeroMicrociclo') ? 'border-destructive' : ''}
-              />
-              {getFieldError('numeroMicrociclo') && (
-                <p className="text-sm text-destructive">{getFieldError('numeroMicrociclo')}</p>
-              )}
-            </div>
-          )}
 
           <div className="space-y-2">
             <Label>Tipo de Microciclo *</Label>

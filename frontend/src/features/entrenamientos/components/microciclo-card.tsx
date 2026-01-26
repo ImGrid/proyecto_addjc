@@ -15,7 +15,7 @@ export function MicrocicloCard({ microciclo }: MicrocicloCardProps) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">
-            Microciclo {microciclo.numeroGlobalMicrociclo}
+            Microciclo {microciclo.codigoMicrociclo}
           </CardTitle>
           <Badge variant="outline">{microciclo.tipoMicrociclo}</Badge>
         </div>

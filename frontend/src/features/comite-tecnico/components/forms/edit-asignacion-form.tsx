@@ -81,7 +81,7 @@ export function EditAsignacionForm({ asignacion, redirectUrl }: EditAsignacionFo
             <Input
               value={
                 asignacion.microciclo
-                  ? `Microciclo ${asignacion.microciclo.numeroGlobalMicrociclo} (${formatDateShort(asignacion.microciclo.fechaInicio)} - ${formatDateShort(asignacion.microciclo.fechaFin)})`
+                  ? `Microciclo ${asignacion.microciclo.codigoMicrociclo} (${formatDateShort(asignacion.microciclo.fechaInicio)} - ${formatDateShort(asignacion.microciclo.fechaFin)})`
                   : 'N/A'
               }
               disabled

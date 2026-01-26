@@ -21,7 +21,7 @@ interface Atleta {
 
 interface Microciclo {
   id: string;
-  numeroGlobalMicrociclo: number;
+  codigoMicrociclo: string;
   fechaInicio: Date;
   fechaFin: Date;
 }
@@ -134,7 +134,7 @@ export function CreateAsignacionForm({ atletas, microciclos }: CreateAsignacionF
               <SelectContent>
                 {microciclos.map((micro) => (
                   <SelectItem key={micro.id} value={micro.id}>
-                    Microciclo {micro.numeroGlobalMicrociclo} ({formatDateShort(micro.fechaInicio)} - {formatDateShort(micro.fechaFin)})
+                    Microciclo {micro.codigoMicrociclo} ({formatDateShort(micro.fechaInicio)} - {formatDateShort(micro.fechaFin)})
                   </SelectItem>
                 ))}
               </SelectContent>

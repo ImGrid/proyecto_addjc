@@ -75,14 +75,13 @@ export default async function MicrocicloDetallePage({ params }: MicrocicloDetall
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold">
-                Microciclo #{microciclo.numeroGlobalMicrociclo}
+                Microciclo #{microciclo.codigoMicrociclo}
               </h1>
               <Badge variant={tipoVariants[microciclo.tipoMicrociclo] || 'outline'}>
                 {microciclo.tipoMicrociclo}
               </Badge>
             </div>
             <p className="text-muted-foreground">
-              {microciclo.numeroMicrociclo && `Semana ${microciclo.numeroMicrociclo} - `}
               {microciclo.mesociclo?.nombre || 'Sin mesociclo asignado'}
             </p>
           </div>
@@ -96,7 +95,7 @@ export default async function MicrocicloDetallePage({ params }: MicrocicloDetall
           </Button>
           <DeleteMicrocicloButton
             microcicloId={id}
-            microcicloNumero={microciclo.numeroGlobalMicrociclo}
+            microcicloNumero={microciclo.codigoMicrociclo}
           />
         </div>
       </div>
@@ -118,7 +117,7 @@ export default async function MicrocicloDetallePage({ params }: MicrocicloDetall
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Numero Global</p>
-                <p className="font-medium">#{microciclo.numeroGlobalMicrociclo}</p>
+                <p className="font-medium">#{microciclo.codigoMicrociclo}</p>
               </div>
             </div>
 

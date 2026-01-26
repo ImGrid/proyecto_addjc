@@ -113,7 +113,7 @@ export default async function SesionesEntrenadorPage() {
                 {sesion.microciclo && (
                   <div className="mt-3 pt-3 border-t">
                     <p className="text-sm text-muted-foreground">
-                      Microciclo #{sesion.microciclo.numeroGlobalMicrociclo}
+                      Microciclo #{sesion.microciclo.codigoMicrociclo}
                     </p>
                   </div>
                 )}

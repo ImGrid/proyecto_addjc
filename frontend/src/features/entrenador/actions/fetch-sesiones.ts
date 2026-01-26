@@ -13,7 +13,7 @@ const sesionesResponseSchema = z.object({
     duracionPlanificada: z.number().nullable().optional(),
     microciclo: z.object({
       id: z.string(),
-      numeroGlobalMicrociclo: z.number().int(),
+      codigoMicrociclo: z.string(),
     }).optional(),
   })),
   meta: z.object({
@@ -33,7 +33,7 @@ const sesionesByAtletaResponseSchema = z.object({
     microcicloId: z.string(),
     microciclo: z.object({
       id: z.string(),
-      numeroGlobalMicrociclo: z.number().int(),
+      codigoMicrociclo: z.string(),
       fechaInicio: z.coerce.date(),
       fechaFin: z.coerce.date(),
     }).optional(),
@@ -52,7 +52,7 @@ export interface SesionParaSelector {
   fecha: Date;
   numeroSesion: number;
   tipoSesion: string;
-  microcicloNumero?: number;
+  codigoMicrociclo?: string;
 }
 
 // Server Action para obtener sesiones disponibles para el entrenador
@@ -97,7 +97,7 @@ export async function fetchSesionesParaSelector(limit: number = 50): Promise<Ses
       });
 
       const tipoSesionFormateado = s.tipoSesion.replace(/_/g, ' ');
-      const microcicloInfo = s.microciclo ? ` - Micro #${s.microciclo.numeroGlobalMicrociclo}` : '';
+      const microcicloInfo = s.microciclo ? ` - Micro #${s.microciclo.codigoMicrociclo}` : '';
 
       return {
         id: s.id,
@@ -105,7 +105,7 @@ export async function fetchSesionesParaSelector(limit: number = 50): Promise<Ses
         fecha: s.fecha,
         numeroSesion: s.numeroSesion,
         tipoSesion: s.tipoSesion,
-        microcicloNumero: s.microciclo?.numeroGlobalMicrociclo,
+        codigoMicrociclo: s.microciclo?.codigoMicrociclo,
       };
     });
 
@@ -170,7 +170,7 @@ export async function fetchSesionesByAtleta(
       });
 
       const tipoSesionFormateado = s.tipoSesion.replace(/_/g, ' ');
-      const microcicloInfo = s.microciclo ? ` - Micro #${s.microciclo.numeroGlobalMicrociclo}` : '';
+      const microcicloInfo = s.microciclo ? ` - Micro #${s.microciclo.codigoMicrociclo}` : '';
 
       return {
         id: s.id,
@@ -178,7 +178,7 @@ export async function fetchSesionesByAtleta(
         fecha: s.fecha,
         numeroSesion: s.numeroSesion,
         tipoSesion: s.tipoSesion,
-        microcicloNumero: s.microciclo?.numeroGlobalMicrociclo,
+        codigoMicrociclo: s.microciclo?.codigoMicrociclo,
       };
     });
 

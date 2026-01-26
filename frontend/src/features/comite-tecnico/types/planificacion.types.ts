@@ -84,8 +84,7 @@ export type Mesociclo = z.infer<typeof mesocicloSchema>;
 export const microcicloSchema = z.object({
   id: z.string(),
   mesocicloId: z.string().nullable(),
-  numeroMicrociclo: z.number().int().nullable(),
-  numeroGlobalMicrociclo: z.number().int(),
+  codigoMicrociclo: z.string(),
   fechaInicio: z.coerce.date(),
   fechaFin: z.coerce.date(),
   tipoMicrociclo: z.enum(TipoMicrocicloValues as [string, ...string[]]),
@@ -98,15 +97,6 @@ export const microcicloSchema = z.object({
   mediaIntensidad: z.number().nullable(),
   sentidoVolumen: z.enum(SentidoCargaValues as [string, ...string[]]).nullable(),
   sentidoIntensidad: z.enum(SentidoCargaValues as [string, ...string[]]).nullable(),
-  // Campos de carga semanal (backend retorna estos campos)
-  vCarga1: z.number().nullable(),
-  vCarga1Nivel: z.number().int().nullable(),
-  iCarga1: z.number().nullable(),
-  iCarga1Nivel: z.number().int().nullable(),
-  vCarga2: z.number().nullable(),
-  vCarga2Nivel: z.number().int().nullable(),
-  iCarga2: z.number().nullable(),
-  iCarga2Nivel: z.number().int().nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
   // Relacion opcional con mesociclo (backend retorna: id, nombre, etapa)
@@ -157,7 +147,7 @@ export const asignacionSchema = z.object({
   microciclo: z
     .object({
       id: z.string(),
-      numeroGlobalMicrociclo: z.number().int(),
+      codigoMicrociclo: z.string(),
       fechaInicio: z.coerce.date(),
       fechaFin: z.coerce.date(),
     })

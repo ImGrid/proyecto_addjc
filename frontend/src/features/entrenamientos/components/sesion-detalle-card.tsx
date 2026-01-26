@@ -169,7 +169,7 @@ export function SesionDetalleCard({ sesion }: SesionDetalleCardProps) {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Esta sesion pertenece al Microciclo {sesion.microciclo.numeroGlobalMicrociclo}
+              Esta sesion pertenece al Microciclo {sesion.microciclo.codigoMicrociclo}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               {formatDateShort(sesion.microciclo.fechaInicio)} - {formatDateMedium(sesion.microciclo.fechaFin)}

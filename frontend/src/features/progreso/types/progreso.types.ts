@@ -23,7 +23,7 @@ export interface TestFisicoSesion {
 
 export interface TestFisicoMicrociclo {
   id: string;
-  numeroGlobalMicrociclo: number;
+  codigoMicrociclo: string;
 }
 
 export interface TestFisico {
@@ -52,7 +52,6 @@ export interface TestFisico {
   clasificacionVO2max: string | null; // Calculado en backend: "Excelente", "Bueno", etc.
   objetivoVO2max: number; // 60 por defecto
   test1500m: string | null;
-  test1500mVO2max: string | null;
 
   // Observaciones
   observaciones: string | null;
@@ -76,7 +75,7 @@ export interface RegistroPostEntrenamientoAtleta {
 }
 
 export interface RegistroPostEntrenamientoMicrociclo {
-  numeroGlobalMicrociclo: number;
+  codigoMicrociclo: string;
 }
 
 export interface RegistroPostEntrenamientoSesion {

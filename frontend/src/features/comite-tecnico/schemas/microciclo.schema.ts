@@ -9,12 +9,7 @@ export const createMicrocicloSchema = z
     // mesocicloId es OPCIONAL (segun schema.prisma y DTO del backend)
     mesocicloId: z.string().optional(),
 
-    numeroMicrociclo: z.coerce.number().int().min(1).optional(),
-
-    numeroGlobalMicrociclo: z.coerce
-      .number()
-      .int()
-      .min(1, 'El numero global debe ser al menos 1'),
+    codigoMicrociclo: z.string().min(1, 'El codigo de microciclo es requerido'),
 
     fechaInicio: z.string().min(1, 'Fecha de inicio es requerida'),
 
@@ -43,16 +38,6 @@ export const createMicrocicloSchema = z
     sentidoVolumen: z.enum(SentidoCargaValues as [string, ...string[]]).optional(),
 
     sentidoIntensidad: z.enum(SentidoCargaValues as [string, ...string[]]).optional(),
-
-    // Cargas semanales (opcionales)
-    vCarga1: z.coerce.number().optional(),
-    vCarga1Nivel: z.coerce.number().int().optional(),
-    iCarga1: z.coerce.number().optional(),
-    iCarga1Nivel: z.coerce.number().int().optional(),
-    vCarga2: z.coerce.number().optional(),
-    vCarga2Nivel: z.coerce.number().int().optional(),
-    iCarga2: z.coerce.number().optional(),
-    iCarga2Nivel: z.coerce.number().int().optional(),
   })
   .refine((data) => new Date(data.fechaFin) > new Date(data.fechaInicio), {
     message: 'La fecha de fin debe ser posterior a la fecha de inicio',
@@ -66,9 +51,7 @@ export const updateMicrocicloSchema = z
   .object({
     mesocicloId: z.string().optional(),
 
-    numeroMicrociclo: z.coerce.number().int().min(1).optional(),
-
-    numeroGlobalMicrociclo: z.coerce.number().int().min(1).optional(),
+    codigoMicrociclo: z.string().optional(),
 
     fechaInicio: z.string().optional(),
 
@@ -93,15 +76,6 @@ export const updateMicrocicloSchema = z
     sentidoVolumen: z.enum(SentidoCargaValues as [string, ...string[]]).optional(),
 
     sentidoIntensidad: z.enum(SentidoCargaValues as [string, ...string[]]).optional(),
-
-    vCarga1: z.coerce.number().optional(),
-    vCarga1Nivel: z.coerce.number().int().optional(),
-    iCarga1: z.coerce.number().optional(),
-    iCarga1Nivel: z.coerce.number().int().optional(),
-    vCarga2: z.coerce.number().optional(),
-    vCarga2Nivel: z.coerce.number().int().optional(),
-    iCarga2: z.coerce.number().optional(),
-    iCarga2Nivel: z.coerce.number().int().optional(),
   })
   .refine(
     (data) => {

@@ -45,7 +45,6 @@ export const testFisicoSchema = z.object({
   clasificacionVO2max: z.string().nullable(),
   objetivoVO2max: z.number(),
   test1500m: z.string().nullable(),
-  test1500mVO2max: z.string().nullable(),
 
   // Observaciones
   observaciones: z.string().nullable(),
@@ -78,7 +77,7 @@ export const testFisicoSchema = z.object({
   microciclo: z
     .object({
       id: z.string(),
-      numeroGlobalMicrociclo: z.number(),
+      codigoMicrociclo: z.string(),
     })
     .optional(),
 });
@@ -139,7 +138,7 @@ export const registroPostEntrenamientoSchema = z.object({
       tipoSesion: z.string(),
       microciclo: z
         .object({
-          numeroGlobalMicrociclo: z.number(),
+          codigoMicrociclo: z.string(),
         })
         .optional(),
     })
@@ -251,8 +250,7 @@ export type Notificacion = z.infer<typeof notificacionSchema>;
 export const microcicloSchema = z.object({
   id: z.string(),
   mesocicloId: z.string().nullable(),
-  numeroMicrociclo: z.number().int().nullable(),
-  numeroGlobalMicrociclo: z.number().int(),
+  codigoMicrociclo: z.string(),
   fechaInicio: z.coerce.date(),
   fechaFin: z.coerce.date(),
   tipoMicrociclo: z.enum(TipoMicrocicloValues as [string, ...string[]]),
@@ -271,14 +269,6 @@ export const microcicloSchema = z.object({
   sentidoIntensidad: z
     .enum(SentidoCargaValues as [string, ...string[]])
     .nullable(),
-  vCarga1: z.number().nullable(),
-  vCarga1Nivel: z.number().nullable(),
-  iCarga1: z.number().nullable(),
-  iCarga1Nivel: z.number().nullable(),
-  vCarga2: z.number().nullable(),
-  vCarga2Nivel: z.number().nullable(),
-  iCarga2: z.number().nullable(),
-  iCarga2Nivel: z.number().nullable(),
 
   // Metadata
   createdAt: z.coerce.date(),
@@ -350,7 +340,7 @@ export const sesionSchema = z.object({
   microciclo: z
     .object({
       id: z.string(),
-      numeroGlobalMicrociclo: z.number(),
+      codigoMicrociclo: z.string(),
       fechaInicio: z.coerce.date(),
       fechaFin: z.coerce.date(),
     })

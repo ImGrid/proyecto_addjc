@@ -21,8 +21,7 @@ export interface MesocicloResumido {
 export interface Microciclo {
   id: string;
   mesocicloId: string | null;
-  numeroMicrociclo: number;
-  numeroGlobalMicrociclo: number;
+  codigoMicrociclo: string;
   fechaInicio: Date;
   fechaFin: Date;
   tipoMicrociclo: string;
@@ -35,14 +34,6 @@ export interface Microciclo {
   mediaIntensidad: number | null;
   sentidoVolumen: string | null;
   sentidoIntensidad: string | null;
-  vCarga1: number | null;
-  vCarga1Nivel: number | null;
-  iCarga1: number | null;
-  iCarga1Nivel: number | null;
-  vCarga2: number | null;
-  vCarga2Nivel: number | null;
-  iCarga2: number | null;
-  iCarga2Nivel: number | null;
   createdAt: Date;
   updatedAt: Date;
   mesociclo?: MesocicloResumido;
@@ -52,7 +43,7 @@ export interface Microciclo {
 // Tipo para el microciclo resumido (dentro de sesion)
 export interface MicrocicloResumido {
   id: string;
-  numeroGlobalMicrociclo: number;
+  codigoMicrociclo: string;
   fechaInicio: Date;
   fechaFin: Date;
 }

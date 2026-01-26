@@ -319,7 +319,7 @@ function PlanificacionTab({ planificacion }: { planificacion: Microciclo[] }) {
         <Card key={micro.id}>
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center justify-between">
-              <span>Microciclo {micro.numeroGlobalMicrociclo}</span>
+              <span>Microciclo {micro.codigoMicrociclo}</span>
               <Badge variant="outline">{micro.tipoMicrociclo?.replace('_', ' ')}</Badge>
             </CardTitle>
           </CardHeader>

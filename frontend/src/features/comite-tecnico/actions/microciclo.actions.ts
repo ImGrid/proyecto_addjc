@@ -27,8 +27,7 @@ export async function createMicrociclo(
     // Extraer datos del FormData
     const rawData = {
       mesocicloId: formData.get('mesocicloId') || undefined,
-      numeroMicrociclo: formData.get('numeroMicrociclo') || undefined,
-      numeroGlobalMicrociclo: formData.get('numeroGlobalMicrociclo'),
+      codigoMicrociclo: formData.get('codigoMicrociclo'),
       fechaInicio: formData.get('fechaInicio'),
       fechaFin: formData.get('fechaFin'),
       tipoMicrociclo: formData.get('tipoMicrociclo'),
@@ -123,8 +122,7 @@ export async function updateMicrociclo(
     const rawData: Record<string, unknown> = {};
     const fields = [
       'mesocicloId',
-      'numeroMicrociclo',
-      'numeroGlobalMicrociclo',
+      'codigoMicrociclo',
       'fechaInicio',
       'fechaFin',
       'tipoMicrociclo',
@@ -201,7 +199,7 @@ export async function updateMicrociclo(
 
 // Tipos para delete info
 export interface MicrocicloDeleteInfo {
-  numeroMicrociclo: number | null;
+  codigoMicrociclo: string;
   sesiones: number;
 }
 

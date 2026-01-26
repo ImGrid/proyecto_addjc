@@ -140,40 +140,20 @@ export function CreateMicrocicloForm({ mesociclos, preselectedMesocicloId }: Cre
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="numeroGlobalMicrociclo">Numero Global *</Label>
+            <Label htmlFor="codigoMicrociclo">Codigo de Microciclo *</Label>
             <Input
-              type="number"
-              id="numeroGlobalMicrociclo"
-              name="numeroGlobalMicrociclo"
-              min="1"
-              placeholder="1"
-              defaultValue={getPreviousValue('numeroGlobalMicrociclo')}
-              className={getFieldError('numeroGlobalMicrociclo') ? 'border-destructive' : ''}
+              type="text"
+              id="codigoMicrociclo"
+              name="codigoMicrociclo"
+              placeholder="Ej: M1, SEMANA-01"
+              defaultValue={getPreviousValue('codigoMicrociclo')}
+              className={getFieldError('codigoMicrociclo') ? 'border-destructive' : ''}
             />
-            {getFieldError('numeroGlobalMicrociclo') && (
-              <p className="text-sm text-destructive">{getFieldError('numeroGlobalMicrociclo')}</p>
+            {getFieldError('codigoMicrociclo') && (
+              <p className="text-sm text-destructive">{getFieldError('codigoMicrociclo')}</p>
             )}
-            <p className="text-xs text-muted-foreground">Numero unico en toda la planificacion</p>
+            <p className="text-xs text-muted-foreground">Codigo identificador unico del microciclo</p>
           </div>
-
-          {selectedMesociclo && (
-            <div className="space-y-2">
-              <Label htmlFor="numeroMicrociclo">Numero en Mesociclo</Label>
-              <Input
-                type="number"
-                id="numeroMicrociclo"
-                name="numeroMicrociclo"
-                min="1"
-                placeholder="1"
-                defaultValue={getPreviousValue('numeroMicrociclo')}
-                className={getFieldError('numeroMicrociclo') ? 'border-destructive' : ''}
-              />
-              {getFieldError('numeroMicrociclo') && (
-                <p className="text-sm text-destructive">{getFieldError('numeroMicrociclo')}</p>
-              )}
-              <p className="text-xs text-muted-foreground">Semana dentro del mesociclo</p>
-            </div>
-          )}
 
           <div className="space-y-2">
             <Label>Tipo de Microciclo *</Label>

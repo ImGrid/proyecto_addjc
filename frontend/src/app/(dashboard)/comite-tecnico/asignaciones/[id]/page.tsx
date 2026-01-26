@@ -98,7 +98,7 @@ export default async function AsignacionDetallePage({ params }: PageProps) {
             <div>
               <p className="text-sm text-muted-foreground">Numero de Microciclo</p>
               <p className="font-medium text-lg">
-                #{asignacion.microciclo?.numeroGlobalMicrociclo || 'N/A'}
+                #{asignacion.microciclo?.codigoMicrociclo || 'N/A'}
               </p>
             </div>
             <div>

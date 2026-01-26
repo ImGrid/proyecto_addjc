@@ -84,7 +84,7 @@ export default async function PostEntrenamientoPage() {
                           Sesion {registro.sesion.numeroSesion}
                           {registro.sesion.microciclo && (
                             <span className="text-muted-foreground ml-1">
-                              (Mic. {registro.sesion.microciclo.numeroGlobalMicrociclo})
+                              (Mic. {registro.sesion.microciclo.codigoMicrociclo})
                             </span>
                           )}
                         </span>

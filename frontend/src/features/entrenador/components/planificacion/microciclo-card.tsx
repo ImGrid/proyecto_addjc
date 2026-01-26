@@ -28,16 +28,9 @@ export function MicrocicloCard({ microciclo }: MicrocicloCardProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between pb-2">
-        <div>
-          <CardTitle className="text-lg">
-            Microciclo #{microciclo.numeroGlobalMicrociclo}
-          </CardTitle>
-          {microciclo.numeroMicrociclo && (
-            <p className="text-sm text-muted-foreground">
-              Semana {microciclo.numeroMicrociclo} del mesociclo
-            </p>
-          )}
-        </div>
+        <CardTitle className="text-lg">
+          Microciclo {microciclo.codigoMicrociclo}
+        </CardTitle>
         <Badge variant={tipoVariants[microciclo.tipoMicrociclo] || 'outline'}>
           {microciclo.tipoMicrociclo}
         </Badge>

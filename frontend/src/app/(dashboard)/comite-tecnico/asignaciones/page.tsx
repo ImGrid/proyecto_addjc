@@ -80,7 +80,7 @@ export default async function AsignacionesPage() {
                         {asignacion.atleta?.nombreCompleto || 'N/A'}
                       </TableCell>
                       <TableCell>
-                        Microciclo {asignacion.microciclo?.numeroGlobalMicrociclo || 'N/A'}
+                        Microciclo {asignacion.microciclo?.codigoMicrociclo || 'N/A'}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {asignacion.microciclo?.fechaInicio && asignacion.microciclo?.fechaFin

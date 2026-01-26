@@ -98,7 +98,7 @@ export const sesionResumenSchema = z.object({
   numeroSesion: z.number().int(),
   tipoSesion: z.string(),
   microciclo: z.object({
-    numeroGlobalMicrociclo: z.number().int(),
+    codigoMicrociclo: z.string(),
   }).optional(),
 });
 

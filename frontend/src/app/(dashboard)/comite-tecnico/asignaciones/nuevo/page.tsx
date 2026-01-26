@@ -20,7 +20,7 @@ export default async function NuevaAsignacionPage() {
 
   const microciclos = (microciclosResult?.data || []).map((m) => ({
     id: m.id,
-    numeroGlobalMicrociclo: m.numeroGlobalMicrociclo,
+    codigoMicrociclo: m.codigoMicrociclo,
     fechaInicio: m.fechaInicio,
     fechaFin: m.fechaFin,
   }));

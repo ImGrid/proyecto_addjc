@@ -105,7 +105,7 @@ export default async function TestFisicoDetallePage({ params }: TestFisicoDetall
             {test.microciclo && (
               <div>
                 <p className="text-sm text-muted-foreground">Microciclo</p>
-                <p className="font-medium">Semana {test.microciclo.numeroGlobalMicrociclo}</p>
+                <p className="font-medium">Semana {test.microciclo.codigoMicrociclo}</p>
               </div>
             )}
           </CardContent>
