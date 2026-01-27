@@ -1,5 +1,6 @@
 import { NestFactory, HttpAdapterHost } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import compression from 'compression';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { BigIntTransformInterceptor } from './common/interceptors/bigint-transform.interceptor';
@@ -8,6 +9,9 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn', 'log'], // Excluir 'debug' y 'verbose'
   });
+
+  // Habilitar compresion gzip para respuestas HTTP
+  app.use(compression());
 
   // Configurar ValidationPipe global para validar DTOs automaticamente
   app.useGlobalPipes(

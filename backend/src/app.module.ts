@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { CacheModule } from '@nestjs/cache-manager';
 import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -38,6 +39,12 @@ import { databaseConfig, jwtConfig, appConfig, validationSchema } from './config
         allowUnknown: true,
         abortEarly: false,
       },
+    }),
+    // Cache in-memory para ranking y datos frecuentes
+    CacheModule.register({
+      isGlobal: true,
+      ttl: 60000, // 60s default (milisegundos, cache-manager v5)
+      max: 100,
     }),
     // Modulo para tareas programadas (cron jobs)
     ScheduleModule.forRoot(),

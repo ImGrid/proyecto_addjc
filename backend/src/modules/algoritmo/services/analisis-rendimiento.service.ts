@@ -49,6 +49,12 @@ interface RendimientoConContexto {
   dificultadPercibida: number | null;
 }
 
+// Datos de dolencia activa precargada
+interface DolenciaActiva {
+  zona: string;
+  tipoLesion: string | null;
+}
+
 // Alternativa sugerida para un ejercicio problematico
 export interface AlternativaSugerida {
   ejercicioId: bigint;
@@ -157,22 +163,35 @@ export class AnalisisRendimientoService {
       );
     }
 
-    // 5. Agrupar por tipo de ejercicio
+    // 5. Preconsultar dolencias activas UNA sola vez para reutilizar
+    const dolenciasActivas = await this.prisma.dolencia.findMany({
+      where: {
+        recuperado: false,
+        registroPostEntrenamiento: { atletaId },
+      },
+      select: { zona: true, tipoLesion: true },
+    });
+
+    // 6. Agrupar por tipo de ejercicio
     const porTipo = this.agruparPorTipoEjercicio(rendimientos);
 
-    // 6. Calcular metricas por tipo
-    const rendimientoPorTipo = await this.calcularMetricasPorTipo(porTipo, atletaId);
-
-    // 7. Identificar ejercicios problematicos
-    const ejerciciosProblematicos = await this.identificarEjerciciosProblematicos(
-      rendimientos,
-      atletaId
+    // 7. Calcular metricas por tipo (pasando dolencias precargadas)
+    const rendimientoPorTipo = await this.calcularMetricasPorTipo(
+      porTipo,
+      atletaId,
+      dolenciasActivas
     );
 
-    // 8. Detectar patrones
+    // 8. Identificar ejercicios problematicos (pasando dolencias precargadas)
+    const ejerciciosProblematicos = await this.identificarEjerciciosProblematicos(
+      rendimientos,
+      dolenciasActivas
+    );
+
+    // 9. Detectar patrones
     const patrones = this.detectarPatrones(rendimientoPorTipo, ejerciciosProblematicos);
 
-    // 9. Determinar si requiere atencion
+    // 10. Determinar si requiere atencion
     const { requiereAtencion, prioridadAtencion } = this.evaluarAtencion(patrones);
 
     return {
@@ -269,7 +288,8 @@ export class AnalisisRendimientoService {
   // Calcula metricas (Z-Score, tendencia) por cada tipo de ejercicio
   private async calcularMetricasPorTipo(
     porTipo: Map<TipoEjercicio, RendimientoConContexto[]>,
-    atletaId: bigint
+    atletaId: bigint,
+    dolenciasActivas: DolenciaActiva[]
   ): Promise<RendimientoPorTipo[]> {
     const resultado: RendimientoPorTipo[] = [];
 
@@ -300,15 +320,18 @@ export class AnalisisRendimientoService {
       // Calcular tendencia
       const tendencia = calcularTendencia(puntosTendencia);
 
-      // Identificar ejercicios problematicos de este tipo
+      // Identificar ejercicios problematicos de este tipo (reutilizando dolencias)
       const ejerciciosProblematicos = await this.identificarEjerciciosProblematicosEnTipo(
         registros,
-        atletaId
+        dolenciasActivas
       );
 
-      // Buscar alternativas a nivel de tipo
-      // Estas se usan cuando hay bajo rendimiento en el tipo pero no hay ejercicios especificos repetidos
-      const alternativasSugeridasDelTipo = await this.buscarAlternativasPorTipo(tipo, atletaId);
+      // Buscar alternativas a nivel de tipo (reutilizando dolencias)
+      const alternativasSugeridasDelTipo = await this.buscarAlternativasPorTipo(
+        tipo,
+        dolenciasActivas,
+        atletaId
+      );
 
       resultado.push({
         tipo,
@@ -350,7 +373,7 @@ export class AnalisisRendimientoService {
   // Identifica ejercicios problematicos en un tipo especifico
   private async identificarEjerciciosProblematicosEnTipo(
     registros: RendimientoConContexto[],
-    atletaId: bigint
+    dolenciasActivas: DolenciaActiva[]
   ): Promise<EjercicioProblematico[]> {
     // Agrupar por ejercicio
     const porEjercicio = new Map<
@@ -402,11 +425,11 @@ export class AnalisisRendimientoService {
         }));
         const tendenciaEj = calcularTendencia(puntos);
 
-        // Buscar alternativas
+        // Buscar alternativas (reutilizando dolencias precargadas)
         const alternativas = await this.buscarAlternativas(
           ejercicio.ejercicioTipo,
           ejercicio.ejercicioNivel,
-          atletaId
+          dolenciasActivas
         );
 
         problematicos.push({
@@ -433,16 +456,17 @@ export class AnalisisRendimientoService {
   // Identifica todos los ejercicios problematicos del atleta
   private async identificarEjerciciosProblematicos(
     rendimientos: RendimientoConContexto[],
-    atletaId: bigint
+    dolenciasActivas: DolenciaActiva[]
   ): Promise<EjercicioProblematico[]> {
-    return this.identificarEjerciciosProblematicosEnTipo(rendimientos, atletaId);
+    return this.identificarEjerciciosProblematicosEnTipo(rendimientos, dolenciasActivas);
   }
 
   // Busca ejercicios alternativos del mismo tipo pero menor dificultad
+  // Recibe dolencias precargadas para evitar queries redundantes
   private async buscarAlternativas(
     tipo: TipoEjercicio,
     nivelActual: number,
-    atletaId: bigint
+    dolenciasActivas: DolenciaActiva[]
   ): Promise<AlternativaSugerida[]> {
     // Buscar ejercicios del mismo tipo con menor o igual dificultad
     const alternativas = await this.prisma.catalogoEjercicios.findMany({
@@ -458,15 +482,6 @@ export class AnalisisRendimientoService {
       },
       orderBy: { nivelDificultad: 'asc' },
       take: CONFIGURACION_ANALISIS.MAX_ALTERNATIVAS_POR_EJERCICIO + 2, // Tomar extras por si hay que filtrar
-    });
-
-    // Obtener dolencias activas del atleta para filtrar
-    const dolenciasActivas = await this.prisma.dolencia.findMany({
-      where: {
-        recuperado: false,
-        registroPostEntrenamiento: { atletaId },
-      },
-      select: { zona: true },
     });
 
     // Zonas afectadas para futuro filtrado por zonasCuerpo del ejercicio
@@ -496,46 +511,36 @@ export class AnalisisRendimientoService {
 
   // Busca alternativas para un TIPO de ejercicio completo
   // Se usa cuando hay bajo rendimiento en un tipo pero no hay ejercicios especificos que se repitan
-  // Considera: perfil del atleta, dolencias activas, nivel de dificultad
+  // Recibe dolencias precargadas para evitar queries redundantes
   async buscarAlternativasPorTipo(
     tipo: TipoEjercicio,
-    atletaId: bigint
+    dolenciasActivas: DolenciaActiva[],
+    atletaId?: bigint
   ): Promise<AlternativaSugerida[]> {
-    // 1. Obtener ultimo test fisico del atleta para determinar su nivel
-    const ultimoTest = await this.prisma.testFisico.findFirst({
-      where: { atletaId },
-      orderBy: { fechaTest: 'desc' },
-      select: { navettePalier: true },
-    });
-
-    // 2. Determinar nivel de dificultad apropiado segun el perfil
-    // Si no hay test, asumir nivel basico (1-2)
-    // Si tiene test, usar navettePalier para estimar nivel
+    // 1. Determinar nivel de dificultad apropiado segun el perfil del atleta
     let nivelMaximo = 3; // Por defecto, nivel basico-intermedio
-    if (ultimoTest?.navettePalier) {
-      const palier = Number(ultimoTest.navettePalier);
-      // Palier 1-4: nivel 1-2, Palier 5-8: nivel 2-3, Palier 9+: nivel 3-5
-      if (palier <= 4) {
-        nivelMaximo = 2;
-      } else if (palier <= 8) {
-        nivelMaximo = 3;
-      } else {
-        nivelMaximo = 5;
+    if (atletaId) {
+      const ultimoTest = await this.prisma.testFisico.findFirst({
+        where: { atletaId },
+        orderBy: { fechaTest: 'desc' },
+        select: { navettePalier: true },
+      });
+      if (ultimoTest?.navettePalier) {
+        const palier = Number(ultimoTest.navettePalier);
+        // Palier 1-4: nivel 1-2, Palier 5-8: nivel 2-3, Palier 9+: nivel 3-5
+        if (palier <= 4) {
+          nivelMaximo = 2;
+        } else if (palier <= 8) {
+          nivelMaximo = 3;
+        } else {
+          nivelMaximo = 5;
+        }
       }
     }
 
-    // 3. Obtener dolencias activas para excluir ejercicios contraindicados
-    const dolenciasActivas = await this.prisma.dolencia.findMany({
-      where: {
-        recuperado: false,
-        registroPostEntrenamiento: { atletaId },
-      },
-      select: { zona: true, tipoLesion: true },
-    });
-
     const zonasAfectadas = dolenciasActivas.map((d) => d.zona.toLowerCase());
 
-    // 4. Buscar ejercicios del tipo especificado con dificultad apropiada
+    // 3. Buscar ejercicios del tipo especificado con dificultad apropiada
     const ejerciciosDelTipo = await this.prisma.catalogoEjercicios.findMany({
       where: {
         tipo,
@@ -553,7 +558,7 @@ export class AnalisisRendimientoService {
       orderBy: { nivelDificultad: 'asc' },
     });
 
-    // 5. Filtrar ejercicios que no agraven lesiones activas
+    // 4. Filtrar ejercicios que no agraven lesiones activas
     const alternativasFiltradas: AlternativaSugerida[] = [];
 
     for (const ejercicio of ejerciciosDelTipo) {

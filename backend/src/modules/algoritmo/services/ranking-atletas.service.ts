@@ -2,7 +2,9 @@
 // Usa las funciones de ranking.service.ts y score.calculator.ts
 // Obtiene datos de la BD y genera ranking por categoria de peso
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import { PrismaService } from '../../../database/prisma.service';
 import { CategoriaPeso } from '@prisma/client';
 import {
@@ -12,19 +14,41 @@ import {
   ResultadoRanking,
 } from './ranking.service';
 
+// Tipo para el resultado de estadisticas (usado para cache tipado)
+interface EstadisticasRankingResult {
+  estadisticas: {
+    categoria: string;
+    totalAtletas: number;
+    aptos: number;
+    reservas: number;
+    noAptos: number;
+    mejorPuntuacion: number;
+  }[];
+  totalGeneral: number;
+}
+
 @Injectable()
 export class RankingAtletasService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(CACHE_MANAGER) private cache: Cache
+  ) {}
 
   // Genera ranking de atletas para una categoria de peso especifica
   async generarRankingPorCategoria(categoriaPeso: CategoriaPeso): Promise<ResultadoRanking> {
+    const cacheKey = `ranking:${categoriaPeso}`;
+    const cached = await this.cache.get<ResultadoRanking>(cacheKey);
+    if (cached) return cached;
+
     // 1. Obtener atletas de la categoria con sus datos completos
     const atletas = await this.obtenerAtletasConDatos(categoriaPeso);
 
     // 2. Generar ranking usando la logica existente
     const ranking = generarRanking(atletas, categoriaPeso);
 
-    return this.formatearResultado(ranking);
+    const resultado = this.formatearResultado(ranking);
+    await this.cache.set(cacheKey, resultado, 30000);
+    return resultado;
   }
 
   // Genera ranking global para todas las categorias
@@ -35,7 +59,7 @@ export class RankingAtletasService {
     // 2. Generar ranking global
     const rankingsMap = generarRankingGlobal(atletas);
 
-    // 3. Convertir Map a objeto para mejor serialización
+    // 3. Convertir Map a objeto para mejor serializacion
     const resultado = new Map<string, ResultadoRanking>();
     rankingsMap.forEach((ranking, categoria) => {
       resultado.set(categoria, this.formatearResultado(ranking));
@@ -46,6 +70,10 @@ export class RankingAtletasService {
 
   // Obtiene ranking global como objeto (para serializar en JSON)
   async generarRankingGlobalComoObjeto(): Promise<Record<string, ResultadoRanking>> {
+    const cacheKey = 'ranking:global';
+    const cached = await this.cache.get<Record<string, ResultadoRanking>>(cacheKey);
+    if (cached) return cached;
+
     const atletas = await this.obtenerAtletasConDatos(null);
     const rankingsMap = generarRankingGlobal(atletas);
 
@@ -54,19 +82,23 @@ export class RankingAtletasService {
       resultado[categoria] = this.formatearResultado(ranking);
     });
 
+    await this.cache.set(cacheKey, resultado, 60000);
     return resultado;
   }
 
   // Obtiene los mejores N atletas de una categoria
+  // Ya usa cache indirectamente via generarRankingPorCategoria (30s TTL)
   async obtenerMejoresAtletas(categoriaPeso: CategoriaPeso, cantidad: number = 5) {
     const ranking = await this.generarRankingPorCategoria(categoriaPeso);
 
-    return {
+    const resultado = {
       categoriaPeso,
       mejores: ranking.ranking.slice(0, cantidad),
       totalAtletas: ranking.totalAtletas,
       resumen: ranking.resumen,
     };
+
+    return resultado;
   }
 
   // Obtiene el ranking de un atleta especifico
@@ -122,6 +154,7 @@ export class RankingAtletasService {
   }
 
   // Obtiene atletas con todos sus datos necesarios para ranking
+  // Optimizado: usa una sola raw query para dolencias en vez de N+1
   private async obtenerAtletasConDatos(
     categoriaPeso: CategoriaPeso | null
   ): Promise<DatosAtletaParaRanking[]> {
@@ -130,7 +163,7 @@ export class RankingAtletasService {
       whereClause.categoriaPeso = categoriaPeso;
     }
 
-    // Obtener atletas con tests, registros y dolencias
+    // Obtener atletas con tests y registros
     const atletas = await this.prisma.atleta.findMany({
       where: whereClause,
       include: {
@@ -163,48 +196,50 @@ export class RankingAtletasService {
       },
     });
 
-    // Obtener conteo de dolencias activas para cada atleta
-    const atletasConDolencias = await Promise.all(
-      atletas.map(async (atleta) => {
-        const dolenciasActivas = await this.prisma.dolencia.count({
-          where: {
-            recuperado: false,
-            registroPostEntrenamiento: {
-              atletaId: atleta.id,
-            },
-          },
-        });
+    // Obtener conteo de dolencias activas para TODOS los atletas en una sola query
+    const dolenciasPorAtleta = await this.prisma.$queryRaw<{ atletaId: bigint; count: bigint }[]>`
+      SELECT r."atletaId", COUNT(d.id)::bigint as count
+      FROM dolencias d
+      JOIN registros_post_entrenamiento r ON d."registroPostEntrenamientoId" = r.id
+      WHERE d.recuperado = false
+      GROUP BY r."atletaId"
+    `;
 
-        const ultimoTest = atleta.testsFisicos[0] || null;
+    // Construir Map para lookup O(1)
+    const dolenciasMap = new Map<string, number>();
+    for (const row of dolenciasPorAtleta) {
+      dolenciasMap.set(row.atletaId.toString(), Number(row.count));
+    }
 
-        return {
-          atletaId: atleta.id,
-          nombreCompleto: atleta.usuario.nombreCompleto,
-          categoriaPeso: atleta.categoriaPeso,
-          pesoActual: atleta.pesoActual ? Number(atleta.pesoActual) : null,
-          edad: atleta.edad,
-          ultimoTest: ultimoTest
-            ? {
-                fechaTest: ultimoTest.fechaTest,
-                pressBanca: ultimoTest.pressBanca ? Number(ultimoTest.pressBanca) : null,
-                tiron: ultimoTest.tiron ? Number(ultimoTest.tiron) : null,
-                sentadilla: ultimoTest.sentadilla ? Number(ultimoTest.sentadilla) : null,
-                barraFija: ultimoTest.barraFija,
-                paralelas: ultimoTest.paralelas,
-                navetteVO2max: ultimoTest.navetteVO2max ? Number(ultimoTest.navetteVO2max) : null,
-              }
-            : null,
-          ultimosRegistros: atleta.registrosPostEntrenamiento.map((r) => ({
-            rpe: r.rpe,
-            calidadSueno: r.calidadSueno,
-            estadoAnimico: r.estadoAnimico,
-          })),
-          dolenciasActivas,
-        };
-      })
-    );
+    return atletas.map((atleta) => {
+      const ultimoTest = atleta.testsFisicos[0] || null;
+      const dolenciasActivas = dolenciasMap.get(atleta.id.toString()) || 0;
 
-    return atletasConDolencias;
+      return {
+        atletaId: atleta.id,
+        nombreCompleto: atleta.usuario.nombreCompleto,
+        categoriaPeso: atleta.categoriaPeso,
+        pesoActual: atleta.pesoActual ? Number(atleta.pesoActual) : null,
+        edad: atleta.edad,
+        ultimoTest: ultimoTest
+          ? {
+              fechaTest: ultimoTest.fechaTest,
+              pressBanca: ultimoTest.pressBanca ? Number(ultimoTest.pressBanca) : null,
+              tiron: ultimoTest.tiron ? Number(ultimoTest.tiron) : null,
+              sentadilla: ultimoTest.sentadilla ? Number(ultimoTest.sentadilla) : null,
+              barraFija: ultimoTest.barraFija,
+              paralelas: ultimoTest.paralelas,
+              navetteVO2max: ultimoTest.navetteVO2max ? Number(ultimoTest.navetteVO2max) : null,
+            }
+          : null,
+        ultimosRegistros: atleta.registrosPostEntrenamiento.map((r) => ({
+          rpe: r.rpe,
+          calidadSueno: r.calidadSueno,
+          estadoAnimico: r.estadoAnimico,
+        })),
+        dolenciasActivas,
+      };
+    });
   }
 
   // Formatea el resultado para serializar BigInt
@@ -225,38 +260,37 @@ export class RankingAtletasService {
   }
 
   // Obtiene estadisticas de ranking por categoria
+  // Optimizado: una sola consulta de atletas en vez de 7 consultas separadas
   async obtenerEstadisticasRanking() {
-    const categorias: CategoriaPeso[] = [
-      'MENOS_60K',
-      'MENOS_66K',
-      'MENOS_73K',
-      'MENOS_81K',
-      'MENOS_90K',
-      'MENOS_100K',
-      'MAS_100K',
-    ];
+    const cacheKey = 'ranking:estadisticas';
+    const cached = await this.cache.get<EstadisticasRankingResult>(cacheKey);
+    if (cached) return cached;
 
-    const estadisticas = await Promise.all(
-      categorias.map(async (categoria) => {
-        const ranking = await this.generarRankingPorCategoria(categoria);
-        const aptos = ranking.ranking.filter((a) => a.aptoPara === 'COMPETIR').length;
-        const reservas = ranking.ranking.filter((a) => a.aptoPara === 'RESERVA').length;
-        const noAptos = ranking.ranking.filter((a) => a.aptoPara === 'NO_APTO').length;
+    const atletas = await this.obtenerAtletasConDatos(null);
+    const rankingsMap = generarRankingGlobal(atletas);
 
-        return {
-          categoria,
-          totalAtletas: ranking.totalAtletas,
-          aptos,
-          reservas,
-          noAptos,
-          mejorPuntuacion: ranking.mejorAtleta?.puntuacion || 0,
-        };
-      })
-    );
+    const estadisticas = [...rankingsMap.entries()].map(([categoria, ranking]) => {
+      const formateado = this.formatearResultado(ranking);
+      const aptos = formateado.ranking.filter((a) => a.aptoPara === 'COMPETIR').length;
+      const reservas = formateado.ranking.filter((a) => a.aptoPara === 'RESERVA').length;
+      const noAptos = formateado.ranking.filter((a) => a.aptoPara === 'NO_APTO').length;
 
-    return {
+      return {
+        categoria,
+        totalAtletas: formateado.totalAtletas,
+        aptos,
+        reservas,
+        noAptos,
+        mejorPuntuacion: formateado.mejorAtleta?.puntuacion || 0,
+      };
+    });
+
+    const resultado: EstadisticasRankingResult = {
       estadisticas: estadisticas.filter((e) => e.totalAtletas > 0),
       totalGeneral: estadisticas.reduce((sum, e) => sum + e.totalAtletas, 0),
     };
+
+    await this.cache.set(cacheKey, resultado, 60000);
+    return resultado;
   }
 }
