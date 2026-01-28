@@ -1,17 +1,40 @@
 // Controller para exponer el analisis de rendimiento por ejercicio
 // Permite al frontend consultar el analisis y recomendaciones de un atleta
 
-import { Controller, Get, Param, Query, UseGuards, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards, ParseIntPipe, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
+import { CurrentUser } from '../../../common/decorators/current-user.decorator';
+import { AccessControlService } from '../../../common/services/access-control.service';
 import { AnalisisRendimientoService } from '../services/analisis-rendimiento.service';
 import { evaluarReglas, ContextoEvaluacion } from '../reglas';
 
 @Controller('algoritmo/analisis')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class AnalisisRendimientoController {
-  constructor(private readonly analisisService: AnalisisRendimientoService) {}
+  constructor(
+    private readonly analisisService: AnalisisRendimientoService,
+    private readonly accessControl: AccessControlService,
+  ) {}
+
+  // Obtener mi analisis de rendimiento (solo ATLETA)
+  // GET /api/algoritmo/analisis/mi-analisis
+  // Resuelve el atletaId a partir del userId del token JWT
+  @Get('mi-analisis')
+  @Roles('ATLETA')
+  async obtenerMiAnalisis(
+    @CurrentUser() user: any,
+    @Query('dias') dias?: string
+  ) {
+    const atletaId = await this.accessControl.getAtletaId(BigInt(user.id));
+
+    if (!atletaId) {
+      throw new BadRequestException('No se encontro perfil de atleta');
+    }
+
+    return this.ejecutarAnalisis(Number(atletaId), dias);
+  }
 
   // Obtener analisis completo de rendimiento de un atleta
   // GET /api/algoritmo/analisis/:atletaId
@@ -19,8 +42,26 @@ export class AnalisisRendimientoController {
   @Roles('COMITE_TECNICO', 'ENTRENADOR', 'ADMINISTRADOR')
   async obtenerAnalisis(
     @Param('atletaId', ParseIntPipe) atletaId: number,
-    @Query('dias') dias?: string
+    @Query('dias') dias?: string,
+    @CurrentUser() user?: any
   ) {
+    // ENTRENADOR solo puede ver analisis de sus atletas asignados
+    if (user && user.rol === 'ENTRENADOR') {
+      const hasAccess = await this.accessControl.checkAtletaOwnership(
+        BigInt(user.id),
+        user.rol,
+        BigInt(atletaId),
+      );
+      if (!hasAccess) {
+        throw new ForbiddenException('Solo puedes ver el analisis de tus atletas asignados');
+      }
+    }
+
+    return this.ejecutarAnalisis(atletaId, dias);
+  }
+
+  // Logica compartida de analisis
+  private async ejecutarAnalisis(atletaId: number, dias?: string) {
     const diasAnalisis = dias ? parseInt(dias, 10) : 30;
     const atletaIdBigInt = BigInt(atletaId);
 
@@ -106,8 +147,21 @@ export class AnalisisRendimientoController {
   @Roles('COMITE_TECNICO', 'ENTRENADOR', 'ADMINISTRADOR')
   async obtenerRecomendaciones(
     @Param('atletaId', ParseIntPipe) atletaId: number,
-    @Query('dias') dias?: string
+    @Query('dias') dias?: string,
+    @CurrentUser() user?: any
   ) {
+    // ENTRENADOR solo puede ver recomendaciones de sus atletas asignados
+    if (user && user.rol === 'ENTRENADOR') {
+      const hasAccess = await this.accessControl.checkAtletaOwnership(
+        BigInt(user.id),
+        user.rol,
+        BigInt(atletaId),
+      );
+      if (!hasAccess) {
+        throw new ForbiddenException('Solo puedes ver las recomendaciones de tus atletas asignados');
+      }
+    }
+
     const diasAnalisis = dias ? parseInt(dias, 10) : 30;
     const atletaIdBigInt = BigInt(atletaId);
 

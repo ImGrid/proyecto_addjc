@@ -82,6 +82,27 @@ export class RegistroPostEntrenamientoService {
       // Para ENTRENAMIENTO/RECUPERACION: todos los campos de entrenamiento son requeridos
       const esCompetencia = sesion.tipoSesion === 'COMPETENCIA';
 
+      // Validar rendimiento por ejercicio obligatorio (asistio=true y NO competencia)
+      if (!esCompetencia && dto.asistio) {
+        // Verificar que la sesion tiene ejercicios asignados
+        const cantidadEjercicios = await tx.ejercicioSesion.count({
+          where: { sesionId: sesionId },
+        });
+
+        if (cantidadEjercicios === 0) {
+          throw new BadRequestException(
+            'Esta sesion no tiene ejercicios asignados. No se puede registrar rendimiento por ejercicio.'
+          );
+        }
+
+        // Validar que se enviaron rendimientos
+        if (!dto.rendimientosEjercicios || dto.rendimientosEjercicios.length === 0) {
+          throw new BadRequestException(
+            'Debe registrar el rendimiento de al menos 1 ejercicio para sesiones de entrenamiento/recuperacion'
+          );
+        }
+      }
+
       if (!esCompetencia && dto.asistio) {
         // Si asistio y NO es competencia, validar campos de entrenamiento
         if (dto.ejerciciosCompletados === undefined || dto.ejerciciosCompletados === null) {
@@ -220,8 +241,8 @@ export class RegistroPostEntrenamientoService {
         },
       });
 
-      // 5.1 Guardar rendimientos por ejercicio si se proporcionan
-      // Esto permite el analisis de rendimiento por ejercicio individual
+      // 5.1 Guardar rendimientos por ejercicio
+      // Obligatorio para sesiones de entrenamiento/recuperacion cuando asistio=true
       let rendimientosGuardados = 0;
       if (dto.rendimientosEjercicios && dto.rendimientosEjercicios.length > 0) {
         // Validar que los ejercicioSesionId pertenecen a la sesion
@@ -385,7 +406,11 @@ export class RegistroPostEntrenamientoService {
     atletaId?: string,
     sesionId?: string,
     page = 1,
-    limit = 10
+    limit = 10,
+    fechaDesde?: string,
+    fechaHasta?: string,
+    asistio?: string,
+    rpeMin?: number
   ) {
     const skip = (page - 1) * limit;
 
@@ -428,6 +453,30 @@ export class RegistroPostEntrenamientoService {
     }
     if (sesionId) {
       whereClause.sesionId = BigInt(sesionId);
+    }
+
+    // Filtro por rango de fechas (campo: fechaRegistro)
+    if (fechaDesde || fechaHasta) {
+      whereClause.fechaRegistro = {};
+      if (fechaDesde) {
+        whereClause.fechaRegistro.gte = new Date(fechaDesde);
+      }
+      if (fechaHasta) {
+        // Incluir todo el dia de fechaHasta (hasta las 23:59:59)
+        const hasta = new Date(fechaHasta);
+        hasta.setHours(23, 59, 59, 999);
+        whereClause.fechaRegistro.lte = hasta;
+      }
+    }
+
+    // Filtro por asistencia (campo: asistio)
+    if (asistio === 'true' || asistio === 'false') {
+      whereClause.asistio = asistio === 'true';
+    }
+
+    // Filtro por RPE minimo (campo: rpe)
+    if (rpeMin !== undefined && rpeMin >= 1 && rpeMin <= 10) {
+      whereClause.rpe = { gte: rpeMin };
     }
 
     const [registros, total] = await Promise.all([

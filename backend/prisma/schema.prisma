@@ -225,7 +225,6 @@ model TestFisico {
   navettePalier        Decimal?                @db.Decimal(5, 2)
   navetteVO2max        Decimal?                @db.Decimal(5, 2)
   test1500m            String?                 @db.VarChar(10)
-  test1500mVO2max      Decimal?                @db.Decimal(5, 2)
   observaciones        String?
   condicionesTest      String?
   createdAt            DateTime                @default(now())

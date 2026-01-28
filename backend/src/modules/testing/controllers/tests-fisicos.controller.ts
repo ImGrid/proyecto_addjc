@@ -30,6 +30,9 @@ export class TestsFisicosController {
     @CurrentUser() user: any,
     @Query('atletaId') atletaId?: string,
     @Query('microcicloId') microcicloId?: string,
+    @Query('fechaDesde') fechaDesde?: string,
+    @Query('fechaHasta') fechaHasta?: string,
+    @Query('asistio') asistio?: string,
     @Query('page', new ParseIntPipe({ optional: true })) page = 1,
     @Query('limit', new ParseIntPipe({ optional: true })) limit = 10
   ) {
@@ -39,7 +42,10 @@ export class TestsFisicosController {
       atletaId,
       microcicloId,
       page,
-      limit
+      limit,
+      fechaDesde,
+      fechaHasta,
+      asistio
     );
   }
 

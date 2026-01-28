@@ -15,11 +15,17 @@ import { CalendarClock, Activity, FileText } from 'lucide-react';
 import { DiaSemanaValues, TipoSesionValues, TurnoValues } from '@/types/enums';
 import type { MicrocicloParaSelector, SesionCompleta } from '../../actions/fetch-planificacion';
 import { formatDateForInput } from '@/lib/date-utils';
+import type { EjerciciosPorTipoResponse } from '@/features/algoritmo/types/algoritmo.types';
+import type { EjercicioSesionItem } from '@/features/entrenador/actions/fetch-ejercicios-sesion';
+import { EjerciciosSelector } from './ejercicios-selector';
+import type { EjercicioSeleccionado } from './ejercicios-selector';
 
 interface EditSesionFormProps {
   sesion: SesionCompleta;
   microciclos: MicrocicloParaSelector[];
   redirectUrl: string;
+  catalogoPorTipo?: EjerciciosPorTipoResponse | null;
+  ejerciciosExistentes?: EjercicioSesionItem[];
 }
 
 // Mapeo de dias para formato legible
@@ -50,7 +56,13 @@ const TURNO_LABELS: Record<string, string> = {
 // Tipos de sesion que NO requieren campos de planificacion detallada ni contenidos
 const TIPOS_SIN_PLANIFICACION = ['COMPETENCIA', 'DESCANSO'];
 
-export function EditSesionForm({ sesion, microciclos, redirectUrl }: EditSesionFormProps) {
+export function EditSesionForm({
+  sesion,
+  microciclos,
+  redirectUrl,
+  catalogoPorTipo,
+  ejerciciosExistentes,
+}: EditSesionFormProps) {
   const router = useRouter();
   const hasShownToast = useRef(false);
 
@@ -63,6 +75,24 @@ export function EditSesionForm({ sesion, microciclos, redirectUrl }: EditSesionF
   const [selectedDia, setSelectedDia] = useState(sesion.diaSemana);
   const [selectedTipo, setSelectedTipo] = useState(sesion.tipoSesion);
   const [selectedTurno, setSelectedTurno] = useState(sesion.turno);
+
+  // Pre-poblar ejercicios existentes
+  const [ejerciciosSeleccionados, setEjerciciosSeleccionados] = useState<EjercicioSeleccionado[]>(
+    () => {
+      if (!ejerciciosExistentes || ejerciciosExistentes.length === 0) return [];
+      return ejerciciosExistentes.map((e) => ({
+        ejercicioId: e.ejercicioId,
+        nombre: e.nombre,
+        tipo: e.tipo,
+        orden: e.orden,
+        duracionMinutos: e.duracionMinutos ?? undefined,
+        repeticiones: e.repeticiones ?? undefined,
+        series: e.series ?? undefined,
+        intensidad: e.intensidad ?? undefined,
+        observaciones: e.observaciones ?? undefined,
+      }));
+    }
+  );
 
   // Determina si mostrar campos de planificacion detallada y contenidos
   const showPlanificacionDetallada = !TIPOS_SIN_PLANIFICACION.includes(selectedTipo);
@@ -402,6 +432,24 @@ export function EditSesionForm({ sesion, microciclos, redirectUrl }: EditSesionF
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Ejercicios del Catalogo - Solo para tipos con planificacion */}
+      {showPlanificacionDetallada && catalogoPorTipo && (
+        <>
+          <EjerciciosSelector
+            catalogoPorTipo={catalogoPorTipo}
+            value={ejerciciosSeleccionados}
+            onChange={setEjerciciosSeleccionados}
+          />
+          <input
+            type="hidden"
+            name="ejerciciosJSON"
+            value={JSON.stringify(
+              ejerciciosSeleccionados.map(({ nombre, tipo, ...rest }) => rest)
+            )}
+          />
+        </>
       )}
 
       {/* Observaciones */}

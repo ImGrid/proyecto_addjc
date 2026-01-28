@@ -14,9 +14,11 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
   ParseBoolPipe,
+  ForbiddenException,
 } from '@nestjs/common';
 import { NotificacionesService } from '../services/notificaciones.service';
 import { AlertasSistemaService } from '../services/alertas-sistema.service';
+import { AccessControlService } from '../../../common/services/access-control.service';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -27,7 +29,8 @@ import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 export class NotificacionesController {
   constructor(
     private readonly notificacionesService: NotificacionesService,
-    private readonly alertasService: AlertasSistemaService
+    private readonly alertasService: AlertasSistemaService,
+    private readonly accessControl: AccessControlService,
   ) {}
 
   // =====================
@@ -99,8 +102,21 @@ export class NotificacionesController {
   @Roles('COMITE_TECNICO', 'ENTRENADOR')
   async obtenerAlertasAtleta(
     @Param('atletaId') atletaId: string,
-    @Query('soloNoLeidas', new DefaultValuePipe(false), ParseBoolPipe) soloNoLeidas: boolean
+    @Query('soloNoLeidas', new DefaultValuePipe(false), ParseBoolPipe) soloNoLeidas: boolean,
+    @CurrentUser() user: any
   ) {
+    // ENTRENADOR solo puede ver alertas de sus atletas asignados
+    if (user.rol === 'ENTRENADOR') {
+      const hasAccess = await this.accessControl.checkAtletaOwnership(
+        BigInt(user.id),
+        user.rol,
+        BigInt(atletaId),
+      );
+      if (!hasAccess) {
+        throw new ForbiddenException('Solo puedes ver alertas de tus atletas asignados');
+      }
+    }
+
     return await this.alertasService.obtenerAlertasAtleta(BigInt(atletaId), soloNoLeidas);
   }
 

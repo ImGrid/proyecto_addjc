@@ -227,6 +227,7 @@ export class AtletasService {
           categoriaPeso: true,
           pesoActual: true,
           fcReposo: true,
+          perfilActual: true,
           createdAt: true,
           updatedAt: true,
           usuario: {
@@ -348,6 +349,7 @@ export class AtletasService {
         categoriaPeso: true,
         pesoActual: true,
         fcReposo: true,
+        perfilActual: true,
         createdAt: true,
         updatedAt: true,
         usuario: {

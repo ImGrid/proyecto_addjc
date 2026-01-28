@@ -2,6 +2,10 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getCurrentUserAction } from '@/app/actions/auth.actions';
 import { fetchTestsFisicosEntrenador } from '@/features/entrenador/actions/fetch-tests-fisicos';
+import { fetchAtletasParaSelector } from '@/features/entrenador/actions/fetch-mis-atletas';
+import { fetchMicrociclosParaSelector } from '@/features/comite-tecnico/actions/fetch-planificacion';
+import { TestsFilters } from '@/features/entrenador/components/tests-filters';
+import { TestsPagination } from '@/features/entrenador/components/tests-pagination';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +13,18 @@ import { ClipboardList, Plus, Calendar } from 'lucide-react';
 import { AUTH_ROUTES } from '@/lib/routes';
 import { formatDateFull } from '@/lib/date-utils';
 
-export default async function TestsFisicosPage() {
+interface PageProps {
+  searchParams: Promise<{
+    atletaId?: string;
+    microcicloId?: string;
+    fechaDesde?: string;
+    fechaHasta?: string;
+    asistio?: string;
+    page?: string;
+  }>;
+}
+
+export default async function TestsFisicosPage({ searchParams }: PageProps) {
   // Verificar autenticacion
   const authResult = await getCurrentUserAction();
 
@@ -17,10 +32,29 @@ export default async function TestsFisicosPage() {
     redirect(AUTH_ROUTES.login);
   }
 
-  // Cargar tests
-  const testsResult = await fetchTestsFisicosEntrenador({ limit: 50 });
+  // Leer filtros de la URL
+  const params = await searchParams;
+  const atletaId = params.atletaId || undefined;
+  const microcicloId = params.microcicloId || undefined;
+  const fechaDesde = params.fechaDesde || undefined;
+  const fechaHasta = params.fechaHasta || undefined;
+  const asistio = params.asistio || undefined;
+  const page = Math.max(1, parseInt(params.page || '1', 10) || 1);
+  const limit = 10;
+
+  // Cargar datos en paralelo
+  const [testsResult, atletas, microciclos] = await Promise.all([
+    fetchTestsFisicosEntrenador({ atletaId, microcicloId, fechaDesde, fechaHasta, asistio, page, limit }),
+    fetchAtletasParaSelector(),
+    fetchMicrociclosParaSelector(),
+  ]);
+
   const tests = testsResult?.data || [];
-  const total = testsResult?.meta.total || 0;
+  const meta = testsResult?.meta || { total: 0, page: 1, limit: 10, totalPages: 1 };
+  const total = meta.total || 0;
+  const totalPages = meta.totalPages || 1;
+
+  const hasActiveFilters = !!atletaId || !!microcicloId || !!fechaDesde || !!fechaHasta || !!asistio;
 
   return (
     <div className="space-y-6">
@@ -39,20 +73,32 @@ export default async function TestsFisicosPage() {
         </Button>
       </div>
 
+      {/* Filtros */}
+      <TestsFilters
+        atletas={atletas || []}
+        microciclos={(microciclos || []).map((m) => ({ id: m.id, label: m.label }))}
+      />
+
       {tests.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
             <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium">No hay tests registrados</h3>
+            <h3 className="text-lg font-medium">
+              {hasActiveFilters ? 'No hay tests con estos filtros' : 'No hay tests registrados'}
+            </h3>
             <p className="text-muted-foreground mt-1 mb-4">
-              Registra el primer test fisico de tus atletas.
+              {hasActiveFilters
+                ? 'Intenta cambiar los filtros para ver mas resultados.'
+                : 'Registra el primer test fisico de tus atletas.'}
             </p>
-            <Button asChild>
-              <Link href="/entrenador/tests-fisicos/nuevo">
-                <Plus className="h-4 w-4 mr-2" />
-                Nuevo Test
-              </Link>
-            </Button>
+            {!hasActiveFilters && (
+              <Button asChild>
+                <Link href="/entrenador/tests-fisicos/nuevo">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nuevo Test
+                </Link>
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
@@ -123,6 +169,13 @@ export default async function TestsFisicosPage() {
           ))}
         </div>
       )}
+
+      {/* Paginacion */}
+      <TestsPagination
+        currentPage={page}
+        totalPages={totalPages}
+        total={total}
+      />
     </div>
   );
 }

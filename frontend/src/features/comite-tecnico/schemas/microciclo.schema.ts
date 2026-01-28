@@ -6,6 +6,9 @@ import { TipoMicrocicloValues, SentidoCargaValues, CreadoPorValues } from '@/typ
 
 export const createMicrocicloSchema = z
   .object({
+    // atletaId es OBLIGATORIO - el backend genera sesiones personalizadas para este atleta
+    atletaId: z.string().min(1, 'El atleta es requerido'),
+
     // mesocicloId es OPCIONAL (segun schema.prisma y DTO del backend)
     mesocicloId: z.string().optional(),
 

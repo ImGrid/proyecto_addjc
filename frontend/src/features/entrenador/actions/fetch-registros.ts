@@ -11,6 +11,10 @@ import {
 interface FetchRegistrosParams {
   atletaId?: string;
   sesionId?: string;
+  fechaDesde?: string;
+  fechaHasta?: string;
+  asistio?: string;
+  rpeMin?: number;
   page?: number;
   limit?: number;
 }
@@ -20,7 +24,7 @@ interface FetchRegistrosParams {
 export async function fetchRegistrosEntrenador(
   params: FetchRegistrosParams = {}
 ): Promise<PaginatedResponse<RegistroPostEntrenamiento> | null> {
-  const { atletaId, sesionId, page = 1, limit = 20 } = params;
+  const { atletaId, sesionId, fechaDesde, fechaHasta, asistio, rpeMin, page = 1, limit = 20 } = params;
 
   try {
     const cookieStore = await cookies();
@@ -39,6 +43,10 @@ export async function fetchRegistrosEntrenador(
     queryParams.append('limit', limit.toString());
     if (atletaId) queryParams.append('atletaId', atletaId);
     if (sesionId) queryParams.append('sesionId', sesionId);
+    if (fechaDesde) queryParams.append('fechaDesde', fechaDesde);
+    if (fechaHasta) queryParams.append('fechaHasta', fechaHasta);
+    if (asistio) queryParams.append('asistio', asistio);
+    if (rpeMin !== undefined) queryParams.append('rpeMin', rpeMin.toString());
 
     const response = await fetch(
       `${API_URL}/registros-post-entrenamiento?${queryParams.toString()}`,
@@ -63,8 +71,9 @@ export async function fetchRegistrosEntrenador(
       data: z.array(registroPostEntrenamientoSchema),
       meta: z.object({
         total: z.number(),
-        page: z.number().optional(),
-        limit: z.number().optional(),
+        page: z.number(),
+        limit: z.number(),
+        totalPages: z.number(),
       }),
     }).safeParse(result);
 

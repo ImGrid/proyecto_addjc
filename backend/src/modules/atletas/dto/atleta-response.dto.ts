@@ -15,6 +15,7 @@ export interface AtletaResponseDto {
   categoriaPeso: CategoriaPeso;
   pesoActual: number | null;
   fcReposo: number | null;
+  perfilActual: string | null;
   createdAt: Date;
   updatedAt: Date;
 

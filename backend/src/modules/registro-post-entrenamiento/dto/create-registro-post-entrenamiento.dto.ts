@@ -10,6 +10,7 @@ import {
   IsArray,
   ValidateNested,
   IsNumber,
+  ArrayMinSize,
 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { CreateDolenciaDto } from './create-dolencia.dto';
@@ -106,11 +107,11 @@ export class CreateRegistroPostEntrenamientoDto {
   })
   observaciones?: string;
 
-  // Rendimiento por ejercicio (opcional)
-  // Permite registrar detalle de rendimiento de cada ejercicio individual
-  // Si se proporciona, el sistema puede generar recomendaciones personalizadas
+  // Rendimiento por ejercicio (obligatorio cuando asistio=true y sesion no es COMPETENCIA)
+  // El backend valida la obligatoriedad segun el contexto de la sesion
   @IsOptional()
   @IsArray({ message: 'Rendimientos de ejercicios debe ser un array' })
+  @ArrayMinSize(1, { message: 'Debe registrar al menos 1 rendimiento de ejercicio' })
   @ValidateNested({ each: true })
   @Type(() => CreateRendimientoEjercicioDto)
   rendimientosEjercicios?: CreateRendimientoEjercicioDto[];

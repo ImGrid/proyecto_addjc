@@ -320,6 +320,10 @@ export interface SesionCompleta {
   vueltaCalma: string | null;
   observaciones: string | null;
   materialNecesario: string | null;
+  // Campos del algoritmo (schema.prisma lineas 192-194)
+  aprobado?: boolean;
+  perfilUtilizado?: string | null;
+  justificacionAlgoritmo?: string | null;
   createdAt: string;
   updatedAt: string;
   microciclo?: {

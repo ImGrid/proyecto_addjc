@@ -63,8 +63,9 @@ export async function fetchDolenciasEntrenador(
       data: z.array(dolenciaSchema),
       meta: z.object({
         total: z.number(),
-        page: z.number().optional(),
-        limit: z.number().optional(),
+        page: z.number(),
+        limit: z.number(),
+        totalPages: z.number(),
       }),
     }).safeParse(result);
 

@@ -1,13 +1,15 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getCurrentUserAction } from '@/app/actions/auth.actions';
-import { fetchSesiones } from '@/features/comite-tecnico/actions';
+import { fetchSesiones, fetchMicrociclosParaSelector } from '@/features/comite-tecnico/actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CalendarClock, Plus, Calendar, Clock, Activity } from 'lucide-react';
 import { AUTH_ROUTES, COMITE_TECNICO_ROUTES } from '@/lib/routes';
 import { formatDateFull } from '@/lib/date-utils';
+import { SesionesFilters } from '@/features/comite-tecnico/components/sesiones-filters';
+import { SesionesPagination } from '@/features/comite-tecnico/components/sesiones-pagination';
 
 // Mapeo de tipos de sesion a colores
 const TIPO_SESION_COLORS: Record<string, string> = {
@@ -27,7 +29,16 @@ const TIPO_SESION_LABELS: Record<string, string> = {
   COMPETENCIA: 'Competencia',
 };
 
-export default async function SesionesComiteTecnicoPage() {
+interface PageProps {
+  searchParams: Promise<{
+    microcicloId?: string;
+    fecha?: string;
+    tipoSesion?: string;
+    page?: string;
+  }>;
+}
+
+export default async function SesionesComiteTecnicoPage({ searchParams }: PageProps) {
   // Verificar autenticacion
   const authResult = await getCurrentUserAction();
 
@@ -35,10 +46,28 @@ export default async function SesionesComiteTecnicoPage() {
     redirect(AUTH_ROUTES.login);
   }
 
-  // Cargar sesiones
-  const sesionesResult = await fetchSesiones({ limit: 50 });
+  // Leer filtros de la URL
+  const params = await searchParams;
+  const microcicloId = params.microcicloId || undefined;
+  const fecha = params.fecha || undefined;
+  const tipoSesion = params.tipoSesion || undefined;
+  const page = params.page ? parseInt(params.page, 10) : 1;
+  const limit = 10;
+
+  // Cargar sesiones y microciclos en paralelo
+  const [sesionesResult, microciclos] = await Promise.all([
+    fetchSesiones({ microcicloId, fecha, page, limit }),
+    fetchMicrociclosParaSelector(),
+  ]);
+
   const sesiones = sesionesResult?.data || [];
   const total = sesionesResult?.meta.total || 0;
+  const totalPages = sesionesResult?.meta.totalPages || 1;
+
+  // Filtro client-side por tipoSesion (el backend no soporta este filtro en findAll)
+  const sesionesFiltradas = tipoSesion
+    ? sesiones.filter((s) => s.tipoSesion === tipoSesion)
+    : sesiones;
 
   return (
     <div className="space-y-6">
@@ -57,25 +86,32 @@ export default async function SesionesComiteTecnicoPage() {
         </Button>
       </div>
 
-      {sesiones.length === 0 ? (
+      {/* Filtros */}
+      <SesionesFilters microciclos={microciclos || []} />
+
+      {sesionesFiltradas.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
             <CalendarClock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium">No hay sesiones registradas</h3>
             <p className="text-muted-foreground mt-1 mb-4">
-              Crea la primera sesion de entrenamiento.
+              {tipoSesion || microcicloId || fecha
+                ? 'No se encontraron sesiones con los filtros aplicados.'
+                : 'Crea la primera sesion de entrenamiento.'}
             </p>
-            <Button asChild>
-              <Link href={COMITE_TECNICO_ROUTES.sesiones.nuevo}>
-                <Plus className="h-4 w-4 mr-2" />
-                Nueva Sesion
-              </Link>
-            </Button>
+            {!tipoSesion && !microcicloId && !fecha && (
+              <Button asChild>
+                <Link href={COMITE_TECNICO_ROUTES.sesiones.nuevo}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nueva Sesion
+                </Link>
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-4">
-          {sesiones.map((sesion) => (
+          {sesionesFiltradas.map((sesion) => (
             <Card key={sesion.id}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center justify-between">
@@ -134,6 +170,13 @@ export default async function SesionesComiteTecnicoPage() {
           ))}
         </div>
       )}
+
+      {/* Paginacion */}
+      <SesionesPagination
+        currentPage={page}
+        totalPages={totalPages}
+        total={total}
+      />
     </div>
   );
 }

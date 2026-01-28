@@ -3,8 +3,11 @@
 import { getCurrentUserAction } from '@/app/actions/auth.actions';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
-import { registroPostEntrenamientoSchema } from '@/features/atleta/types/atleta.types';
-import type { RegistroPostEntrenamiento, RPEWeeklyDataPoint, PaginatedResponse } from '../types/progreso.types';
+import {
+  registroPostEntrenamientoSchema,
+  type RegistroPostEntrenamiento,
+} from '@/features/atleta/types/atleta.types';
+import type { RPEWeeklyDataPoint } from '../types/progreso.types';
 
 // Helper para obtener el número de semana del año
 function getWeekNumber(date: Date): number {

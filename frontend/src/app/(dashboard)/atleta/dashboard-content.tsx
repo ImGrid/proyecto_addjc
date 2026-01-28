@@ -56,7 +56,7 @@ export function DashboardContent() {
   return (
     <div className="space-y-6">
       {/* Header con nombre del usuario */}
-      <DashboardHeader userName={userName} unreadCount={0} />
+      <DashboardHeader userName={userName} unreadCount={data.notificacionesNoLeidas} />
 
       {/* Grid de 4 tarjetas de estadisticas */}
       <DashboardStatsGrid stats={data.stats} />

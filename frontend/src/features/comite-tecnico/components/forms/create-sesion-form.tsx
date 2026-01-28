@@ -14,10 +14,14 @@ import { initialActionState } from '@/types/action-result';
 import { CalendarClock, Activity, FileText } from 'lucide-react';
 import { DiaSemanaValues, TipoSesionValues, TurnoValues } from '@/types/enums';
 import type { MicrocicloParaSelector } from '../../actions/fetch-planificacion';
+import type { EjerciciosPorTipoResponse } from '@/features/algoritmo/types/algoritmo.types';
+import { EjerciciosSelector } from './ejercicios-selector';
+import type { EjercicioSeleccionado } from './ejercicios-selector';
 
 interface CreateSesionFormProps {
   microciclos: MicrocicloParaSelector[];
   redirectUrl: string;
+  catalogoPorTipo?: EjerciciosPorTipoResponse | null;
 }
 
 // Mapeo de dias para formato legible
@@ -48,7 +52,7 @@ const TURNO_LABELS: Record<string, string> = {
 // Tipos de sesion que NO requieren campos de planificacion detallada ni contenidos
 const TIPOS_SIN_PLANIFICACION = ['COMPETENCIA', 'DESCANSO'];
 
-export function CreateSesionForm({ microciclos, redirectUrl }: CreateSesionFormProps) {
+export function CreateSesionForm({ microciclos, redirectUrl, catalogoPorTipo }: CreateSesionFormProps) {
   const router = useRouter();
   const hasShownToast = useRef(false);
   const [state, formAction] = useActionState(createSesion, initialActionState);
@@ -58,6 +62,7 @@ export function CreateSesionForm({ microciclos, redirectUrl }: CreateSesionFormP
   const [selectedDia, setSelectedDia] = useState('');
   const [selectedTipo, setSelectedTipo] = useState('');
   const [selectedTurno, setSelectedTurno] = useState('COMPLETO');
+  const [ejerciciosSeleccionados, setEjerciciosSeleccionados] = useState<EjercicioSeleccionado[]>([]);
 
   // Determina si mostrar campos de planificacion detallada y contenidos
   const showPlanificacionDetallada = !TIPOS_SIN_PLANIFICACION.includes(selectedTipo);
@@ -402,6 +407,24 @@ export function CreateSesionForm({ microciclos, redirectUrl }: CreateSesionFormP
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Ejercicios del Catalogo - Solo para tipos con planificacion */}
+      {showPlanificacionDetallada && catalogoPorTipo && (
+        <>
+          <EjerciciosSelector
+            catalogoPorTipo={catalogoPorTipo}
+            value={ejerciciosSeleccionados}
+            onChange={setEjerciciosSeleccionados}
+          />
+          <input
+            type="hidden"
+            name="ejerciciosJSON"
+            value={JSON.stringify(
+              ejerciciosSeleccionados.map(({ nombre, tipo, ...rest }) => rest)
+            )}
+          />
+        </>
       )}
 
       {/* Observaciones */}

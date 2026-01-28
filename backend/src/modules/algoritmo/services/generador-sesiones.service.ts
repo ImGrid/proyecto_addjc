@@ -514,13 +514,24 @@ function aplicarAjustesPerfil(
   };
 }
 
-// Calcula la fecha para un dia de la semana
+// Calcula la fecha para un dia de la semana a partir de fechaInicio
+// IMPORTANTE: Usar metodos UTC para evitar bug de timezone.
+// Prisma devuelve campos DATE como UTC midnight. Los metodos locales
+// (getDay/getDate/setDate) convierten a hora local y en zonas horarias
+// negativas (ej: Bolivia UTC-4) devuelven el dia anterior.
+// Ref: https://github.com/prisma/prisma/issues/7490
 function calcularFechaDia(fechaInicio: Date, diaSemana: DiaSemana): Date {
   const fecha = new Date(fechaInicio);
   const diaObjetivo = DIAS_SEMANA.indexOf(diaSemana);
-  const diaActual = fecha.getDay() === 0 ? 6 : fecha.getDay() - 1;
-  const diferencia = diaObjetivo - diaActual;
-  fecha.setDate(fecha.getDate() + diferencia);
+  // Convertir getUTCDay (0=Dom,1=Lun,...,6=Sab) a indice DIAS_SEMANA (0=Lun,...,6=Dom)
+  const diaActual = fecha.getUTCDay() === 0 ? 6 : fecha.getUTCDay() - 1;
+  let diferencia = diaObjetivo - diaActual;
+  // Si la diferencia es negativa, el dia objetivo ya paso esta semana.
+  // Avanzar a la semana siguiente para mantener la fecha dentro del rango.
+  if (diferencia < 0) {
+    diferencia += 7;
+  }
+  fecha.setUTCDate(fecha.getUTCDate() + diferencia);
   return fecha;
 }
 

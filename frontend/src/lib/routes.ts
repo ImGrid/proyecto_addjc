@@ -70,6 +70,38 @@ export const COMITE_TECNICO_ROUTES = {
     detalle: (id: string | number) => `/comite-tecnico/sesiones/${id}`,
     editar: (id: string | number) => `/comite-tecnico/sesiones/${id}/editar`,
   },
+
+  // Algoritmo - Ranking
+  ranking: {
+    list: '/comite-tecnico/ranking',
+    detalle: (atletaId: string | number) =>
+      `/comite-tecnico/ranking/${atletaId}`,
+  },
+
+  // Algoritmo - Recomendaciones
+  recomendaciones: {
+    list: '/comite-tecnico/recomendaciones',
+    detalle: (id: string | number) =>
+      `/comite-tecnico/recomendaciones/${id}`,
+  },
+
+  // Algoritmo - Notificaciones
+  notificaciones: '/comite-tecnico/notificaciones',
+
+  // Algoritmo - Analisis de rendimiento
+  analisis: {
+    list: '/comite-tecnico/analisis',
+    detalle: (atletaId: string | number) =>
+      `/comite-tecnico/analisis/${atletaId}`,
+  },
+
+  // Algoritmo - Alertas
+  alertas: '/comite-tecnico/alertas',
+
+  // Algoritmo - Catalogo de ejercicios
+  catalogoEjercicios: {
+    list: '/comite-tecnico/catalogo-ejercicios',
+  },
 } as const;
 
 // Rutas del Entrenador
@@ -127,6 +159,28 @@ export const ENTRENADOR_ROUTES = {
 
   // Dolencias
   dolencias: '/entrenador/dolencias',
+
+  // Algoritmo - Ranking (sus atletas)
+  ranking: '/entrenador/ranking',
+
+  // Algoritmo - Recomendaciones (solo lectura)
+  recomendaciones: {
+    list: '/entrenador/recomendaciones',
+    detalle: (id: string | number) =>
+      `/entrenador/recomendaciones/${id}`,
+  },
+
+  // Algoritmo - Notificaciones
+  notificaciones: '/entrenador/notificaciones',
+
+  // Algoritmo - Analisis de rendimiento (sus atletas)
+  analisis: {
+    detalle: (atletaId: string | number) =>
+      `/entrenador/analisis/${atletaId}`,
+  },
+
+  // Algoritmo - Alertas (sus atletas)
+  alertas: '/entrenador/alertas',
 } as const;
 
 // Rutas del Atleta
@@ -145,6 +199,15 @@ export const ATLETA_ROUTES = {
 
   // Dolencias
   dolencias: '/atleta/dolencias',
+
+  // Algoritmo - Ranking (su posicion)
+  ranking: '/atleta/ranking',
+
+  // Algoritmo - Notificaciones
+  notificaciones: '/atleta/notificaciones',
+
+  // Algoritmo - Analisis de rendimiento (propio)
+  analisis: '/atleta/analisis',
 } as const;
 
 // Rutas del Administrador

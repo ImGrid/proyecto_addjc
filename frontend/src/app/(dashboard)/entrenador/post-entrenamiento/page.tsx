@@ -2,13 +2,27 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getCurrentUserAction } from '@/app/actions/auth.actions';
 import { fetchRegistrosEntrenador } from '@/features/entrenador/actions/fetch-registros';
+import { fetchAtletasParaSelector } from '@/features/entrenador/actions/fetch-mis-atletas';
+import { RegistrosFilters } from '@/features/entrenador/components/registros-filters';
+import { RegistrosPagination } from '@/features/entrenador/components/registros-pagination';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Activity, Plus, Calendar, AlertTriangle } from 'lucide-react';
 import { AUTH_ROUTES } from '@/lib/routes';
 
-export default async function PostEntrenamientoPage() {
+interface PageProps {
+  searchParams: Promise<{
+    atletaId?: string;
+    fechaDesde?: string;
+    fechaHasta?: string;
+    asistio?: string;
+    rpeMin?: string;
+    page?: string;
+  }>;
+}
+
+export default async function PostEntrenamientoPage({ searchParams }: PageProps) {
   // Verificar autenticacion
   const authResult = await getCurrentUserAction();
 
@@ -16,10 +30,28 @@ export default async function PostEntrenamientoPage() {
     redirect(AUTH_ROUTES.login);
   }
 
-  // Cargar registros
-  const registrosResult = await fetchRegistrosEntrenador({ limit: 50 });
+  // Leer filtros de la URL
+  const params = await searchParams;
+  const atletaId = params.atletaId || undefined;
+  const fechaDesde = params.fechaDesde || undefined;
+  const fechaHasta = params.fechaHasta || undefined;
+  const asistio = params.asistio || undefined;
+  const rpeMin = params.rpeMin ? parseInt(params.rpeMin, 10) : undefined;
+  const page = Math.max(1, parseInt(params.page || '1', 10) || 1);
+  const limit = 10;
+
+  // Cargar datos en paralelo
+  const [registrosResult, atletas] = await Promise.all([
+    fetchRegistrosEntrenador({ atletaId, fechaDesde, fechaHasta, asistio, rpeMin, page, limit }),
+    fetchAtletasParaSelector(),
+  ]);
+
   const registros = registrosResult?.data || [];
-  const total = registrosResult?.meta.total || 0;
+  const meta = registrosResult?.meta || { total: 0, page: 1, limit: 10, totalPages: 1 };
+  const total = meta.total || 0;
+  const totalPages = meta.totalPages || 1;
+
+  const hasActiveFilters = !!atletaId || !!fechaDesde || !!fechaHasta || !!asistio || rpeMin !== undefined;
 
   return (
     <div className="space-y-6">
@@ -38,20 +70,29 @@ export default async function PostEntrenamientoPage() {
         </Button>
       </div>
 
+      {/* Filtros */}
+      <RegistrosFilters atletas={atletas || []} />
+
       {registros.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
             <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium">No hay registros</h3>
+            <h3 className="text-lg font-medium">
+              {hasActiveFilters ? 'No hay registros con estos filtros' : 'No hay registros'}
+            </h3>
             <p className="text-muted-foreground mt-1 mb-4">
-              Registra los datos post-entrenamiento de tus atletas.
+              {hasActiveFilters
+                ? 'Intenta cambiar los filtros para ver mas resultados.'
+                : 'Registra los datos post-entrenamiento de tus atletas.'}
             </p>
-            <Button asChild>
-              <Link href="/entrenador/post-entrenamiento/nuevo">
-                <Plus className="h-4 w-4 mr-2" />
-                Nuevo Registro
-              </Link>
-            </Button>
+            {!hasActiveFilters && (
+              <Button asChild>
+                <Link href="/entrenador/post-entrenamiento/nuevo">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nuevo Registro
+                </Link>
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
@@ -129,6 +170,13 @@ export default async function PostEntrenamientoPage() {
           ))}
         </div>
       )}
+
+      {/* Paginacion */}
+      <RegistrosPagination
+        currentPage={page}
+        totalPages={totalPages}
+        total={total}
+      />
     </div>
   );
 }

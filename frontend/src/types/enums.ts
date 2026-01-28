@@ -144,6 +144,7 @@ export const EstadoRecomendacion = {
   EN_PROCESO: 'EN_PROCESO',
   CUMPLIDA: 'CUMPLIDA',
   RECHAZADA: 'RECHAZADA',
+  MODIFICADA: 'MODIFICADA',
 } as const;
 
 export type EstadoRecomendacion = typeof EstadoRecomendacion[keyof typeof EstadoRecomendacion];
@@ -194,6 +195,38 @@ export const Severidad = {
 
 export type Severidad = typeof Severidad[keyof typeof Severidad];
 
+// Enum de periodo de tolerancia
+export const PeriodoTolerancia = {
+  GENERAL: 'GENERAL',
+  ESPECIFICA_I: 'ESPECIFICA_I',
+  ESPECIFICA_II: 'ESPECIFICA_II',
+  PRE_COMPETITIVA: 'PRE_COMPETITIVA',
+  COMPETITIVA: 'COMPETITIVA',
+} as const;
+
+export type PeriodoTolerancia = typeof PeriodoTolerancia[keyof typeof PeriodoTolerancia];
+
+// Enum de tipo de ejercicio
+export const TipoEjercicio = {
+  FISICO: 'FISICO',
+  TECNICO_TACHI: 'TECNICO_TACHI',
+  TECNICO_NE: 'TECNICO_NE',
+  RESISTENCIA: 'RESISTENCIA',
+  VELOCIDAD: 'VELOCIDAD',
+} as const;
+
+export type TipoEjercicio = typeof TipoEjercicio[keyof typeof TipoEjercicio];
+
+// Enum de perfil de atleta
+export const PerfilAtleta = {
+  VELOZ: 'VELOZ',
+  RESISTENTE: 'RESISTENTE',
+  EQUILIBRADO: 'EQUILIBRADO',
+  NUEVO: 'NUEVO',
+} as const;
+
+export type PerfilAtleta = typeof PerfilAtleta[keyof typeof PerfilAtleta];
+
 // Arrays de valores para usar con z.enum() en Zod
 export const RolUsuarioValues = Object.values(RolUsuario);
 export const CategoriaPesoValues = Object.values(CategoriaPeso);
@@ -213,3 +246,6 @@ export const TipoNotificacionValues = Object.values(TipoNotificacion);
 export const TipoLesionValues = Object.values(TipoLesion);
 export const TipoAlertaValues = Object.values(TipoAlerta);
 export const SeveridadValues = Object.values(Severidad);
+export const PeriodoToleranciaValues = Object.values(PeriodoTolerancia);
+export const TipoEjercicioValues = Object.values(TipoEjercicio);
+export const PerfilAtletaValues = Object.values(PerfilAtleta);

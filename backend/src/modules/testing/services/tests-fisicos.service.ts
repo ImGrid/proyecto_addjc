@@ -307,7 +307,10 @@ export class TestsFisicosService {
     atletaId?: string,
     microcicloId?: string,
     page = 1,
-    limit = 10
+    limit = 10,
+    fechaDesde?: string,
+    fechaHasta?: string,
+    asistio?: string
   ) {
     const skip = (page - 1) * limit;
 
@@ -330,6 +333,25 @@ export class TestsFisicosService {
     }
     if (microcicloId) {
       whereClause.microcicloId = BigInt(microcicloId);
+    }
+
+    // Filtro por rango de fechas (campo: fechaTest)
+    if (fechaDesde || fechaHasta) {
+      whereClause.fechaTest = {};
+      if (fechaDesde) {
+        whereClause.fechaTest.gte = new Date(fechaDesde);
+      }
+      if (fechaHasta) {
+        // Incluir todo el dia de fechaHasta (hasta las 23:59:59)
+        const hasta = new Date(fechaHasta);
+        hasta.setHours(23, 59, 59, 999);
+        whereClause.fechaTest.lte = hasta;
+      }
+    }
+
+    // Filtro por asistencia (campo: asistio)
+    if (asistio === 'true' || asistio === 'false') {
+      whereClause.asistio = asistio === 'true';
     }
 
     const [tests, total] = await Promise.all([

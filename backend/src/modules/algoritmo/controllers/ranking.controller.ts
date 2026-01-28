@@ -107,7 +107,7 @@ export class RankingController {
 
   // GET /api/ranking/categoria/:categoria/mejores - Mejores N atletas de una categoria
   @Get('categoria/:categoria/mejores')
-  @Roles('COMITE_TECNICO', 'ENTRENADOR')
+  @Roles('COMITE_TECNICO', 'ENTRENADOR', 'ATLETA')
   async obtenerMejoresAtletas(
     @Param('categoria') categoria: string,
     @Query('cantidad', new DefaultValuePipe(5), ParseIntPipe) cantidad: number
@@ -152,6 +152,18 @@ export class RankingController {
 
       if (atletaId.toString() !== id) {
         throw new ForbiddenException('Solo puedes ver tu propio ranking');
+      }
+    }
+
+    // Si es ENTRENADOR, solo puede ver atletas asignados
+    if (user.rol === 'ENTRENADOR') {
+      const hasAccess = await this.accessControl.checkAtletaOwnership(
+        BigInt(user.id),
+        user.rol,
+        BigInt(id),
+      );
+      if (!hasAccess) {
+        throw new ForbiddenException('Solo puedes ver el ranking de tus atletas asignados');
       }
     }
 

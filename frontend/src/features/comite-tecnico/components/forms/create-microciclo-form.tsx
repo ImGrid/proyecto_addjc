@@ -17,17 +17,25 @@ import { TipoMicrocicloValues } from '@/types/enums';
 import { COMITE_TECNICO_ROUTES } from '@/lib/routes';
 import type { Mesociclo } from '../../types/planificacion.types';
 
+interface AtletaOption {
+  id: string;
+  nombreCompleto: string;
+}
+
 interface CreateMicrocicloFormProps {
   mesociclos: Pick<Mesociclo, 'id' | 'nombre' | 'etapa'>[];
+  atletas: AtletaOption[];
   preselectedMesocicloId?: string;
+  preselectedAtletaId?: string;
 }
 
 // Formulario para crear un nuevo microciclo
 // NOTA: El backend genera automaticamente 7 sesiones al crear el microciclo
-export function CreateMicrocicloForm({ mesociclos, preselectedMesocicloId }: CreateMicrocicloFormProps) {
+export function CreateMicrocicloForm({ mesociclos, atletas, preselectedMesocicloId, preselectedAtletaId }: CreateMicrocicloFormProps) {
   const router = useRouter();
   const hasShownToast = useRef(false);
   const [state, formAction] = useActionState(createMicrociclo, initialActionState);
+  const [selectedAtleta, setSelectedAtleta] = useState(preselectedAtletaId || '');
   const [selectedMesociclo, setSelectedMesociclo] = useState(preselectedMesocicloId || '');
   const [selectedTipo, setSelectedTipo] = useState('');
   const [fechaInicio, setFechaInicio] = useState('');
@@ -83,6 +91,9 @@ export function CreateMicrocicloForm({ mesociclos, preselectedMesocicloId }: Cre
   // Restaurar valores de selects y fechas si hay error
   useEffect(() => {
     if (!state.success && state.submittedData) {
+      if (state.submittedData.atletaId) {
+        setSelectedAtleta(String(state.submittedData.atletaId));
+      }
       if (state.submittedData.mesocicloId) {
         setSelectedMesociclo(String(state.submittedData.mesocicloId));
       }
@@ -116,6 +127,30 @@ export function CreateMicrocicloForm({ mesociclos, preselectedMesocicloId }: Cre
           <CardDescription>Informacion basica del microciclo semanal</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label>Atleta *</Label>
+            <Select
+              value={selectedAtleta}
+              onValueChange={setSelectedAtleta}
+            >
+              <SelectTrigger className={getFieldError('atletaId') ? 'border-destructive' : ''}>
+                <SelectValue placeholder="Selecciona un atleta" />
+              </SelectTrigger>
+              <SelectContent>
+                {atletas.map((atleta) => (
+                  <SelectItem key={atleta.id} value={atleta.id}>
+                    {atleta.nombreCompleto}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <input type="hidden" name="atletaId" value={selectedAtleta} />
+            {getFieldError('atletaId') && (
+              <p className="text-sm text-destructive">{getFieldError('atletaId')}</p>
+            )}
+            <p className="text-xs text-muted-foreground">Las sesiones se personalizan para este atleta</p>
+          </div>
+
           <div className="space-y-2">
             <Label>Mesociclo (opcional)</Label>
             <Select

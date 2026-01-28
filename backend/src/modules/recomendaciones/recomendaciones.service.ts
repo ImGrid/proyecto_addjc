@@ -526,26 +526,11 @@ export class RecomendacionesService {
         },
       });
 
-      // Si tiene sesion generada, aplicar modificaciones y aprobar
-      if (recomendacion.sesionGeneradaId && dto.modificaciones.ajustesSesion) {
-        const ajustes = dto.modificaciones.ajustesSesion;
+      // Si tiene sesion generada, aprobarla
+      if (recomendacion.sesionGeneradaId) {
         await tx.sesion.update({
           where: { id: recomendacion.sesionGeneradaId },
-          data: {
-            aprobado: true,
-            ...(ajustes.duracionPlanificada && {
-              duracionPlanificada: ajustes.duracionPlanificada,
-            }),
-            ...(ajustes.volumenPlanificado && { volumenPlanificado: ajustes.volumenPlanificado }),
-            ...(ajustes.intensidadPlanificada && {
-              intensidadPlanificada: ajustes.intensidadPlanificada,
-            }),
-            ...(ajustes.contenidoFisico && { contenidoFisico: ajustes.contenidoFisico }),
-            ...(ajustes.contenidoTecnico && { contenidoTecnico: ajustes.contenidoTecnico }),
-            ...(ajustes.contenidoTactico && { contenidoTactico: ajustes.contenidoTactico }),
-            ...(ajustes.partePrincipal && { partePrincipal: ajustes.partePrincipal }),
-            ...(ajustes.observaciones && { observaciones: ajustes.observaciones }),
-          },
+          data: { aprobado: true },
         });
       }
 

@@ -46,8 +46,10 @@ export class SesionFactory {
     // Domingo: Recuperación/Descanso
 
     for (let i = 0; i < 7; i++) {
+      // Usar metodos UTC para evitar bug de timezone con campos DATE de Prisma
+      // Ref: https://github.com/prisma/prisma/issues/7490
       const fecha = new Date(fechaInicio);
-      fecha.setDate(fecha.getDate() + i);
+      fecha.setUTCDate(fecha.getUTCDate() + i);
 
       const diaSemana = diasSemana[i];
       const numeroSesion = i + 1;

@@ -18,6 +18,60 @@ export const dolenciaSchema = z.object({
 
 export type DolenciaInput = z.infer<typeof dolenciaSchema>;
 
+// Schema para rendimiento de un ejercicio individual
+// Basado en: backend/src/modules/registro-post-entrenamiento/dto/create-rendimiento-ejercicio.dto.ts
+export const rendimientoEjercicioSchema = z.object({
+  ejercicioSesionId: z.coerce.number().int().positive('ID de ejercicio requerido'),
+
+  completado: z.boolean(),
+
+  // Rendimiento 1-10 (requerido si completado=true, se valida con superRefine)
+  rendimiento: z.coerce.number()
+    .int('Rendimiento debe ser un numero entero')
+    .min(1, 'Rendimiento debe ser minimo 1')
+    .max(10, 'Rendimiento debe ser maximo 10')
+    .optional(),
+
+  // Dificultad percibida 1-10 (opcional)
+  dificultadPercibida: z.coerce.number()
+    .int('Dificultad percibida debe ser un numero entero')
+    .min(1, 'Dificultad percibida debe ser minimo 1')
+    .max(10, 'Dificultad percibida debe ser maximo 10')
+    .optional(),
+
+  // Tiempo real en minutos (opcional)
+  tiempoReal: z.coerce.number()
+    .int('Tiempo real debe ser un numero entero')
+    .min(1, 'Tiempo real debe ser al menos 1 minuto')
+    .max(120, 'Tiempo real no puede exceder 120 minutos')
+    .optional(),
+
+  // Observacion (opcional)
+  observacion: z.string().max(500, 'Observacion no puede exceder 500 caracteres').optional(),
+
+  // Motivo si no se completo (requerido si completado=false, se valida con superRefine)
+  motivoNoCompletado: z.string().max(500, 'Motivo no puede exceder 500 caracteres').optional(),
+}).superRefine((data, ctx) => {
+  // Si completado=true, rendimiento es requerido
+  if (data.completado && (data.rendimiento === undefined || data.rendimiento === null)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Rendimiento es requerido cuando el ejercicio fue completado',
+      path: ['rendimiento'],
+    });
+  }
+  // Si completado=false, motivoNoCompletado es requerido
+  if (!data.completado && (!data.motivoNoCompletado || data.motivoNoCompletado.trim().length === 0)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Indica el motivo por el que no se completo el ejercicio',
+      path: ['motivoNoCompletado'],
+    });
+  }
+});
+
+export type RendimientoEjercicioInput = z.infer<typeof rendimientoEjercicioSchema>;
+
 // Schema para crear un registro post-entrenamiento
 // Basado en: backend/src/modules/registro-post-entrenamiento/dto/create-registro-post-entrenamiento.dto.ts
 // NOTA: Para sesiones tipo COMPETENCIA, los campos de entrenamiento son opcionales
@@ -78,6 +132,10 @@ export const createRegistroSchema = z.object({
   // Dolencias (array opcional)
   dolencias: z.array(dolenciaSchema).optional(),
 
+  // Rendimiento por ejercicio (obligatorio cuando asistio=true y sesion no es COMPETENCIA)
+  // Opcional en Zod porque la validacion depende de asistio + tipoSesion
+  rendimientosEjercicios: z.array(rendimientoEjercicioSchema).optional(),
+
   // Observaciones
   observaciones: z.string().max(1000, 'Las observaciones no pueden exceder 1000 caracteres').optional(),
 }).refine(
@@ -116,6 +174,16 @@ export type CreateRegistroPayload = {
     nivel: number;
     descripcion?: string;
     tipoLesion?: string;
+  }[];
+  // Rendimiento por ejercicio
+  rendimientosEjercicios?: {
+    ejercicioSesionId: number;
+    completado: boolean;
+    rendimiento?: number;
+    dificultadPercibida?: number;
+    tiempoReal?: number;
+    observacion?: string;
+    motivoNoCompletado?: string;
   }[];
   observaciones?: string;
 };

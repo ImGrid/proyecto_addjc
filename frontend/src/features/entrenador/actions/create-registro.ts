@@ -44,6 +44,7 @@ export async function createRegistro(
       'estadoAnimico',
       'observaciones',
       'dolencias',
+      'rendimientosEjercicios',
     ]);
 
     // Manejar conversiones especiales
@@ -52,6 +53,11 @@ export async function createRegistro(
     // Parsear dolencias si existen
     if (rawData.dolencias && typeof rawData.dolencias === 'string') {
       rawData.dolencias = JSON.parse(rawData.dolencias as string);
+    }
+
+    // Parsear rendimientos de ejercicios si existen
+    if (rawData.rendimientosEjercicios && typeof rawData.rendimientosEjercicios === 'string') {
+      rawData.rendimientosEjercicios = JSON.parse(rawData.rendimientosEjercicios as string);
     }
 
     // Validar con Zod
@@ -151,6 +157,19 @@ export async function createRegistro(
         nivel: d.nivel,
         descripcion: d.descripcion?.trim() || undefined,
         tipoLesion: d.tipoLesion || undefined,
+      }));
+    }
+
+    // Agregar rendimientos de ejercicios si existen
+    if (validation.data.rendimientosEjercicios && validation.data.rendimientosEjercicios.length > 0) {
+      payload.rendimientosEjercicios = validation.data.rendimientosEjercicios.map((r) => ({
+        ejercicioSesionId: r.ejercicioSesionId,
+        completado: r.completado,
+        rendimiento: r.rendimiento,
+        dificultadPercibida: r.dificultadPercibida,
+        tiempoReal: r.tiempoReal,
+        observacion: r.observacion?.trim() || undefined,
+        motivoNoCompletado: r.motivoNoCompletado?.trim() || undefined,
       }));
     }
 

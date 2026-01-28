@@ -17,6 +17,11 @@ import {
   CalendarDays,
   CalendarRange,
   CalendarClock,
+  Medal,
+  Lightbulb,
+  LineChart,
+  ShieldAlert,
+  BookOpen,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { RolUsuario } from '@/types/auth';
@@ -118,9 +123,34 @@ export const navigationConfig: Record<RolUsuario, NavigationItem[]> = {
       icon: AlertTriangle,
     },
     {
+      href: '/comite-tecnico/ranking',
+      label: 'Ranking',
+      icon: Medal,
+    },
+    {
       href: '/comite-tecnico/recomendaciones',
       label: 'Recomendaciones',
+      icon: Lightbulb,
+    },
+    {
+      href: '/comite-tecnico/analisis',
+      label: 'Analisis',
+      icon: LineChart,
+    },
+    {
+      href: '/comite-tecnico/alertas',
+      label: 'Alertas',
+      icon: ShieldAlert,
+    },
+    {
+      href: '/comite-tecnico/notificaciones',
+      label: 'Notificaciones',
       icon: Bell,
+    },
+    {
+      href: '/comite-tecnico/catalogo-ejercicios',
+      label: 'Catalogo Ejercicios',
+      icon: BookOpen,
     },
   ],
 
@@ -174,6 +204,26 @@ export const navigationConfig: Record<RolUsuario, NavigationItem[]> = {
       label: 'Dolencias',
       icon: AlertTriangle,
     },
+    {
+      href: '/entrenador/ranking',
+      label: 'Ranking',
+      icon: Medal,
+    },
+    {
+      href: '/entrenador/recomendaciones',
+      label: 'Recomendaciones',
+      icon: Lightbulb,
+    },
+    {
+      href: '/entrenador/alertas',
+      label: 'Alertas',
+      icon: ShieldAlert,
+    },
+    {
+      href: '/entrenador/notificaciones',
+      label: 'Notificaciones',
+      icon: Bell,
+    },
   ],
 
   ATLETA: [
@@ -202,11 +252,20 @@ export const navigationConfig: Record<RolUsuario, NavigationItem[]> = {
       label: 'Mis Dolencias',
       icon: Heart,
     },
-    // Pendiente de implementar (Fase 6)
-    // {
-    //   href: '/atleta/recomendaciones',
-    //   label: 'Recomendaciones',
-    //   icon: Bell,
-    // },
+    {
+      href: '/atleta/ranking',
+      label: 'Mi Ranking',
+      icon: Medal,
+    },
+    {
+      href: '/atleta/analisis',
+      label: 'Mi Analisis',
+      icon: LineChart,
+    },
+    {
+      href: '/atleta/notificaciones',
+      label: 'Notificaciones',
+      icon: Bell,
+    },
   ],
 };

@@ -26,6 +26,7 @@ export async function createMicrociclo(
 
     // Extraer datos del FormData
     const rawData = {
+      atletaId: formData.get('atletaId'),
       mesocicloId: formData.get('mesocicloId') || undefined,
       codigoMicrociclo: formData.get('codigoMicrociclo'),
       fechaInicio: formData.get('fechaInicio'),

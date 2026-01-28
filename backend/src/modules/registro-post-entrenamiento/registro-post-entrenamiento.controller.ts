@@ -32,6 +32,10 @@ export class RegistroPostEntrenamientoController {
     @CurrentUser() user: any,
     @Query('atletaId') atletaId?: string,
     @Query('sesionId') sesionId?: string,
+    @Query('fechaDesde') fechaDesde?: string,
+    @Query('fechaHasta') fechaHasta?: string,
+    @Query('asistio') asistio?: string,
+    @Query('rpeMin', new ParseIntPipe({ optional: true })) rpeMin?: number,
     @Query('page', new ParseIntPipe({ optional: true })) page = 1,
     @Query('limit', new ParseIntPipe({ optional: true })) limit = 10
   ) {
@@ -41,7 +45,11 @@ export class RegistroPostEntrenamientoController {
       atletaId,
       sesionId,
       page,
-      limit
+      limit,
+      fechaDesde,
+      fechaHasta,
+      asistio,
+      rpeMin
     );
   }
 

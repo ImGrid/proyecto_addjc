@@ -11,6 +11,9 @@ import {
 interface FetchTestsFisicosParams {
   atletaId?: string;
   microcicloId?: string;
+  fechaDesde?: string;
+  fechaHasta?: string;
+  asistio?: string;
   page?: number;
   limit?: number;
 }
@@ -20,7 +23,7 @@ interface FetchTestsFisicosParams {
 export async function fetchTestsFisicosEntrenador(
   params: FetchTestsFisicosParams = {}
 ): Promise<PaginatedResponse<TestFisico> | null> {
-  const { atletaId, microcicloId, page = 1, limit = 20 } = params;
+  const { atletaId, microcicloId, fechaDesde, fechaHasta, asistio, page = 1, limit = 20 } = params;
 
   try {
     const cookieStore = await cookies();
@@ -39,6 +42,9 @@ export async function fetchTestsFisicosEntrenador(
     queryParams.append('limit', limit.toString());
     if (atletaId) queryParams.append('atletaId', atletaId);
     if (microcicloId) queryParams.append('microcicloId', microcicloId);
+    if (fechaDesde) queryParams.append('fechaDesde', fechaDesde);
+    if (fechaHasta) queryParams.append('fechaHasta', fechaHasta);
+    if (asistio) queryParams.append('asistio', asistio);
 
     const response = await fetch(
       `${API_URL}/tests-fisicos?${queryParams.toString()}`,
@@ -63,8 +69,9 @@ export async function fetchTestsFisicosEntrenador(
       data: z.array(testFisicoSchema),
       meta: z.object({
         total: z.number(),
-        page: z.number().optional(),
-        limit: z.number().optional(),
+        page: z.number(),
+        limit: z.number(),
+        totalPages: z.number(),
       }),
     }).safeParse(result);
 

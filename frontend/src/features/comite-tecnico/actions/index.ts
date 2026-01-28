@@ -89,6 +89,10 @@ export {
 // Acciones de escritura - Sesiones
 export { createSesion, updateSesion, deleteSesion } from './sesion.actions';
 
+// Acciones de ejercicios de sesion
+export { updateEjerciciosSesion } from './ejercicios-sesion.actions';
+export type { EjercicioParaAsignar } from './ejercicios-sesion.actions';
+
 // Acciones de escritura - Atletas
 export { createAtleta, updateAtleta, deleteAtleta } from './atleta.actions';
 

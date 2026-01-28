@@ -4,6 +4,8 @@ import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { createSesionSchema, updateSesionSchema } from '../schemas/sesion.schema';
 import type { ActionResult } from '@/types/action-result';
+import { updateEjerciciosSesion } from './ejercicios-sesion.actions';
+import type { EjercicioParaAsignar } from './ejercicios-sesion.actions';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
@@ -93,6 +95,22 @@ export async function createSesion(
 
     const result = await response.json();
     console.log('[createSesion] Sesion creada:', result.id);
+
+    // Asignar ejercicios si se proporcionaron
+    const ejerciciosJSON = formData.get('ejerciciosJSON') as string | null;
+    if (ejerciciosJSON && result.id) {
+      try {
+        const ejercicios: EjercicioParaAsignar[] = JSON.parse(ejerciciosJSON);
+        if (ejercicios.length > 0) {
+          const ejResult = await updateEjerciciosSesion(String(result.id), ejercicios);
+          if (!ejResult.success) {
+            console.error('[createSesion] Error asignando ejercicios:', ejResult.error);
+          }
+        }
+      } catch (parseError) {
+        console.error('[createSesion] Error parseando ejercicios:', parseError);
+      }
+    }
 
     revalidatePath('/comite-tecnico/sesiones');
     revalidatePath('/comite-tecnico/planificacion');
@@ -205,6 +223,20 @@ export async function updateSesion(
         success: false,
         error: errorData?.message || 'Error al actualizar la sesion',
       };
+    }
+
+    // Asignar ejercicios si se proporcionaron
+    const ejerciciosJSON = formData.get('ejerciciosJSON') as string | null;
+    if (ejerciciosJSON) {
+      try {
+        const ejercicios: EjercicioParaAsignar[] = JSON.parse(ejerciciosJSON);
+        const ejResult = await updateEjerciciosSesion(id, ejercicios);
+        if (!ejResult.success) {
+          console.error('[updateSesion] Error asignando ejercicios:', ejResult.error);
+        }
+      } catch (parseError) {
+        console.error('[updateSesion] Error parseando ejercicios:', parseError);
+      }
     }
 
     revalidatePath('/comite-tecnico/sesiones');

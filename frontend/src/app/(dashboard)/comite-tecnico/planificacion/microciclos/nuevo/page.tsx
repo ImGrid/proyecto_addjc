@@ -1,24 +1,33 @@
-import { fetchMesociclos } from '@/features/comite-tecnico/actions';
+import { fetchMesociclos, fetchAtletas } from '@/features/comite-tecnico/actions';
 import { CreateMicrocicloForm } from '@/features/comite-tecnico/components';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 interface NuevoMicrocicloPageProps {
-  searchParams: Promise<{ mesocicloId?: string }>;
+  searchParams: Promise<{ mesocicloId?: string; atletaId?: string }>;
 }
 
 export default async function NuevoMicrocicloPage({ searchParams }: NuevoMicrocicloPageProps) {
   const params = await searchParams;
 
-  // Obtener mesociclos para el selector
-  const result = await fetchMesociclos({ limit: 100 });
+  // Obtener mesociclos y atletas en paralelo
+  const [mesociclosResult, atletasResult] = await Promise.all([
+    fetchMesociclos({ limit: 100 }),
+    fetchAtletas({ limit: 100 }),
+  ]);
 
   // Transformar datos para el formulario (solo id, nombre, etapa)
-  const mesociclos = (result?.data || []).map((m) => ({
+  const mesociclos = (mesociclosResult?.data || []).map((m) => ({
     id: m.id,
     nombre: m.nombre,
     etapa: m.etapa,
+  }));
+
+  // Transformar atletas para el selector (id + nombreCompleto)
+  const atletas = (atletasResult?.data || []).map((a) => ({
+    id: a.id,
+    nombreCompleto: a.usuario.nombreCompleto,
   }));
 
   return (
@@ -38,7 +47,9 @@ export default async function NuevoMicrocicloPage({ searchParams }: NuevoMicroci
 
       <CreateMicrocicloForm
         mesociclos={mesociclos}
+        atletas={atletas}
         preselectedMesocicloId={params.mesocicloId}
+        preselectedAtletaId={params.atletaId}
       />
     </div>
   );

@@ -4,11 +4,9 @@ import { getCurrentUserAction } from '@/app/actions/auth.actions';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
 import { registroPostEntrenamientoSchema } from '@/features/atleta/types/atleta.types';
-import type { SleepDataPoint, PaginatedResponse } from '../types/progreso.types';
+import type { SleepDataPoint } from '../types/progreso.types';
 
-type RegistroPostEntrenamiento = z.infer<typeof registroPostEntrenamientoSchema>;
-
-// Server Action para obtener datos de sueño (calidad + horas)
+// Server Action para obtener datos de sueno (calidad + horas)
 // Endpoint: GET /api/registros-post-entrenamiento
 // Verificado en: backend/src/modules/registro-post-entrenamiento/registro-post-entrenamiento.controller.ts (línea 42)
 // Filtrado automático por JWT para ATLETA (líneas 329-336 del service)

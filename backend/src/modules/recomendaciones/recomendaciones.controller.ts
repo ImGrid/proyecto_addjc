@@ -12,8 +12,10 @@ import {
   UseGuards,
   ParseIntPipe,
   DefaultValuePipe,
+  ForbiddenException,
 } from '@nestjs/common';
 import { RecomendacionesService } from './recomendaciones.service';
+import { AccessControlService } from '../../common/services/access-control.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -28,7 +30,10 @@ import {
 @Controller('recomendaciones')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class RecomendacionesController {
-  constructor(private readonly recomendacionesService: RecomendacionesService) {}
+  constructor(
+    private readonly recomendacionesService: RecomendacionesService,
+    private readonly accessControl: AccessControlService,
+  ) {}
 
   // GET /api/recomendaciones/pendientes - Listar recomendaciones pendientes de revision
   // Solo COMITE_TECNICO puede ver pendientes
@@ -60,14 +65,29 @@ export class RecomendacionesController {
   }
 
   // GET /api/recomendaciones - Listar todas las recomendaciones con filtros
+  // ENTRENADOR: si pasa atletaId, se valida ownership. Sin atletaId, el service
+  // deberia filtrar por atletas asignados (si no lo hace, ve todas)
   @Get()
   @Roles('COMITE_TECNICO', 'ENTRENADOR')
   async listar(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('estado') estado?: EstadoRecomendacion,
-    @Query('atletaId') atletaId?: string
+    @Query('atletaId') atletaId?: string,
+    @CurrentUser() user?: any
   ) {
+    // ENTRENADOR: si filtra por atletaId, validar que sea su atleta
+    if (user && user.rol === 'ENTRENADOR' && atletaId) {
+      const hasAccess = await this.accessControl.checkAtletaOwnership(
+        BigInt(user.id),
+        user.rol,
+        BigInt(atletaId),
+      );
+      if (!hasAccess) {
+        throw new ForbiddenException('Solo puedes ver recomendaciones de tus atletas asignados');
+      }
+    }
+
     return this.recomendacionesService.findAll(page, limit, estado, atletaId);
   }
 
@@ -75,7 +95,24 @@ export class RecomendacionesController {
   @Get(':id')
   @Roles('COMITE_TECNICO', 'ENTRENADOR')
   async obtenerPorId(@Param('id') id: string, @CurrentUser() user: any) {
-    return this.recomendacionesService.findOne(id, BigInt(user.id), user.rol);
+    const recomendacion = await this.recomendacionesService.findOne(id, BigInt(user.id), user.rol);
+
+    // ENTRENADOR: validar que la recomendacion pertenece a uno de sus atletas
+    if (user.rol === 'ENTRENADOR' && recomendacion && recomendacion.atletaId) {
+      const atletaId = typeof recomendacion.atletaId === 'string'
+        ? BigInt(recomendacion.atletaId)
+        : recomendacion.atletaId;
+      const hasAccess = await this.accessControl.checkAtletaOwnership(
+        BigInt(user.id),
+        user.rol,
+        atletaId,
+      );
+      if (!hasAccess) {
+        throw new ForbiddenException('No tienes acceso a esta recomendacion');
+      }
+    }
+
+    return recomendacion;
   }
 
   // GET /api/recomendaciones/:id/historial - Obtener historial de cambios (Audit Trail)

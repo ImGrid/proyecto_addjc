@@ -1,43 +1,120 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bell } from 'lucide-react';
+import {
+  fetchRecomendaciones,
+  fetchRecomendacionesEstadisticas,
+} from '@/features/algoritmo/actions/fetch-recomendaciones';
+import { RecomendacionesFiltro } from '@/features/algoritmo/components/recomendaciones-filtro';
+import { RecomendacionesList } from '@/features/algoritmo/components/recomendaciones-list';
+import { RecomendacionesPagination } from '@/features/algoritmo/components/recomendaciones-pagination';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-export default async function RecomendacionesPage() {
-  // El modulo de recomendaciones no existe aun en el backend
-  // Por ahora es una vista informativa
+interface PageProps {
+  searchParams: Promise<{
+    estado?: string;
+    page?: string;
+  }>;
+}
+
+export default async function RecomendacionesCTPage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const estado = params.estado || undefined;
+  const page = params.page ? parseInt(params.page, 10) : 1;
+  const limit = 10;
+
+  const [recomendacionesResult, estadisticas] = await Promise.all([
+    fetchRecomendaciones({ estado, page, limit }),
+    fetchRecomendacionesEstadisticas(),
+  ]);
+
+  const recomendaciones = recomendacionesResult?.data || [];
+  const total = recomendacionesResult?.meta.total || 0;
+  const totalPages = recomendacionesResult?.meta.totalPages || 1;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Recomendaciones</h1>
-          <p className="text-muted-foreground">
-            Sugerencias del algoritmo de entrenamiento
-          </p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold">Recomendaciones</h1>
+        <p className="text-muted-foreground">
+          {total} recomendacion{total !== 1 ? 'es' : ''} - Revisa y gestiona las recomendaciones generadas por el algoritmo
+        </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5" />
-            Recomendaciones del Sistema
-          </CardTitle>
-          <CardDescription>
-            Alertas y sugerencias basadas en el analisis de datos de entrenamiento
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <Bell className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium">Modulo en desarrollo</h3>
-            <p className="text-muted-foreground mt-1">
-              El sistema de recomendaciones esta siendo implementado.
-              <br />
-              Aqui podras revisar y aprobar las sugerencias del algoritmo.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      {estadisticas && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Pendientes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">
+                {estadisticas.resumen.pendientes}
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                En proceso
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">
+                {estadisticas.resumen.enProceso}
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Aprobadas
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">
+                {estadisticas.resumen.cumplidas}
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Rechazadas
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">
+                {estadisticas.resumen.rechazadas}
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Tasa aprobacion
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">
+                {estadisticas.tasaAprobacion}%
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      <RecomendacionesFiltro />
+
+      <RecomendacionesList
+        recomendaciones={recomendaciones}
+        detalleBaseHref="/comite-tecnico/recomendaciones"
+      />
+
+      <RecomendacionesPagination
+        currentPage={page}
+        totalPages={totalPages}
+        total={total}
+      />
     </div>
   );
 }

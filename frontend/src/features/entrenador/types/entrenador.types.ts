@@ -44,6 +44,7 @@ export const atletaResumenSchema = z.object({
   edad: z.number().int(),
   categoriaPeso: z.enum(CategoriaPesoValues as [string, ...string[]]),
   pesoActual: z.number().nullable(),
+  perfilActual: z.string().nullable().optional(),
 
   // Datos del usuario asociado
   usuario: z.object({
@@ -113,8 +114,9 @@ export const atletasListResponseSchema = z.object({
   data: z.array(atletaResumenSchema),
   meta: z.object({
     total: z.number().int(),
-    page: z.number().int().optional(),
-    limit: z.number().int().optional(),
+    page: z.number().int(),
+    limit: z.number().int(),
+    totalPages: z.number().int(),
   }),
 });
 

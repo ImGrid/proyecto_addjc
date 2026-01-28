@@ -27,6 +27,10 @@ export const testFisicoSchema = z.object({
   microcicloId: z.string().nullable(),
   fechaTest: z.coerce.date(),
 
+  // Asistencia (schema.prisma lineas 233-234)
+  asistio: z.boolean().optional(),
+  motivoInasistencia: z.string().nullable().optional(),
+
   // Tests de fuerza maxima (1RM) - Backend retorna Decimal como string
   pressBanca: z.string().nullable(),
   pressBancaIntensidad: z.string().nullable(),
@@ -312,16 +316,16 @@ export const sesionSchema = z.object({
 
   // Planificacion
   duracionPlanificada: z.number().int(),
-  volumenPlanificado: z.number(),
-  intensidadPlanificada: z.number(),
+  volumenPlanificado: z.number().nullable(),
+  intensidadPlanificada: z.number().nullable(),
   // Datos reales (usados por algoritmo de recomendacion)
   volumenReal: z.number().nullable(),
   intensidadReal: z.number().nullable(),
 
-  // Contenidos
-  contenidoFisico: z.string(),
-  contenidoTecnico: z.string(),
-  contenidoTactico: z.string(),
+  // Contenidos (nullable en schema.prisma)
+  contenidoFisico: z.string().nullable(),
+  contenidoTecnico: z.string().nullable(),
+  contenidoTactico: z.string().nullable(),
 
   // Estructura de sesion
   calentamiento: z.string().nullable(),
@@ -331,6 +335,11 @@ export const sesionSchema = z.object({
   // Observaciones
   observaciones: z.string().nullable(),
   materialNecesario: z.string().nullable(),
+
+  // Campos del algoritmo (schema.prisma lineas 192-194)
+  aprobado: z.boolean().optional(),
+  perfilUtilizado: z.string().nullable().optional(),
+  justificacionAlgoritmo: z.string().nullable().optional(),
 
   // Metadata
   createdAt: z.coerce.date(),
@@ -354,6 +363,7 @@ export type Sesion = z.infer<typeof sesionSchema>;
 // ===================================
 
 // Respuesta paginada generica
+// Todos los endpoints del backend envian total, page, limit y totalPages
 export const paginatedResponseSchema = <T extends z.ZodTypeAny>(
   dataSchema: T
 ) =>
@@ -361,8 +371,9 @@ export const paginatedResponseSchema = <T extends z.ZodTypeAny>(
     data: z.array(dataSchema),
     meta: z.object({
       total: z.number(),
-      page: z.number().optional(),
-      limit: z.number().optional(),
+      page: z.number(),
+      limit: z.number(),
+      totalPages: z.number(),
     }),
   });
 
@@ -370,7 +381,8 @@ export type PaginatedResponse<T> = {
   data: T[];
   meta: {
     total: number;
-    page?: number;
-    limit?: number;
+    page: number;
+    limit: number;
+    totalPages: number;
   };
 };

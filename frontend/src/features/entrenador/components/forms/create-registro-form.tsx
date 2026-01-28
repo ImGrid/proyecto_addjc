@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useState, useEffect, useRef, useTransition } from 'react';
+import { useActionState, useState, useEffect, useRef, useTransition, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { SelectAtleta } from './select-atleta';
 import { SelectSesion } from './select-sesion';
 import { DolenciasFieldArray, FormWithDolencias } from './dolencias-field-array';
@@ -15,6 +17,7 @@ import { SubmitButton } from './submit-button';
 import { createRegistro } from '../../actions/create-registro';
 import { initialActionState } from '@/types/action-result';
 import { fetchSesionesByAtleta, SesionParaSelector } from '../../actions/fetch-sesiones';
+import { fetchEjerciciosSesion, EjercicioSesionItem } from '../../actions/fetch-ejercicios-sesion';
 import {
   Activity,
   Moon,
@@ -22,6 +25,10 @@ import {
   FileText,
   CheckCircle,
   XCircle,
+  Dumbbell,
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { ENTRENADOR_ROUTES } from '@/lib/routes';
 
@@ -34,8 +41,28 @@ interface CreateRegistroFormProps {
   atletas: Atleta[];
 }
 
+// Estado de rendimiento por ejercicio
+interface RendimientoEjercicio {
+  ejercicioSesionId: number;
+  completado: boolean;
+  rendimiento?: number;
+  dificultadPercibida?: number;
+  tiempoReal?: number;
+  observacion?: string;
+  motivoNoCompletado?: string;
+}
+
 // Tipos de sesion permitidos para registro post-entrenamiento
 const TIPOS_SESION_PERMITIDOS = 'ENTRENAMIENTO,RECUPERACION,COMPETENCIA';
+
+// Mapa de colores para tipos de ejercicio
+const TIPO_EJERCICIO_COLORS: Record<string, string> = {
+  FISICO: 'bg-blue-100 text-blue-800',
+  TECNICO_TACHI: 'bg-green-100 text-green-800',
+  TECNICO_NE: 'bg-emerald-100 text-emerald-800',
+  RESISTENCIA: 'bg-orange-100 text-orange-800',
+  VELOCIDAD: 'bg-purple-100 text-purple-800',
+};
 
 export function CreateRegistroForm({ atletas }: CreateRegistroFormProps) {
   const router = useRouter();
@@ -47,9 +74,19 @@ export function CreateRegistroForm({ atletas }: CreateRegistroFormProps) {
   const [isPending, startTransition] = useTransition();
   const [asistio, setAsistio] = useState(true);
 
+  // Estado para ejercicios y rendimientos
+  const [ejerciciosSesion, setEjerciciosSesion] = useState<EjercicioSesionItem[]>([]);
+  const [loadingEjercicios, setLoadingEjercicios] = useState(false);
+  const [rendimientos, setRendimientos] = useState<Record<string, RendimientoEjercicio>>({});
+  const [observacionesAbiertas, setObservacionesAbiertas] = useState<Record<string, boolean>>({});
+
   // Detectar si la sesion seleccionada es tipo COMPETENCIA
   const sesionSeleccionada = sesiones.find(s => s.id === selectedSesion);
   const esCompetencia = sesionSeleccionada?.tipoSesion === 'COMPETENCIA';
+
+  // Determinar si se debe mostrar la seccion de rendimiento
+  const mostrarRendimiento = asistio && !esCompetencia && selectedSesion !== '';
+  const tieneEjercicios = ejerciciosSesion.length > 0;
 
   // React Hook Form para manejo del array de dolencias (sin resolver - validacion en servidor)
   const { control, register, getValues } = useForm<FormWithDolencias>({
@@ -65,6 +102,8 @@ export function CreateRegistroForm({ atletas }: CreateRegistroFormProps) {
       // Limpiar sesion seleccionada al cambiar de atleta
       setSelectedSesion('');
       setSesiones([]);
+      setEjerciciosSesion([]);
+      setRendimientos({});
 
       // Cargar sesiones del atleta (solo tipos permitidos para post-entrenamiento)
       startTransition(async () => {
@@ -76,8 +115,75 @@ export function CreateRegistroForm({ atletas }: CreateRegistroFormProps) {
     } else {
       setSesiones([]);
       setSelectedSesion('');
+      setEjerciciosSesion([]);
+      setRendimientos({});
     }
   }, [selectedAtleta]);
+
+  // Cargar ejercicios cuando cambia la sesion seleccionada
+  const cargarEjercicios = useCallback(async (sesionId: string) => {
+    if (!sesionId) {
+      setEjerciciosSesion([]);
+      setRendimientos({});
+      return;
+    }
+
+    setLoadingEjercicios(true);
+    try {
+      const ejercicios = await fetchEjerciciosSesion(sesionId);
+      setEjerciciosSesion(ejercicios);
+
+      // Inicializar rendimientos con valores por defecto
+      const nuevosRendimientos: Record<string, RendimientoEjercicio> = {};
+      for (const ej of ejercicios) {
+        nuevosRendimientos[ej.id] = {
+          ejercicioSesionId: Number(ej.id),
+          completado: true,
+          rendimiento: 7,
+        };
+      }
+      setRendimientos(nuevosRendimientos);
+      setObservacionesAbiertas({});
+    } catch (error) {
+      console.error('Error cargando ejercicios:', error);
+      setEjerciciosSesion([]);
+      setRendimientos({});
+    } finally {
+      setLoadingEjercicios(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selectedSesion) {
+      cargarEjercicios(selectedSesion);
+    } else {
+      setEjerciciosSesion([]);
+      setRendimientos({});
+    }
+  }, [selectedSesion, cargarEjercicios]);
+
+  // Actualizar un campo de rendimiento
+  const updateRendimiento = (
+    ejercicioId: string,
+    field: keyof RendimientoEjercicio,
+    value: unknown
+  ) => {
+    setRendimientos(prev => ({
+      ...prev,
+      [ejercicioId]: {
+        ...prev[ejercicioId],
+        [field]: value,
+      },
+    }));
+  };
+
+  // Toggle observaciones colapsables
+  const toggleObservacion = (ejercicioId: string) => {
+    setObservacionesAbiertas(prev => ({
+      ...prev,
+      [ejercicioId]: !prev[ejercicioId],
+    }));
+  };
 
   // Mostrar toast y redirigir en caso de exito
   useEffect(() => {
@@ -142,6 +248,14 @@ export function CreateRegistroForm({ atletas }: CreateRegistroFormProps) {
     const dolencias = getValues('dolencias');
     if (dolencias && dolencias.length > 0) {
       formData.set('dolencias', JSON.stringify(dolencias));
+    }
+
+    // Serializar rendimientos de ejercicios como JSON
+    if (mostrarRendimiento && tieneEjercicios) {
+      const rendimientosArray = Object.values(rendimientos);
+      if (rendimientosArray.length > 0) {
+        formData.set('rendimientosEjercicios', JSON.stringify(rendimientosArray));
+      }
     }
 
     // Llamar al server action
@@ -308,6 +422,207 @@ export function CreateRegistroForm({ atletas }: CreateRegistroFormProps) {
             </CardContent>
           </Card>
 
+          {/* Seccion: Rendimiento por Ejercicio */}
+          {selectedSesion && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Dumbbell className="h-5 w-5" />
+                  Rendimiento por Ejercicio *
+                </CardTitle>
+                <CardDescription>
+                  Evalua el rendimiento del atleta en cada ejercicio de la sesion
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {loadingEjercicios && (
+                  <p className="text-sm text-muted-foreground">
+                    Cargando ejercicios de la sesion...
+                  </p>
+                )}
+
+                {!loadingEjercicios && !tieneEjercicios && (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      Esta sesion no tiene ejercicios asignados. Primero asigne ejercicios a la sesion desde la planificacion antes de registrar el post-entrenamiento.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {!loadingEjercicios && tieneEjercicios && (
+                  <div className="space-y-4">
+                    {ejerciciosSesion.map((ejercicio, index) => {
+                      const rend = rendimientos[ejercicio.id];
+                      if (!rend) return null;
+
+                      return (
+                        <div
+                          key={ejercicio.id}
+                          className="rounded-lg border p-4 space-y-3"
+                        >
+                          {/* Encabezado del ejercicio */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-muted-foreground">
+                                {index + 1}.
+                              </span>
+                              <span className="font-medium">{ejercicio.nombre}</span>
+                              <Badge
+                                variant="secondary"
+                                className={TIPO_EJERCICIO_COLORS[ejercicio.tipo] || ''}
+                              >
+                                {ejercicio.tipo.replace(/_/g, ' ')}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Label
+                                htmlFor={`completado-${ejercicio.id}`}
+                                className="text-sm"
+                              >
+                                Completado
+                              </Label>
+                              <Switch
+                                id={`completado-${ejercicio.id}`}
+                                checked={rend.completado}
+                                onCheckedChange={(checked) =>
+                                  updateRendimiento(ejercicio.id, 'completado', checked)
+                                }
+                              />
+                            </div>
+                          </div>
+
+                          {/* Detalle del ejercicio (solo lectura) */}
+                          <div className="flex gap-4 text-xs text-muted-foreground">
+                            {ejercicio.duracionMinutos && (
+                              <span>{ejercicio.duracionMinutos} min</span>
+                            )}
+                            {ejercicio.repeticiones && (
+                              <span>{ejercicio.repeticiones} reps</span>
+                            )}
+                            {ejercicio.series && (
+                              <span>{ejercicio.series} series</span>
+                            )}
+                            {ejercicio.intensidad && (
+                              <span>Intensidad: {ejercicio.intensidad}%</span>
+                            )}
+                          </div>
+
+                          {/* Campos si COMPLETADO */}
+                          {rend.completado && (
+                            <div className="grid gap-3 md:grid-cols-3">
+                              <div className="space-y-1">
+                                <Label className="text-sm">
+                                  Rendimiento (1-10) *
+                                </Label>
+                                <Input
+                                  type="number"
+                                  min={1}
+                                  max={10}
+                                  value={rend.rendimiento ?? ''}
+                                  onChange={(e) =>
+                                    updateRendimiento(
+                                      ejercicio.id,
+                                      'rendimiento',
+                                      e.target.value ? Number(e.target.value) : undefined
+                                    )
+                                  }
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-sm">
+                                  Dificultad percibida (1-10)
+                                </Label>
+                                <Input
+                                  type="number"
+                                  min={1}
+                                  max={10}
+                                  value={rend.dificultadPercibida ?? ''}
+                                  onChange={(e) =>
+                                    updateRendimiento(
+                                      ejercicio.id,
+                                      'dificultadPercibida',
+                                      e.target.value ? Number(e.target.value) : undefined
+                                    )
+                                  }
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-sm">
+                                  Tiempo real (min)
+                                </Label>
+                                <Input
+                                  type="number"
+                                  min={1}
+                                  max={120}
+                                  value={rend.tiempoReal ?? ''}
+                                  onChange={(e) =>
+                                    updateRendimiento(
+                                      ejercicio.id,
+                                      'tiempoReal',
+                                      e.target.value ? Number(e.target.value) : undefined
+                                    )
+                                  }
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Campo si NO COMPLETADO */}
+                          {!rend.completado && (
+                            <div className="space-y-1">
+                              <Label className="text-sm">
+                                Motivo de no completar *
+                              </Label>
+                              <textarea
+                                rows={2}
+                                maxLength={500}
+                                placeholder="Explica por que no se completo el ejercicio..."
+                                value={rend.motivoNoCompletado ?? ''}
+                                onChange={(e) =>
+                                  updateRendimiento(ejercicio.id, 'motivoNoCompletado', e.target.value)
+                                }
+                                className="flex min-h-[50px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                              />
+                            </div>
+                          )}
+
+                          {/* Observacion colapsable */}
+                          <div>
+                            <button
+                              type="button"
+                              onClick={() => toggleObservacion(ejercicio.id)}
+                              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              {observacionesAbiertas[ejercicio.id] ? (
+                                <ChevronUp className="h-3 w-3" />
+                              ) : (
+                                <ChevronDown className="h-3 w-3" />
+                              )}
+                              Observacion
+                            </button>
+                            {observacionesAbiertas[ejercicio.id] && (
+                              <textarea
+                                rows={2}
+                                maxLength={500}
+                                placeholder="Observaciones sobre este ejercicio..."
+                                value={rend.observacion ?? ''}
+                                onChange={(e) =>
+                                  updateRendimiento(ejercicio.id, 'observacion', e.target.value)
+                                }
+                                className="mt-1 flex min-h-[50px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                              />
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Seccion: Estado Fisico */}
           <Card>
             <CardHeader>
@@ -448,7 +763,10 @@ export function CreateRegistroForm({ atletas }: CreateRegistroFormProps) {
 
       {/* Boton Submit */}
       <div className="flex justify-end gap-4">
-        <SubmitButton pendingText="Guardando registro...">
+        <SubmitButton
+          pendingText="Guardando registro..."
+          disabled={mostrarRendimiento && !tieneEjercicios}
+        >
           Guardar Registro
         </SubmitButton>
       </div>

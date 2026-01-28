@@ -6,6 +6,8 @@ import { EditSesionForm } from '@/features/comite-tecnico/components/forms/edit-
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { AUTH_ROUTES, COMITE_TECNICO_ROUTES } from '@/lib/routes';
+import { fetchEjerciciosPorTipo } from '@/features/algoritmo/actions/fetch-catalogo';
+import { fetchEjerciciosSesion } from '@/features/entrenador/actions/fetch-ejercicios-sesion';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -21,10 +23,12 @@ export default async function EditarSesionComiteTecnicoPage({ params }: PageProp
     redirect(AUTH_ROUTES.login);
   }
 
-  // Cargar sesion y microciclos en paralelo
-  const [sesion, microciclos] = await Promise.all([
+  // Cargar sesion, microciclos, catalogo y ejercicios existentes en paralelo
+  const [sesion, microciclos, catalogoPorTipo, ejerciciosExistentes] = await Promise.all([
     fetchSesion(id),
     fetchMicrociclosParaSelector(),
+    fetchEjerciciosPorTipo(),
+    fetchEjerciciosSesion(id),
   ]);
 
   if (!sesion) {
@@ -56,6 +60,8 @@ export default async function EditarSesionComiteTecnicoPage({ params }: PageProp
         sesion={sesion}
         microciclos={microciclos}
         redirectUrl={COMITE_TECNICO_ROUTES.sesiones.list}
+        catalogoPorTipo={catalogoPorTipo}
+        ejerciciosExistentes={ejerciciosExistentes}
       />
     </div>
   );

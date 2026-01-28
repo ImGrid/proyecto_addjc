@@ -6,6 +6,7 @@ import { CreateSesionForm } from '@/features/comite-tecnico/components/forms/cre
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { AUTH_ROUTES, COMITE_TECNICO_ROUTES } from '@/lib/routes';
+import { fetchEjerciciosPorTipo } from '@/features/algoritmo/actions/fetch-catalogo';
 
 export default async function NuevaSesionComiteTecnicoPage() {
   // Verificar autenticacion
@@ -15,8 +16,11 @@ export default async function NuevaSesionComiteTecnicoPage() {
     redirect(AUTH_ROUTES.login);
   }
 
-  // Cargar microciclos para el selector
-  const microciclos = await fetchMicrociclosParaSelector();
+  // Cargar microciclos y catalogo de ejercicios en paralelo
+  const [microciclos, catalogoPorTipo] = await Promise.all([
+    fetchMicrociclosParaSelector(),
+    fetchEjerciciosPorTipo(),
+  ]);
 
   if (!microciclos) {
     redirect(COMITE_TECNICO_ROUTES.dashboard);
@@ -42,6 +46,7 @@ export default async function NuevaSesionComiteTecnicoPage() {
       <CreateSesionForm
         microciclos={microciclos}
         redirectUrl={COMITE_TECNICO_ROUTES.sesiones.list}
+        catalogoPorTipo={catalogoPorTipo}
       />
     </div>
   );

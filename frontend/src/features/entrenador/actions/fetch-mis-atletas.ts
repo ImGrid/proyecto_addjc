@@ -54,8 +54,9 @@ export async function fetchMisAtletas(
       data: z.array(atletaResumenSchema),
       meta: z.object({
         total: z.number(),
-        page: z.number().optional(),
-        limit: z.number().optional(),
+        page: z.number(),
+        limit: z.number(),
+        totalPages: z.number(),
       }),
     }).safeParse(result);
 

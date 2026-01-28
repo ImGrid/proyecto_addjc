@@ -6,6 +6,7 @@ import { CreateSesionForm } from '@/features/comite-tecnico/components/forms/cre
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { AUTH_ROUTES, ENTRENADOR_ROUTES } from '@/lib/routes';
+import { fetchEjerciciosPorTipo } from '@/features/algoritmo/actions/fetch-catalogo';
 
 export default async function NuevaSesionEntrenadorPage() {
   // Verificar autenticacion
@@ -15,8 +16,11 @@ export default async function NuevaSesionEntrenadorPage() {
     redirect(AUTH_ROUTES.login);
   }
 
-  // Cargar microciclos para el selector
-  const microciclos = await fetchMicrociclosParaSelector();
+  // Cargar microciclos y catalogo de ejercicios en paralelo
+  const [microciclos, catalogoPorTipo] = await Promise.all([
+    fetchMicrociclosParaSelector(),
+    fetchEjerciciosPorTipo(),
+  ]);
 
   if (!microciclos) {
     redirect(ENTRENADOR_ROUTES.dashboard);
@@ -42,6 +46,7 @@ export default async function NuevaSesionEntrenadorPage() {
       <CreateSesionForm
         microciclos={microciclos}
         redirectUrl={ENTRENADOR_ROUTES.sesiones.list}
+        catalogoPorTipo={catalogoPorTipo}
       />
     </div>
   );

@@ -28,9 +28,10 @@ export interface DashboardStats {
 // Tipo para la respuesta completa del dashboard
 export interface DashboardData {
   stats: DashboardStats;
-  tests: any[]; // Usamos any temporalmente, luego usaremos los tipos reales
+  tests: any[];
   planificacion: any[];
   notificaciones: any[];
+  notificacionesNoLeidas: number;
   dolencias: any[];
 }
 
@@ -61,7 +62,7 @@ export async function fetchDashboardData(): Promise<DashboardData | null> {
 
     // Hacer peticiones en paralelo a los 3 endpoints
     // IMPORTANTE: Los endpoints se filtran automaticamente por el usuario autenticado
-    const [testsResponse, microciclosResponse, dolenciasResponse] =
+    const [testsResponse, microciclosResponse, dolenciasResponse, notificacionesResponse] =
       await Promise.all([
         // Obtener todos los tests fisicos del atleta autenticado
         // Endpoint: GET /tests-fisicos/me (solo para ATLETA)
@@ -92,6 +93,16 @@ export async function fetchDashboardData(): Promise<DashboardData | null> {
           },
           credentials: 'include',
         }).catch(() => null),
+
+        // Obtener notificaciones recientes del atleta (las 5 mas recientes no leidas)
+        // Endpoint: GET /notificaciones (filtrado automatico por usuario)
+        fetch(`${API_URL}/notificaciones?soloNoLeidas=true&page=1&limit=5`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        }).catch(() => null),
       ]);
 
     // Parsear respuestas JSON de forma segura
@@ -104,6 +115,11 @@ export async function fetchDashboardData(): Promise<DashboardData | null> {
 
     const dolenciasResult = dolenciasResponse?.ok ? await dolenciasResponse.json() : { data: [] };
     const dolenciasData = dolenciasResult.data || [];
+
+    // /notificaciones devuelve estructura paginada { data: [...], meta: { noLeidas, ... } }
+    const notificacionesResult = notificacionesResponse?.ok ? await notificacionesResponse.json() : { data: [], meta: { noLeidas: 0 } };
+    const notificacionesData = notificacionesResult.data || [];
+    const noLeidas: number = notificacionesResult.meta?.noLeidas ?? 0;
 
     // Validar con Zod
     const testsValidation = z.array(testFisicoSchema).safeParse(testsData);
@@ -205,7 +221,8 @@ export async function fetchDashboardData(): Promise<DashboardData | null> {
       stats,
       tests: tests.slice(0, 10), // Solo los ultimos 10 tests
       planificacion: planificacion.slice(0, 5), // Solo los proximos 5 microciclos
-      notificaciones: [], // Modulo no implementado aun
+      notificaciones: notificacionesData.slice(0, 5),
+      notificacionesNoLeidas: noLeidas,
       dolencias,
     };
   } catch (error) {

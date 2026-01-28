@@ -778,6 +778,9 @@ export class SesionesService {
       vueltaCalma: sesion.vueltaCalma,
       observaciones: sesion.observaciones,
       materialNecesario: sesion.materialNecesario,
+      aprobado: sesion.aprobado,
+      perfilUtilizado: sesion.perfilUtilizado,
+      justificacionAlgoritmo: sesion.justificacionAlgoritmo,
       createdAt: sesion.createdAt,
       updatedAt: sesion.updatedAt,
       ...(sesion.microciclo && {
