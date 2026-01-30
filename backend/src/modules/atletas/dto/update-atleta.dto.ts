@@ -20,6 +20,13 @@ export class UpdateAtletaDto {
   @IsOptional()
   municipio?: string;
 
+  // Datos deportivos: municipio del club y club
+  @IsString()
+  @MinLength(1, { message: 'Municipio del club es requerido' })
+  @MaxLength(100)
+  @IsOptional()
+  municipioClub?: string;
+
   @IsString()
   @MinLength(1, { message: 'Club es requerido' })
   @MaxLength(100)
@@ -66,10 +73,6 @@ export class UpdateAtletaDto {
   @Min(0, { message: 'Peso actual no puede ser negativo' })
   @IsOptional()
   pesoActual?: number;
-
-  @IsInt()
-  @IsOptional()
-  fcReposo?: number;
 
   // Estado del atleta (para activar/desactivar)
   // Este campo actualiza el estado del usuario asociado

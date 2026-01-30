@@ -2,6 +2,7 @@ import {
   fetchRecomendaciones,
   fetchRecomendacionesEstadisticas,
 } from '@/features/algoritmo/actions/fetch-recomendaciones';
+import { fetchAtletas } from '@/features/comite-tecnico/actions/fetch-atletas';
 import { RecomendacionesFiltro } from '@/features/algoritmo/components/recomendaciones-filtro';
 import { RecomendacionesList } from '@/features/algoritmo/components/recomendaciones-list';
 import { RecomendacionesPagination } from '@/features/algoritmo/components/recomendaciones-pagination';
@@ -10,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 interface PageProps {
   searchParams: Promise<{
     estado?: string;
+    atletaId?: string;
     page?: string;
   }>;
 }
@@ -17,17 +19,25 @@ interface PageProps {
 export default async function RecomendacionesCTPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const estado = params.estado || undefined;
+  const atletaId = params.atletaId || undefined;
   const page = params.page ? parseInt(params.page, 10) : 1;
   const limit = 10;
 
-  const [recomendacionesResult, estadisticas] = await Promise.all([
-    fetchRecomendaciones({ estado, page, limit }),
+  const [recomendacionesResult, estadisticas, atletasResult] = await Promise.all([
+    fetchRecomendaciones({ estado, atletaId, page, limit }),
     fetchRecomendacionesEstadisticas(),
+    fetchAtletas({ limit: 100 }),
   ]);
 
   const recomendaciones = recomendacionesResult?.data || [];
   const total = recomendacionesResult?.meta.total || 0;
   const totalPages = recomendacionesResult?.meta.totalPages || 1;
+
+  // Formatear atletas para el filtro
+  const atletas = (atletasResult?.data || []).map((atleta) => ({
+    id: atleta.id,
+    nombreCompleto: atleta.usuario.nombreCompleto,
+  }));
 
   return (
     <div className="space-y-6">
@@ -103,7 +113,7 @@ export default async function RecomendacionesCTPage({ searchParams }: PageProps)
         </div>
       )}
 
-      <RecomendacionesFiltro />
+      <RecomendacionesFiltro atletas={atletas} />
 
       <RecomendacionesList
         recomendaciones={recomendaciones}

@@ -104,17 +104,17 @@ export function EditMesocicloForm({ mesociclo }: EditMesocicloFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="numeroMesociclo">Numero de Mesociclo *</Label>
+            <Label htmlFor="codigoMesociclo">Codigo de Mesociclo *</Label>
             <Input
-              type="number"
-              id="numeroMesociclo"
-              name="numeroMesociclo"
-              min="1"
-              defaultValue={getPreviousValue('numeroMesociclo', String(mesociclo.numeroMesociclo))}
-              className={getFieldError('numeroMesociclo') ? 'border-destructive' : ''}
+              type="text"
+              id="codigoMesociclo"
+              name="codigoMesociclo"
+              maxLength={50}
+              defaultValue={getPreviousValue('codigoMesociclo', mesociclo.codigoMesociclo)}
+              className={getFieldError('codigoMesociclo') ? 'border-destructive' : ''}
             />
-            {getFieldError('numeroMesociclo') && (
-              <p className="text-sm text-destructive">{getFieldError('numeroMesociclo')}</p>
+            {getFieldError('codigoMesociclo') && (
+              <p className="text-sm text-destructive">{getFieldError('codigoMesociclo')}</p>
             )}
           </div>
 

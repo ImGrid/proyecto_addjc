@@ -5,9 +5,6 @@ import {
   MaxLength,
   IsDateString,
   IsEnum,
-  IsInt,
-  Min,
-  IsOptional,
 } from 'class-validator';
 import { EtapaMesociclo } from '@prisma/client';
 
@@ -22,9 +19,10 @@ export class CreateMesocicloDto {
   @MaxLength(100)
   nombre!: string;
 
-  @IsInt()
-  @Min(1)
-  numeroMesociclo!: number;
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(50)
+  codigoMesociclo!: string;
 
   @IsEnum(EtapaMesociclo)
   @IsNotEmpty()
@@ -49,9 +47,4 @@ export class CreateMesocicloDto {
   @IsString()
   @IsNotEmpty()
   objetivoTactico!: string;
-
-  @IsInt()
-  @Min(0)
-  @IsOptional()
-  totalMicrociclos?: number;
 }

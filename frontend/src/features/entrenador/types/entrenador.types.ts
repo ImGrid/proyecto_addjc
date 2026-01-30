@@ -38,6 +38,7 @@ export const atletaResumenSchema = z.object({
   id: z.string(),
   usuarioId: z.string(),
   municipio: z.string(),
+  municipioClub: z.string(),
   club: z.string(),
   categoria: z.string(),
   fechaNacimiento: z.coerce.date(),
@@ -81,7 +82,6 @@ export type AtletaResumen = z.infer<typeof atletaResumenSchema>;
 export const atletaDetalleSchema = atletaResumenSchema.extend({
   direccion: z.string().nullable(),
   telefono: z.string().nullable(),
-  fcReposo: z.number().int().nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });

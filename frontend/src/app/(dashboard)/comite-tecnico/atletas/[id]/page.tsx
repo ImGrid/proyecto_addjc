@@ -14,7 +14,6 @@ import {
   Scale,
   UserCog,
   Edit,
-  Heart,
 } from 'lucide-react';
 import { formatDateLocale } from '@/lib/date-utils';
 import { COMITE_TECNICO_ROUTES } from '@/lib/routes';
@@ -169,16 +168,6 @@ export default async function AtletaDetallePage({ params }: AtletaDetallePagePro
               <div>
                 <p className="text-sm text-muted-foreground">Peso Actual</p>
                 <p className="font-medium">{atleta.pesoActual} kg</p>
-              </div>
-            )}
-
-            {atleta.fcReposo && (
-              <div>
-                <p className="text-sm text-muted-foreground flex items-center gap-1">
-                  <Heart className="h-4 w-4" />
-                  FC Reposo
-                </p>
-                <p className="font-medium">{atleta.fcReposo} bpm</p>
               </div>
             )}
 

@@ -7,6 +7,7 @@ import type {
   ResumenNotificaciones,
   AlertasPaginadas,
   AlertaAtleta,
+  CentroNotificacionesTotal,
 } from '../types/algoritmo.types';
 
 // Parametros para listar notificaciones
@@ -223,6 +224,30 @@ export async function fetchAlertasAtleta(
     return await response.json();
   } catch (error) {
     console.error('[fetchAlertasAtleta] Error:', error);
+    return null;
+  }
+}
+
+// Obtener total para badge del Centro de Notificaciones (sidebar)
+// Verificado: notificaciones.controller.ts GET /notificaciones/centro/total
+// Roles: COMITE_TECNICO, ENTRENADOR
+export async function fetchCentroNotificacionesTotal(): Promise<CentroNotificacionesTotal | null> {
+  try {
+    const token = await getAuthToken();
+    if (!token) {
+      return null;
+    }
+
+    const response = await authFetch('/notificaciones/centro/total');
+
+    if (!response.ok) {
+      console.error('[fetchCentroNotificacionesTotal] Error:', response.status);
+      return null;
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('[fetchCentroNotificacionesTotal] Error:', error);
     return null;
   }
 }

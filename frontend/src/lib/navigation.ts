@@ -1,26 +1,19 @@
 import {
   Home,
   Users,
-  Settings,
   Calendar,
   Trophy,
   Clipboard,
   Activity,
   BarChart,
   Bell,
-  Database,
   Heart,
   AlertTriangle,
   UserCog,
   Link,
-  Layers,
-  CalendarDays,
-  CalendarRange,
   CalendarClock,
   Medal,
-  Lightbulb,
   LineChart,
-  ShieldAlert,
   BookOpen,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -36,6 +29,7 @@ export interface NavigationItem {
   label: string;
   icon: LucideIcon;
   children?: NavigationSubItem[];
+  badgeKey?: string;
 }
 
 export const navigationConfig: Record<RolUsuario, NavigationItem[]> = {
@@ -128,24 +122,15 @@ export const navigationConfig: Record<RolUsuario, NavigationItem[]> = {
       icon: Medal,
     },
     {
-      href: '/comite-tecnico/recomendaciones',
+      href: '/comite-tecnico/centro-notificaciones',
       label: 'Recomendaciones',
-      icon: Lightbulb,
+      icon: Bell,
+      badgeKey: 'centroNotificaciones',
     },
     {
       href: '/comite-tecnico/analisis',
       label: 'Analisis',
       icon: LineChart,
-    },
-    {
-      href: '/comite-tecnico/alertas',
-      label: 'Alertas',
-      icon: ShieldAlert,
-    },
-    {
-      href: '/comite-tecnico/notificaciones',
-      label: 'Notificaciones',
-      icon: Bell,
     },
     {
       href: '/comite-tecnico/catalogo-ejercicios',
@@ -210,19 +195,10 @@ export const navigationConfig: Record<RolUsuario, NavigationItem[]> = {
       icon: Medal,
     },
     {
-      href: '/entrenador/recomendaciones',
+      href: '/entrenador/centro-notificaciones',
       label: 'Recomendaciones',
-      icon: Lightbulb,
-    },
-    {
-      href: '/entrenador/alertas',
-      label: 'Alertas',
-      icon: ShieldAlert,
-    },
-    {
-      href: '/entrenador/notificaciones',
-      label: 'Notificaciones',
       icon: Bell,
+      badgeKey: 'centroNotificaciones',
     },
   ],
 

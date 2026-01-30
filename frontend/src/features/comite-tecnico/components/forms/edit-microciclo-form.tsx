@@ -29,6 +29,9 @@ export function EditMicrocicloForm({ microciclo }: EditMicrocicloFormProps) {
   const updateWithId = updateMicrociclo.bind(null, microciclo.id);
   const [state, formAction] = useActionState(updateWithId, initialActionState);
   const [selectedTipo, setSelectedTipo] = useState(microciclo.tipoMicrociclo);
+  const [fechaInicio, setFechaInicio] = useState(formatDateForInput(microciclo.fechaInicio));
+  const [fechaFin, setFechaFin] = useState(formatDateForInput(microciclo.fechaFin));
+  const [errorFechaInicio, setErrorFechaInicio] = useState<string | null>(null);
 
   // Mostrar toast y redirigir en caso de exito
   useEffect(() => {
@@ -73,8 +76,35 @@ export function EditMicrocicloForm({ microciclo }: EditMicrocicloFormProps) {
       if (state.submittedData.tipoMicrociclo) {
         setSelectedTipo(String(state.submittedData.tipoMicrociclo));
       }
+      if (state.submittedData.fechaInicio) {
+        setFechaInicio(String(state.submittedData.fechaInicio));
+      }
     }
   }, [state]);
+
+  // Validar que fechaInicio sea LUNES y calcular fechaFin
+  useEffect(() => {
+    if (fechaInicio) {
+      const inicio = new Date(fechaInicio + 'T00:00:00');
+      const diaSemana = inicio.getDay();
+
+      // Validar que sea lunes (getDay() === 1)
+      if (diaSemana !== 1) {
+        const diasSemana = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+        setErrorFechaInicio(`La fecha debe ser un LUNES. Seleccionaste ${diasSemana[diaSemana]}.`);
+        setFechaFin('');
+      } else {
+        setErrorFechaInicio(null);
+        // Calcular fechaFin (fechaInicio + 6 dias = 7 dias totales)
+        const fin = new Date(inicio);
+        fin.setDate(fin.getDate() + 6);
+        setFechaFin(fin.toISOString().split('T')[0]);
+      }
+    } else {
+      setErrorFechaInicio(null);
+      setFechaFin('');
+    }
+  }, [fechaInicio]);
 
   return (
     <form action={formAction} className="space-y-6">
@@ -139,32 +169,38 @@ export function EditMicrocicloForm({ microciclo }: EditMicrocicloFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="fechaInicio">Fecha Inicio *</Label>
+            <Label htmlFor="fechaInicio">Fecha Inicio (Lunes) *</Label>
             <Input
               type="date"
               id="fechaInicio"
               name="fechaInicio"
-              defaultValue={getPreviousValue('fechaInicio', formatDateForInput(microciclo.fechaInicio))}
-              className={getFieldError('fechaInicio') ? 'border-destructive' : ''}
+              value={fechaInicio}
+              onChange={(e) => setFechaInicio(e.target.value)}
+              className={getFieldError('fechaInicio') || errorFechaInicio ? 'border-destructive' : ''}
             />
-            {getFieldError('fechaInicio') && (
+            {errorFechaInicio && (
+              <p className="text-sm text-destructive">{errorFechaInicio}</p>
+            )}
+            {!errorFechaInicio && getFieldError('fechaInicio') && (
               <p className="text-sm text-destructive">{getFieldError('fechaInicio')}</p>
             )}
+            <p className="text-xs text-muted-foreground">Debe ser un lunes (inicio de semana)</p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="fechaFin">Fecha Fin *</Label>
+            <Label htmlFor="fechaFin">Fecha Fin (Domingo) *</Label>
             <Input
               type="date"
               id="fechaFin"
               name="fechaFin"
-              defaultValue={getPreviousValue('fechaFin', formatDateForInput(microciclo.fechaFin))}
-              className={getFieldError('fechaFin') ? 'border-destructive' : ''}
+              value={fechaFin}
+              readOnly
+              className="bg-muted"
             />
             {getFieldError('fechaFin') && (
               <p className="text-sm text-destructive">{getFieldError('fechaFin')}</p>
             )}
-            <p className="text-xs text-muted-foreground">Debe ser 6 dias despues del inicio (7 dias totales)</p>
+            <p className="text-xs text-muted-foreground">Se calcula automaticamente (7 dias)</p>
           </div>
         </CardContent>
       </Card>

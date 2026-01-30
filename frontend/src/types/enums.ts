@@ -249,3 +249,25 @@ export const SeveridadValues = Object.values(Severidad);
 export const PeriodoToleranciaValues = Object.values(PeriodoTolerancia);
 export const TipoEjercicioValues = Object.values(TipoEjercicio);
 export const PerfilAtletaValues = Object.values(PerfilAtleta);
+
+// Datos estaticos de municipios y clubes de ADDJC
+// Fuente: respuestas.txt del cliente
+export const MUNICIPIOS_CLUB = [
+  'Cochabamba',
+  'Tiquipaya',
+  'Colcapirhua',
+  'Quillacollo',
+] as const;
+
+export type MunicipioClub = typeof MUNICIPIOS_CLUB[number];
+
+// Relacion municipio -> clubes
+export const CLUBES_POR_MUNICIPIO: Record<MunicipioClub, readonly string[]> = {
+  Cochabamba: ['Asaji', 'Eishoji', 'Sonkey'],
+  Tiquipaya: ['Takeshi', 'Nihon'],
+  Colcapirhua: ['Aguilas', 'Mifune'],
+  Quillacollo: ['Tigre', 'Fukuda'],
+} as const;
+
+// Array plano de todos los clubes (para validaciones)
+export const TODOS_LOS_CLUBES = Object.values(CLUBES_POR_MUNICIPIO).flat();

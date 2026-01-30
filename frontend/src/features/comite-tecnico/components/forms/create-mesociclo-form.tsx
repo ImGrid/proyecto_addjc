@@ -129,18 +129,18 @@ export function CreateMesocicloForm({ macrociclos, preselectedMacrocicloId }: Cr
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="numeroMesociclo">Numero de Mesociclo *</Label>
+            <Label htmlFor="codigoMesociclo">Codigo de Mesociclo *</Label>
             <Input
-              type="number"
-              id="numeroMesociclo"
-              name="numeroMesociclo"
-              min="1"
-              placeholder="1"
-              defaultValue={getPreviousValue('numeroMesociclo')}
-              className={getFieldError('numeroMesociclo') ? 'border-destructive' : ''}
+              type="text"
+              id="codigoMesociclo"
+              name="codigoMesociclo"
+              placeholder="Ej: M1-PG"
+              maxLength={50}
+              defaultValue={getPreviousValue('codigoMesociclo')}
+              className={getFieldError('codigoMesociclo') ? 'border-destructive' : ''}
             />
-            {getFieldError('numeroMesociclo') && (
-              <p className="text-sm text-destructive">{getFieldError('numeroMesociclo')}</p>
+            {getFieldError('codigoMesociclo') && (
+              <p className="text-sm text-destructive">{getFieldError('codigoMesociclo')}</p>
             )}
           </div>
 

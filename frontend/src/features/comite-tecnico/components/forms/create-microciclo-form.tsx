@@ -40,6 +40,7 @@ export function CreateMicrocicloForm({ mesociclos, atletas, preselectedMesociclo
   const [selectedTipo, setSelectedTipo] = useState('');
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
+  const [errorFechaInicio, setErrorFechaInicio] = useState<string | null>(null);
 
   // Mostrar toast y redirigir en caso de exito
   useEffect(() => {
@@ -61,13 +62,27 @@ export function CreateMicrocicloForm({ mesociclos, atletas, preselectedMesociclo
     }
   }, [state]);
 
-  // Calcular fechaFin automaticamente (fechaInicio + 6 dias = 7 dias totales)
+  // Validar que fechaInicio sea LUNES y calcular fechaFin automaticamente
   useEffect(() => {
     if (fechaInicio) {
-      const inicio = new Date(fechaInicio);
-      const fin = new Date(inicio);
-      fin.setDate(fin.getDate() + 6);
-      setFechaFin(fin.toISOString().split('T')[0]);
+      const inicio = new Date(fechaInicio + 'T00:00:00');
+      const diaSemana = inicio.getDay();
+
+      // Validar que sea lunes (getDay() === 1)
+      if (diaSemana !== 1) {
+        const diasSemana = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+        setErrorFechaInicio(`La fecha debe ser un LUNES. Seleccionaste ${diasSemana[diaSemana]}.`);
+        setFechaFin('');
+      } else {
+        setErrorFechaInicio(null);
+        // Calcular fechaFin (fechaInicio + 6 dias = 7 dias totales)
+        const fin = new Date(inicio);
+        fin.setDate(fin.getDate() + 6);
+        setFechaFin(fin.toISOString().split('T')[0]);
+      }
+    } else {
+      setErrorFechaInicio(null);
+      setFechaFin('');
     }
   }, [fechaInicio]);
 
@@ -221,11 +236,15 @@ export function CreateMicrocicloForm({ mesociclos, atletas, preselectedMesociclo
               name="fechaInicio"
               value={fechaInicio}
               onChange={(e) => setFechaInicio(e.target.value)}
-              className={getFieldError('fechaInicio') ? 'border-destructive' : ''}
+              className={getFieldError('fechaInicio') || errorFechaInicio ? 'border-destructive' : ''}
             />
-            {getFieldError('fechaInicio') && (
+            {errorFechaInicio && (
+              <p className="text-sm text-destructive">{errorFechaInicio}</p>
+            )}
+            {!errorFechaInicio && getFieldError('fechaInicio') && (
               <p className="text-sm text-destructive">{getFieldError('fechaInicio')}</p>
             )}
+            <p className="text-xs text-muted-foreground">Debe ser un lunes (inicio de semana)</p>
           </div>
 
           <div className="space-y-2">

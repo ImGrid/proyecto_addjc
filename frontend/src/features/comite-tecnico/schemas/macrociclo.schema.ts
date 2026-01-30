@@ -28,12 +28,6 @@ export const createMacrocicloSchema = z
     fechaFin: z.string().min(1, 'Fecha de fin es requerida'),
 
     estado: z.enum(EstadoMacrocicloValues as [string, ...string[]]).optional(),
-
-    totalMicrociclos: z.coerce.number().int().min(0).optional(),
-
-    totalSesiones: z.coerce.number().int().min(0).optional(),
-
-    totalHoras: z.coerce.number().min(0).optional(),
   })
   .refine((data) => new Date(data.fechaFin) > new Date(data.fechaInicio), {
     message: 'La fecha de fin debe ser posterior a la fecha de inicio',
@@ -68,12 +62,6 @@ export const updateMacrocicloSchema = z
     fechaFin: z.string().optional(),
 
     estado: z.enum(EstadoMacrocicloValues as [string, ...string[]]).optional(),
-
-    totalMicrociclos: z.coerce.number().int().min(0).optional(),
-
-    totalSesiones: z.coerce.number().int().min(0).optional(),
-
-    totalHoras: z.coerce.number().min(0).optional(),
   })
   .refine(
     (data) => {

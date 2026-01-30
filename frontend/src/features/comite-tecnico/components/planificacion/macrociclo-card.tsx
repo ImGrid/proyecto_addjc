@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Macrociclo } from '../../types/planificacion.types';
-import { Calendar, Target, Layers, Clock, ArrowRight } from 'lucide-react';
+import { Calendar, Target, ArrowRight } from 'lucide-react';
 import { formatDateLocale } from '@/lib/date-utils';
 import { COMITE_TECNICO_ROUTES } from '@/lib/routes';
 
@@ -36,25 +36,14 @@ export function MacrocicloCard({ macrociclo }: MacrocicloCardProps) {
         </Badge>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Target className="h-4 w-4" />
-            <span>{macrociclo.categoriaObjetivo}</span>
-          </div>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Layers className="h-4 w-4" />
-            <span>{macrociclo.totalMicrociclos} microciclos</span>
-          </div>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Target className="h-4 w-4" />
+          <span>{macrociclo.categoriaObjetivo}</span>
         </div>
 
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Calendar className="h-4 w-4" />
           <span>{fechaInicio} - {fechaFin}</span>
-        </div>
-
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Clock className="h-4 w-4" />
-          <span>{macrociclo.totalHoras}h totales ({macrociclo.totalSesiones} sesiones)</span>
         </div>
 
         <div className="text-sm">

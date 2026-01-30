@@ -54,7 +54,7 @@ export function AlertaCard({ alerta, onMarcarLeida, isPending }: AlertaCardProps
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onMarcarLeida(alerta.alertaDestinatarioId)}
+              onClick={() => onMarcarLeida(alerta.id)}
               disabled={isPending}
             >
               <Eye className="h-4 w-4 mr-1" />

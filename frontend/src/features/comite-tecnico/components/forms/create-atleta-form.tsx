@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useRef } from 'react';
+import { useActionState, useEffect, useRef, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -10,9 +10,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SubmitButton } from './submit-button';
 import { createAtleta } from '../../actions/atleta.actions';
 import { initialActionState } from '@/types/action-result';
-import { User, MapPin, Scale, UserCog, UserPlus } from 'lucide-react';
-import { CategoriaPesoValues } from '@/types/enums';
+import { User, MapPin, Scale, UserCog, UserPlus, AlertTriangle } from 'lucide-react';
+import { CategoriaPesoValues, type CategoriaPeso, MUNICIPIOS_CLUB, CLUBES_POR_MUNICIPIO, type MunicipioClub } from '@/types/enums';
 import { COMITE_TECNICO_ROUTES } from '@/lib/routes';
+import {
+  validarPesoCategoria,
+  getRangoTexto,
+  NOMBRES_CATEGORIA_PESO,
+} from '@/lib/peso-utils';
+import { calcularEdad } from '@/lib/date-utils';
 
 interface Entrenador {
   id: string;
@@ -29,6 +35,55 @@ export function CreateAtletaForm({ entrenadores }: CreateAtletaFormProps) {
   const hasShownToast = useRef(false);
   const [state, formAction] = useActionState(createAtleta, initialActionState);
 
+  // Estados controlados para fecha de nacimiento y edad (calculo automatico)
+  const [fechaNacimiento, setFechaNacimiento] = useState<string>('');
+  const [edad, setEdad] = useState<string>('');
+  const [edadAutoCalculada, setEdadAutoCalculada] = useState<boolean>(false);
+
+  // Estados controlados para validacion de peso
+  const [selectedCategoriaPeso, setSelectedCategoriaPeso] = useState<CategoriaPeso | ''>('');
+  const [pesoActual, setPesoActual] = useState<string>('');
+
+  // Estados controlados para selects dependientes de municipio y club
+  const [selectedMunicipioClub, setSelectedMunicipioClub] = useState<MunicipioClub | ''>('');
+  const [selectedClub, setSelectedClub] = useState<string>('');
+
+  // Obtener clubes filtrados por municipio seleccionado
+  const clubesDisponibles = useMemo(() => {
+    if (!selectedMunicipioClub) return [];
+    return CLUBES_POR_MUNICIPIO[selectedMunicipioClub] || [];
+  }, [selectedMunicipioClub]);
+
+  // Cuando cambia el municipio, resetear el club seleccionado
+  useEffect(() => {
+    setSelectedClub('');
+  }, [selectedMunicipioClub]);
+
+  // Calcular edad automaticamente cuando cambie la fecha de nacimiento
+  useEffect(() => {
+    if (fechaNacimiento) {
+      const edadCalculada = calcularEdad(fechaNacimiento);
+      if (edadCalculada >= 0 && edadCalculada <= 100) {
+        setEdad(String(edadCalculada));
+        setEdadAutoCalculada(true);
+      }
+    }
+  }, [fechaNacimiento]);
+
+  // Validacion de peso vs categoria en tiempo real
+  const validacionPeso = useMemo(() => {
+    const peso = pesoActual ? parseFloat(pesoActual) : null;
+    const categoria = selectedCategoriaPeso || null;
+    return validarPesoCategoria(peso, categoria as CategoriaPeso | null);
+  }, [pesoActual, selectedCategoriaPeso]);
+
+  // Obtener el rango de peso como placeholder
+  const placeholderPeso = useMemo(() => {
+    if (!selectedCategoriaPeso) return 'Ej: 72.5';
+    const rango = getRangoTexto(selectedCategoriaPeso as CategoriaPeso);
+    return `Rango: ${rango}`;
+  }, [selectedCategoriaPeso]);
+
   // Mostrar toast y redirigir en caso de exito
   useEffect(() => {
     if (state.success && state.message && !hasShownToast.current) {
@@ -39,6 +94,31 @@ export function CreateAtletaForm({ entrenadores }: CreateAtletaFormProps) {
       router.push(COMITE_TECNICO_ROUTES.atletas.list);
     }
   }, [state, router]);
+
+  // Restaurar valores de estados controlados si hay error
+  useEffect(() => {
+    if (!state.success && state.submittedData) {
+      if (state.submittedData.fechaNacimiento) {
+        setFechaNacimiento(String(state.submittedData.fechaNacimiento));
+      }
+      if (state.submittedData.edad) {
+        setEdad(String(state.submittedData.edad));
+        setEdadAutoCalculada(false);
+      }
+      if (state.submittedData.categoriaPeso) {
+        setSelectedCategoriaPeso(state.submittedData.categoriaPeso as CategoriaPeso);
+      }
+      if (state.submittedData.pesoActual) {
+        setPesoActual(String(state.submittedData.pesoActual));
+      }
+      if (state.submittedData.municipioClub) {
+        setSelectedMunicipioClub(state.submittedData.municipioClub as MunicipioClub);
+      }
+      if (state.submittedData.club) {
+        setSelectedClub(String(state.submittedData.club));
+      }
+    }
+  }, [state]);
 
   // Mostrar toast en caso de error
   useEffect(() => {
@@ -156,7 +236,8 @@ export function CreateAtletaForm({ entrenadores }: CreateAtletaFormProps) {
               type="date"
               id="fechaNacimiento"
               name="fechaNacimiento"
-              defaultValue={getPreviousValue('fechaNacimiento')}
+              value={fechaNacimiento}
+              onChange={(e) => setFechaNacimiento(e.target.value)}
               className={getFieldError('fechaNacimiento') ? 'border-destructive' : ''}
             />
             {getFieldError('fechaNacimiento') && (
@@ -165,15 +246,26 @@ export function CreateAtletaForm({ entrenadores }: CreateAtletaFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="edad">Edad *</Label>
+            <Label htmlFor="edad">
+              Edad *
+              {edadAutoCalculada && (
+                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                  (calculada automaticamente)
+                </span>
+              )}
+            </Label>
             <Input
               type="number"
               id="edad"
               name="edad"
-              placeholder="Ej: 18"
+              placeholder="Se calcula al ingresar fecha"
               min={5}
-              defaultValue={getPreviousValue('edad')}
-              className={getFieldError('edad') ? 'border-destructive' : ''}
+              value={edad}
+              onChange={(e) => {
+                setEdad(e.target.value);
+                setEdadAutoCalculada(false);
+              }}
+              className={`${getFieldError('edad') ? 'border-destructive' : ''} ${edadAutoCalculada ? 'bg-muted/50' : ''}`}
             />
             {getFieldError('edad') && (
               <p className="text-sm text-destructive">{getFieldError('edad')}</p>
@@ -230,15 +322,48 @@ export function CreateAtletaForm({ entrenadores }: CreateAtletaFormProps) {
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="club">Club *</Label>
-            <Input
-              type="text"
-              id="club"
-              name="club"
-              placeholder="Ej: Club ADDJC"
-              defaultValue={getPreviousValue('club')}
-              className={getFieldError('club') ? 'border-destructive' : ''}
-            />
+            <Label>Municipio del Club *</Label>
+            <Select
+              value={selectedMunicipioClub}
+              onValueChange={(value) => setSelectedMunicipioClub(value as MunicipioClub)}
+            >
+              <SelectTrigger className={getFieldError('municipioClub') ? 'border-destructive' : ''}>
+                <SelectValue placeholder="Selecciona el municipio" />
+              </SelectTrigger>
+              <SelectContent>
+                {MUNICIPIOS_CLUB.map((mun) => (
+                  <SelectItem key={mun} value={mun}>
+                    {mun}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <input type="hidden" name="municipioClub" value={selectedMunicipioClub} />
+            {getFieldError('municipioClub') && (
+              <p className="text-sm text-destructive">{getFieldError('municipioClub')}</p>
+            )}
+            <p className="text-xs text-muted-foreground">Primero selecciona el municipio del club</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Club *</Label>
+            <Select
+              value={selectedClub}
+              onValueChange={setSelectedClub}
+              disabled={!selectedMunicipioClub}
+            >
+              <SelectTrigger className={getFieldError('club') ? 'border-destructive' : ''}>
+                <SelectValue placeholder={selectedMunicipioClub ? 'Selecciona el club' : 'Primero selecciona municipio'} />
+              </SelectTrigger>
+              <SelectContent>
+                {clubesDisponibles.map((club) => (
+                  <SelectItem key={club} value={club}>
+                    {club}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <input type="hidden" name="club" value={selectedClub} />
             {getFieldError('club') && (
               <p className="text-sm text-destructive">{getFieldError('club')}</p>
             )}
@@ -261,18 +386,22 @@ export function CreateAtletaForm({ entrenadores }: CreateAtletaFormProps) {
 
           <div className="space-y-2">
             <Label htmlFor="categoriaPeso">Categoria de Peso *</Label>
-            <Select name="categoriaPeso" defaultValue={getPreviousValue('categoriaPeso') || undefined}>
+            <Select
+              value={selectedCategoriaPeso}
+              onValueChange={(value) => setSelectedCategoriaPeso(value as CategoriaPeso)}
+            >
               <SelectTrigger className={getFieldError('categoriaPeso') ? 'border-destructive' : ''}>
                 <SelectValue placeholder="Selecciona categoria" />
               </SelectTrigger>
               <SelectContent>
                 {CategoriaPesoValues.map((cat) => (
                   <SelectItem key={cat} value={cat}>
-                    {cat.replace(/_/g, ' ')}
+                    {NOMBRES_CATEGORIA_PESO[cat as CategoriaPeso]}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            <input type="hidden" name="categoriaPeso" value={selectedCategoriaPeso} />
             {getFieldError('categoriaPeso') && (
               <p className="text-sm text-destructive">{getFieldError('categoriaPeso')}</p>
             )}
@@ -284,21 +413,18 @@ export function CreateAtletaForm({ entrenadores }: CreateAtletaFormProps) {
               type="number"
               id="pesoActual"
               name="pesoActual"
-              placeholder="Ej: 72.5"
+              placeholder={placeholderPeso}
               step="0.1"
-              defaultValue={getPreviousValue('pesoActual')}
+              value={pesoActual}
+              onChange={(e) => setPesoActual(e.target.value)}
+              className={!validacionPeso.valido ? 'border-yellow-500' : ''}
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="fcReposo">FC Reposo (bpm)</Label>
-            <Input
-              type="number"
-              id="fcReposo"
-              name="fcReposo"
-              placeholder="Ej: 60"
-              defaultValue={getPreviousValue('fcReposo')}
-            />
+            {!validacionPeso.valido && validacionPeso.mensaje && (
+              <div className="flex items-start gap-2 rounded-md bg-yellow-50 p-3 text-sm text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200">
+                <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <span>{validacionPeso.mensaje}</span>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

@@ -49,6 +49,16 @@ export class MicrociclosService {
     // Validar que fechaFin > fechaInicio
     this.dateRangeValidator.validateDateOrder(fechaInicio, fechaFin, 'microciclo');
 
+    // Validar que fechaInicio sea LUNES (getDay() === 1)
+    // Un microciclo siempre debe comenzar en lunes para mantener consistencia
+    if (fechaInicio.getUTCDay() !== 1) {
+      const diasSemana = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+      const diaSeleccionado = diasSemana[fechaInicio.getUTCDay()];
+      throw new BadRequestException(
+        `La fecha de inicio debe ser un LUNES. La fecha seleccionada es ${diaSeleccionado}.`
+      );
+    }
+
     // Validar que el rango es exactamente 7 dias
     const diffTime = Math.abs(fechaFin.getTime() - fechaInicio.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -567,11 +577,20 @@ export class MicrociclosService {
 
       this.dateRangeValidator.validateDateOrder(fechaInicio, fechaFin, 'microciclo');
 
-      // Validar que sigue siendo 7 días
+      // Validar que fechaInicio sea LUNES
+      if (fechaInicio.getUTCDay() !== 1) {
+        const diasSemana = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+        const diaSeleccionado = diasSemana[fechaInicio.getUTCDay()];
+        throw new BadRequestException(
+          `La fecha de inicio debe ser un LUNES. La fecha seleccionada es ${diaSeleccionado}.`
+        );
+      }
+
+      // Validar que sigue siendo 7 dias
       const diffTime = Math.abs(fechaFin.getTime() - fechaInicio.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       if (diffDays !== 6) {
-        throw new BadRequestException('Un microciclo debe durar exactamente 7 días');
+        throw new BadRequestException('Un microciclo debe durar exactamente 7 dias');
       }
 
       // Si hay mesociclo, validar fechas jerárquicas

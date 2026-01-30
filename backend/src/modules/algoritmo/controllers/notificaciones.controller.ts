@@ -167,6 +167,27 @@ export class NotificacionesController {
     };
   }
 
+  // GET /api/notificaciones/centro/total - Total para badge del sidebar
+  // Suma: recomendaciones pendientes + alertas no leidas + notificaciones no leidas
+  @Get('centro/total')
+  @Roles('COMITE_TECNICO', 'ENTRENADOR')
+  async obtenerTotalCentroNotificaciones(@CurrentUser() user: any) {
+    const usuarioId = BigInt(user.id);
+
+    const [recomendacionesPendientes, alertasNoLeidas, notificacionesNoLeidas] = await Promise.all([
+      this.notificacionesService.contarRecomendacionesPendientes(),
+      this.alertasService.contarAlertasNoLeidas(usuarioId),
+      this.notificacionesService.contarNoLeidas(usuarioId),
+    ]);
+
+    return {
+      recomendaciones: recomendacionesPendientes,
+      alertas: alertasNoLeidas.noLeidas,
+      informativas: notificacionesNoLeidas,
+      total: recomendacionesPendientes + alertasNoLeidas.noLeidas + notificacionesNoLeidas,
+    };
+  }
+
   // =====================
   // RUTAS CON PARAMETRO :id (deben ir AL FINAL)
   // =====================

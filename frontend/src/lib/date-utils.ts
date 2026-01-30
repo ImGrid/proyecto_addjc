@@ -83,3 +83,38 @@ export function getDateTimestamp(date: string | Date): number {
 export function isDateAfter(date: string | Date, compareDate: Date): boolean {
   return parseDateOnly(date) > compareDate;
 }
+
+// Calcula la edad en anos a partir de una fecha de nacimiento
+// Tiene en cuenta si ya cumplio anos este ano o no
+export function calcularEdad(fechaNacimiento: string | Date): number {
+  const fechaNac = parseDateOnly(fechaNacimiento);
+  const hoy = new Date();
+
+  let edad = hoy.getFullYear() - fechaNac.getFullYear();
+  const mes = hoy.getMonth() - fechaNac.getMonth();
+
+  // Si aun no ha cumplido anos este ano, restar 1
+  if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
+    edad--;
+  }
+
+  return edad;
+}
+
+// Valida si una fecha de nacimiento es razonable para un atleta
+// Retorna null si es valida, o un mensaje de error si no lo es
+export function validarFechaNacimiento(fechaNacimiento: string): string | null {
+  if (!fechaNacimiento) return null;
+
+  const edad = calcularEdad(fechaNacimiento);
+
+  if (edad < 5) {
+    return 'La edad minima para un atleta es 5 anos';
+  }
+
+  if (edad > 80) {
+    return 'Por favor verifica la fecha de nacimiento ingresada';
+  }
+
+  return null;
+}

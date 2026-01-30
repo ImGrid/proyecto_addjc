@@ -161,6 +161,17 @@ export class NotificacionesService {
     });
   }
 
+  // Contar recomendaciones pendientes (solo PENDIENTE)
+  // Usado por el endpoint de centro de notificaciones total
+  // Consistente con el tab de Recomendaciones que solo muestra pendientes
+  async contarRecomendacionesPendientes(): Promise<number> {
+    return await this.prisma.recomendacion.count({
+      where: {
+        estado: 'PENDIENTE',
+      },
+    });
+  }
+
   // Eliminar notificacion
   async eliminar(notificacionId: bigint, usuarioId: bigint) {
     const notificacion = await this.prisma.notificacion.findFirst({

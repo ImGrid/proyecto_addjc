@@ -28,7 +28,7 @@ export async function createMesociclo(
     const rawData = {
       macrocicloId: formData.get('macrocicloId'),
       nombre: formData.get('nombre'),
-      numeroMesociclo: formData.get('numeroMesociclo'),
+      codigoMesociclo: formData.get('codigoMesociclo'),
       etapa: formData.get('etapa'),
       fechaInicio: formData.get('fechaInicio'),
       fechaFin: formData.get('fechaFin'),
@@ -122,7 +122,7 @@ export async function updateMesociclo(
     const fields = [
       'macrocicloId',
       'nombre',
-      'numeroMesociclo',
+      'codigoMesociclo',
       'etapa',
       'fechaInicio',
       'fechaFin',

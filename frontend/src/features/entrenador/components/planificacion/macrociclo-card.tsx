@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Macrociclo } from '@/features/comite-tecnico/types/planificacion.types';
-import { Calendar, Target, Layers, ArrowRight } from 'lucide-react';
+import { Calendar, Target, ArrowRight } from 'lucide-react';
 import { formatDateLocale } from '@/lib/date-utils';
 import { ENTRENADOR_ROUTES } from '@/lib/routes';
 
@@ -41,11 +41,6 @@ export function MacrocicloCard({ macrociclo }: MacrocicloCardProps) {
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Calendar className="h-4 w-4" />
           <span>{fechaInicio} - {fechaFin}</span>
-        </div>
-
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Layers className="h-4 w-4" />
-          <span>{macrociclo.totalMicrociclos} microciclos</span>
         </div>
 
         <div className="text-sm">

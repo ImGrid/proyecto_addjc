@@ -10,7 +10,6 @@ import {
   Calendar,
   Target,
   Layers,
-  Clock,
   User,
 } from 'lucide-react';
 import { formatDateLocale, formatDateShort } from '@/lib/date-utils';
@@ -111,24 +110,6 @@ export default async function EntrenadorMacrocicloDetallePage({ params }: Macroc
               <p className="font-medium">{fechaInicio} - {fechaFin}</p>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 pt-2 border-t">
-              <div className="text-center">
-                <Layers className="h-5 w-5 mx-auto text-muted-foreground" />
-                <p className="text-2xl font-bold">{macrociclo.totalMicrociclos}</p>
-                <p className="text-xs text-muted-foreground">Microciclos</p>
-              </div>
-              <div className="text-center">
-                <Target className="h-5 w-5 mx-auto text-muted-foreground" />
-                <p className="text-2xl font-bold">{macrociclo.totalSesiones}</p>
-                <p className="text-xs text-muted-foreground">Sesiones</p>
-              </div>
-              <div className="text-center">
-                <Clock className="h-5 w-5 mx-auto text-muted-foreground" />
-                <p className="text-2xl font-bold">{macrociclo.totalHoras}h</p>
-                <p className="text-xs text-muted-foreground">Total</p>
-              </div>
-            </div>
-
             {macrociclo.creador && (
               <div className="pt-2 border-t">
                 <p className="text-sm text-muted-foreground flex items-center gap-1">
@@ -203,16 +184,13 @@ export default async function EntrenadorMacrocicloDetallePage({ params }: Macroc
                           <div>
                             <p className="font-medium">{mesociclo.nombre}</p>
                             <p className="text-sm text-muted-foreground">
-                              Mesociclo #{mesociclo.numeroMesociclo}
+                              Codigo: {mesociclo.codigoMesociclo}
                             </p>
                           </div>
                           <Badge variant="outline">{mesociclo.etapa.replace(/_/g, ' ')}</Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">
                           {mesoInicio} - {mesoFin}
-                        </p>
-                        <p className="text-sm mt-2">
-                          {mesociclo.totalMicrociclos} microciclos
                         </p>
                       </CardContent>
                     </Card>

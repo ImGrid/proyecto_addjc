@@ -22,6 +22,7 @@ export async function fetchDashboardStats(): Promise<ComiteTecnicoDashboardStats
       microciclosRes,
       testsRes,
       dolenciasRes,
+      recomendacionesRes,
     ] = await Promise.all([
       authFetch('/atletas?page=1&limit=1'),
       authFetch('/entrenadores?page=1&limit=1'),
@@ -29,16 +30,18 @@ export async function fetchDashboardStats(): Promise<ComiteTecnicoDashboardStats
       authFetch('/microciclos?page=1&limit=1'),
       authFetch('/tests-fisicos?page=1&limit=1'),
       authFetch('/dolencias?page=1&limit=1&recuperado=false'),
+      authFetch('/recomendaciones/pendientes?page=1&limit=1'),
     ]);
 
     // Procesar respuestas en paralelo
-    const [atletas, entrenadores, macrociclos, microciclos, tests, dolencias] = await Promise.all([
+    const [atletas, entrenadores, macrociclos, microciclos, tests, dolencias, recomendaciones] = await Promise.all([
       atletasRes.ok ? atletasRes.json() : { meta: { total: 0 } },
       entrenadoresRes.ok ? entrenadoresRes.json() : { meta: { total: 0 } },
       macrociclosRes.ok ? macrociclosRes.json() : { meta: { total: 0 } },
       microciclosRes.ok ? microciclosRes.json() : { meta: { total: 0 } },
       testsRes.ok ? testsRes.json() : { meta: { total: 0 } },
       dolenciasRes.ok ? dolenciasRes.json() : { meta: { total: 0 } },
+      recomendacionesRes.ok ? recomendacionesRes.json() : { meta: { total: 0 } },
     ]);
 
     return {
@@ -47,7 +50,7 @@ export async function fetchDashboardStats(): Promise<ComiteTecnicoDashboardStats
       macrociclosActivos: macrociclos.meta?.total ?? 0,
       microciclosEnCurso: microciclos.meta?.total ?? 0,
       testsEsteMes: tests.meta?.total ?? 0,
-      recomendacionesPendientes: 0, // Modulo no implementado aun
+      recomendacionesPendientes: recomendaciones.meta?.total ?? 0,
       dolenciasActivas: dolencias.meta?.total ?? 0,
     };
   } catch (error) {

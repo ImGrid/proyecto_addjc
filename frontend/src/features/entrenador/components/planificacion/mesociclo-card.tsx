@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Mesociclo } from '@/features/comite-tecnico/types/planificacion.types';
-import { Calendar, Layers, ArrowRight } from 'lucide-react';
+import { Calendar, ArrowRight } from 'lucide-react';
 import { formatDateLocale } from '@/lib/date-utils';
 import { ENTRENADOR_ROUTES } from '@/lib/routes';
 
@@ -30,7 +30,7 @@ export function MesocicloCard({ mesociclo }: MesocicloCardProps) {
         <div>
           <CardTitle className="text-lg">{mesociclo.nombre}</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Mesociclo #{mesociclo.numeroMesociclo}
+            Codigo: {mesociclo.codigoMesociclo}
           </p>
         </div>
         <Badge variant={etapaVariants[mesociclo.etapa] || 'outline'}>
@@ -41,11 +41,6 @@ export function MesocicloCard({ mesociclo }: MesocicloCardProps) {
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Calendar className="h-4 w-4" />
           <span>{fechaInicio} - {fechaFin}</span>
-        </div>
-
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Layers className="h-4 w-4" />
-          <span>{mesociclo.totalMicrociclos} microciclos</span>
         </div>
 
         {mesociclo.macrociclo && (

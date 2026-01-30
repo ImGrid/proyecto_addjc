@@ -1,4 +1,4 @@
-import { EstadoMacrociclo, Prisma } from '@prisma/client';
+import { EstadoMacrociclo } from '@prisma/client';
 
 // DTO de respuesta para Macrociclo
 // Estructura que se envía al cliente
@@ -15,9 +15,6 @@ export interface MacrocicloResponseDto {
   fechaInicio: Date;
   fechaFin: Date;
   estado: EstadoMacrociclo;
-  totalMicrociclos: number;
-  totalSesiones: number;
-  totalHoras: Prisma.Decimal;
   creadoPor: bigint;
   createdAt: Date;
   updatedAt: Date;

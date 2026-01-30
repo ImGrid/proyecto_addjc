@@ -9,8 +9,11 @@ import type {
 // Parametros para listar ejercicios del catalogo
 export interface FetchCatalogoParams {
   tipo?: string;
+  dificultad?: number; // 1=Facil, 2=Intermedio, 3=Avanzado
   activo?: boolean;
   search?: string;
+  page?: number;
+  limit?: number;
 }
 
 // Listar ejercicios del catalogo con filtros
@@ -29,8 +32,11 @@ export async function fetchCatalogoEjercicios(
 
     const searchParams = new URLSearchParams();
     if (params.tipo) searchParams.set('tipo', params.tipo);
+    if (params.dificultad) searchParams.set('dificultad', params.dificultad.toString());
     if (params.activo === false) searchParams.set('activo', 'false');
     if (params.search) searchParams.set('search', params.search);
+    if (params.page) searchParams.set('page', params.page.toString());
+    if (params.limit) searchParams.set('limit', params.limit.toString());
 
     const queryString = searchParams.toString();
     const endpoint = `/catalogo-ejercicios${queryString ? `?${queryString}` : ''}`;

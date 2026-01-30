@@ -12,24 +12,43 @@ import { TipoEjercicio } from '@prisma/client';
 export class CatalogoEjerciciosController {
   constructor(private readonly prisma: PrismaService) {}
 
-  // GET /api/catalogo-ejercicios - Listar ejercicios del catalogo
+  // GET /api/catalogo-ejercicios - Listar ejercicios del catalogo con paginacion
   // Query params:
   //   - tipo: Filtrar por tipo (FISICO, TECNICO_TACHI, TECNICO_NE, RESISTENCIA, VELOCIDAD)
+  //   - dificultad: Filtrar por nivel de dificultad (1, 2, 3)
   //   - activo: Filtrar por estado activo (default: true)
   //   - search: Buscar por nombre (parcial, case insensitive)
+  //   - page: Numero de pagina (default: 1)
+  //   - limit: Items por pagina (default: 20)
   @Get()
   @Roles('COMITE_TECNICO', 'ENTRENADOR')
   async findAll(
     @Query('tipo') tipo?: TipoEjercicio,
+    @Query('dificultad') dificultadParam?: string,
     @Query('activo') activo?: string,
-    @Query('search') search?: string
+    @Query('search') search?: string,
+    @Query('page') pageParam?: string,
+    @Query('limit') limitParam?: string
   ) {
+    // Parsear paginacion con defaults
+    const page = Math.max(1, parseInt(pageParam || '1', 10) || 1);
+    const limit = Math.max(1, Math.min(100, parseInt(limitParam || '20', 10) || 20));
+    const skip = (page - 1) * limit;
+
+    // Parsear dificultad (1, 2, 3 o undefined)
+    const dificultad = dificultadParam ? parseInt(dificultadParam, 10) : undefined;
+
     // Construir filtros
     const where: any = {};
 
     // Filtro por tipo
     if (tipo) {
       where.tipo = tipo;
+    }
+
+    // Filtro por dificultad
+    if (dificultad && dificultad >= 1 && dificultad <= 3) {
+      where.nivelDificultad = dificultad;
     }
 
     // Filtro por activo (default: true)
@@ -44,21 +63,26 @@ export class CatalogoEjerciciosController {
       };
     }
 
-    // Consultar ejercicios
-    const ejercicios = await this.prisma.catalogoEjercicios.findMany({
-      where,
-      select: {
-        id: true,
-        nombre: true,
-        tipo: true,
-        subtipo: true,
-        categoria: true,
-        descripcion: true,
-        duracionMinutos: true,
-        nivelDificultad: true,
-      },
-      orderBy: [{ tipo: 'asc' }, { nombre: 'asc' }],
-    });
+    // Consultar total y ejercicios en paralelo
+    const [total, ejercicios] = await Promise.all([
+      this.prisma.catalogoEjercicios.count({ where }),
+      this.prisma.catalogoEjercicios.findMany({
+        where,
+        select: {
+          id: true,
+          nombre: true,
+          tipo: true,
+          subtipo: true,
+          categoria: true,
+          descripcion: true,
+          duracionMinutos: true,
+          nivelDificultad: true,
+        },
+        orderBy: [{ tipo: 'asc' }, { nombre: 'asc' }],
+        skip,
+        take: limit,
+      }),
+    ]);
 
     // Formatear respuesta (convertir BigInt a string)
     const data = ejercicios.map((ej) => ({
@@ -72,10 +96,15 @@ export class CatalogoEjerciciosController {
       nivelDificultad: ej.nivelDificultad,
     }));
 
+    const totalPages = Math.ceil(total / limit);
+
     return {
       data,
       meta: {
-        total: data.length,
+        total,
+        page,
+        limit,
+        totalPages,
         filtros: {
           tipo: tipo || null,
           activo: activoBoolean,

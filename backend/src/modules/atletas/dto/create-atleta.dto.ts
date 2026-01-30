@@ -39,6 +39,12 @@ export class CreateAtletaDto {
   @MaxLength(100)
   municipio!: string;
 
+  // Datos deportivos: municipio del club y club
+  @IsString()
+  @MinLength(1, { message: 'Municipio del club es requerido' })
+  @MaxLength(100)
+  municipioClub!: string;
+
   @IsString()
   @MinLength(1, { message: 'Club es requerido' })
   @MaxLength(100)
@@ -81,8 +87,4 @@ export class CreateAtletaDto {
   @Min(0, { message: 'Peso actual no puede ser negativo' })
   @IsOptional()
   pesoActual?: number;
-
-  @IsInt()
-  @IsOptional()
-  fcReposo?: number;
 }

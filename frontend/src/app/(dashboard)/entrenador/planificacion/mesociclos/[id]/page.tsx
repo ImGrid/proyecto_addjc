@@ -79,7 +79,7 @@ export default async function EntrenadorMesocicloDetallePage({ params }: Mesocic
               </Badge>
             </div>
             <p className="text-muted-foreground">
-              Mesociclo #{mesociclo.numeroMesociclo}
+              Codigo: {mesociclo.codigoMesociclo}
               {mesociclo.macrociclo && ` - ${mesociclo.macrociclo.nombre}`}
             </p>
           </div>
@@ -102,8 +102,8 @@ export default async function EntrenadorMesocicloDetallePage({ params }: Mesocic
                 <p className="font-medium">{mesociclo.etapa.replace(/_/g, ' ')}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Numero</p>
-                <p className="font-medium">#{mesociclo.numeroMesociclo}</p>
+                <p className="text-sm text-muted-foreground">Codigo</p>
+                <p className="font-medium">{mesociclo.codigoMesociclo}</p>
               </div>
             </div>
 
@@ -120,14 +120,6 @@ export default async function EntrenadorMesocicloDetallePage({ params }: Mesocic
                 </p>
               </div>
             )}
-
-            <div className="pt-2 border-t">
-              <div className="text-center">
-                <Layers className="h-5 w-5 mx-auto text-muted-foreground" />
-                <p className="text-2xl font-bold">{mesociclo.totalMicrociclos}</p>
-                <p className="text-xs text-muted-foreground">Microciclos</p>
-              </div>
-            </div>
           </CardContent>
         </Card>
 

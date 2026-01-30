@@ -41,6 +41,7 @@ model Atleta {
   id                         BigInt                       @id @default(autoincrement())
   usuarioId                  BigInt                       @unique
   municipio                  String                       @db.VarChar(100)
+  municipioClub              String                       @db.VarChar(100)
   club                       String                       @db.VarChar(100)
   categoria                  String                       @db.VarChar(50)
   fechaNacimiento            DateTime                     @db.Date
@@ -50,7 +51,6 @@ model Atleta {
   entrenadorAsignadoId       BigInt?
   categoriaPeso              CategoriaPeso
   pesoActual                 Decimal?                     @db.Decimal(5, 2)
-  fcReposo                   Int?
   perfilActual               PerfilAtleta?
   createdAt                  DateTime                     @default(now())
   updatedAt                  DateTime                     @updatedAt
@@ -65,6 +65,7 @@ model Atleta {
   @@index([usuarioId])
   @@index([entrenadorAsignadoId])
   @@index([club])
+  @@index([municipioClub])
   @@index([categoria])
   @@index([categoriaPeso])
   @@map("atletas")
@@ -99,9 +100,6 @@ model Macrociclo {
   fechaInicio       DateTime         @db.Date
   fechaFin          DateTime         @db.Date
   estado            EstadoMacrociclo
-  totalMicrociclos  Int
-  totalSesiones     Int
-  totalHoras        Decimal          @db.Decimal(10, 2)
   creadoPor         BigInt
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
@@ -114,21 +112,20 @@ model Macrociclo {
 }
 
 model Mesociclo {
-  id               BigInt         @id @default(autoincrement())
-  macrocicloId     BigInt
-  nombre           String         @db.VarChar(100)
-  numeroMesociclo  Int
-  etapa            EtapaMesociclo
-  fechaInicio      DateTime       @db.Date
-  fechaFin         DateTime       @db.Date
-  objetivoFisico   String
-  objetivoTecnico  String
-  objetivoTactico  String
-  totalMicrociclos Int
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  macrociclo       Macrociclo     @relation(fields: [macrocicloId], references: [id], onDelete: Cascade)
-  microciclos      Microciclo[]
+  id              BigInt         @id @default(autoincrement())
+  macrocicloId    BigInt
+  nombre          String         @db.VarChar(100)
+  codigoMesociclo String         @db.VarChar(50)
+  etapa           EtapaMesociclo
+  fechaInicio     DateTime       @db.Date
+  fechaFin        DateTime       @db.Date
+  objetivoFisico  String
+  objetivoTecnico String
+  objetivoTactico String
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  macrociclo      Macrociclo     @relation(fields: [macrocicloId], references: [id], onDelete: Cascade)
+  microciclos     Microciclo[]
 
   @@index([macrocicloId])
   @@map("mesociclos")

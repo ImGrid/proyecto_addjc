@@ -1,4 +1,5 @@
 import { fetchRecomendaciones } from '@/features/algoritmo/actions/fetch-recomendaciones';
+import { fetchAtletasParaSelector } from '@/features/entrenador/actions/fetch-mis-atletas';
 import { RecomendacionesFiltro } from '@/features/algoritmo/components/recomendaciones-filtro';
 import { RecomendacionesList } from '@/features/algoritmo/components/recomendaciones-list';
 import { RecomendacionesPagination } from '@/features/algoritmo/components/recomendaciones-pagination';
@@ -6,6 +7,7 @@ import { RecomendacionesPagination } from '@/features/algoritmo/components/recom
 interface PageProps {
   searchParams: Promise<{
     estado?: string;
+    atletaId?: string;
     page?: string;
   }>;
 }
@@ -13,10 +15,14 @@ interface PageProps {
 export default async function RecomendacionesEntrenadorPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const estado = params.estado || undefined;
+  const atletaId = params.atletaId || undefined;
   const page = params.page ? parseInt(params.page, 10) : 1;
   const limit = 10;
 
-  const data = await fetchRecomendaciones({ estado, page, limit });
+  const [data, atletas] = await Promise.all([
+    fetchRecomendaciones({ estado, atletaId, page, limit }),
+    fetchAtletasParaSelector(),
+  ]);
 
   const recomendaciones = data?.data || [];
   const total = data?.meta.total || 0;
@@ -31,7 +37,7 @@ export default async function RecomendacionesEntrenadorPage({ searchParams }: Pa
         </p>
       </div>
 
-      <RecomendacionesFiltro />
+      <RecomendacionesFiltro atletas={atletas || []} />
 
       <RecomendacionesList
         recomendaciones={recomendaciones}

@@ -71,27 +71,6 @@ export class CreateMacrocicloDto {
   @IsOptional()
   estado?: EstadoMacrociclo;
 
-  // totalMicrociclos - Int
-  @IsInt()
-  @Min(0)
-  @IsOptional()
-  totalMicrociclos?: number;
-
-  // totalSesiones - Int
-  @IsInt()
-  @Min(0)
-  @IsOptional()
-  totalSesiones?: number;
-
-  // totalHoras - Decimal @db.Decimal(10, 2)
-  @Transform(({ value }) => (value ? parseFloat(value) : null))
-  @IsNumber(
-    { maxDecimalPlaces: 2 },
-    { message: 'Total horas debe ser un numero con maximo 2 decimales' }
-  )
-  @IsOptional()
-  totalHoras?: number;
-
   // creadoPor - BigInt (FK a Usuario)
   // Se obtendrá del usuario autenticado, no se envía en el body
 }

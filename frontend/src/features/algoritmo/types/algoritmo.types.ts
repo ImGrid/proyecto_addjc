@@ -324,6 +324,17 @@ export const resumenNotificacionesSchema = z.object({
 
 export type ResumenNotificaciones = z.infer<typeof resumenNotificacionesSchema>;
 
+// Total para badge del Centro de Notificaciones (sidebar)
+// Verificado: notificaciones.controller.ts - GET /centro/total
+export const centroNotificacionesTotalSchema = z.object({
+  recomendaciones: z.number(),
+  alertas: z.number(),
+  informativas: z.number(),
+  total: z.number(),
+});
+
+export type CentroNotificacionesTotal = z.infer<typeof centroNotificacionesTotalSchema>;
+
 // ===================================
 // ALERTAS DEL SISTEMA - Verificado contra:
 // backend/src/modules/algoritmo/services/alertas-sistema.service.ts
@@ -606,12 +617,15 @@ export const catalogoEjercicioSchema = z.object({
 
 export type CatalogoEjercicio = z.infer<typeof catalogoEjercicioSchema>;
 
-// Respuesta de listado de ejercicios
-// Verificado: catalogo-ejercicios.controller.ts linea 75-85
+// Respuesta de listado de ejercicios con paginacion
+// Verificado: catalogo-ejercicios.controller.ts linea 75-90
 export const catalogoEjerciciosResponseSchema = z.object({
   data: z.array(catalogoEjercicioSchema),
   meta: z.object({
     total: z.number(),
+    page: z.number(),
+    limit: z.number(),
+    totalPages: z.number(),
     filtros: z.object({
       tipo: z.string().nullable(),
       activo: z.boolean(),

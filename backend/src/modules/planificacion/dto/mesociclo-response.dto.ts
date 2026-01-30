@@ -5,14 +5,13 @@ export interface MesocicloResponseDto {
   id: bigint;
   macrocicloId: bigint;
   nombre: string;
-  numeroMesociclo: number;
+  codigoMesociclo: string;
   etapa: EtapaMesociclo;
   fechaInicio: Date;
   fechaFin: Date;
   objetivoFisico: string;
   objetivoTecnico: string;
   objetivoTactico: string;
-  totalMicrociclos: number;
   createdAt: Date;
   updatedAt: Date;
   macrociclo?: {

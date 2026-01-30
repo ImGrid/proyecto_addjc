@@ -33,6 +33,7 @@ export async function createAtleta(
       email: formData.get('email'),
       contrasena: formData.get('contrasena'),
       municipio: formData.get('municipio'),
+      municipioClub: formData.get('municipioClub'),
       club: formData.get('club'),
       categoria: formData.get('categoria'),
       fechaNacimiento: formData.get('fechaNacimiento'),
@@ -42,7 +43,6 @@ export async function createAtleta(
       entrenadorAsignadoId: formData.get('entrenadorAsignadoId') || undefined,
       categoriaPeso: formData.get('categoriaPeso') || undefined,
       pesoActual: formData.get('pesoActual') || undefined,
-      fcReposo: formData.get('fcReposo') || undefined,
     };
 
     // Validar con Zod
@@ -139,9 +139,9 @@ export async function updateAtleta(
 
     // Extraer datos del FormData
     // Campos obligatorios siempre se incluyen (para validacion)
-    const requiredFields = ['municipio', 'club', 'categoria', 'fechaNacimiento', 'edad', 'categoriaPeso'];
+    const requiredFields = ['municipio', 'municipioClub', 'club', 'categoria', 'fechaNacimiento', 'edad', 'categoriaPeso'];
     // Campos opcionales solo si tienen valor
-    const optionalFields = ['direccion', 'telefono', 'entrenadorAsignadoId', 'pesoActual', 'fcReposo'];
+    const optionalFields = ['direccion', 'telefono', 'entrenadorAsignadoId', 'pesoActual'];
 
     const rawData: Record<string, unknown> = {};
 

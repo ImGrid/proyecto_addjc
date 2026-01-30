@@ -20,10 +20,40 @@ const tipoVariants: Record<string, 'default' | 'secondary' | 'destructive' | 'ou
   COMPETITIVO: 'default',
 };
 
+// Calcula el estado temporal del microciclo basado en las fechas
+type EstadoTemporal = 'VENCIDO' | 'EN_CURSO' | 'FUTURO';
+
+function calcularEstadoTemporal(fechaInicio: Date, fechaFin: Date): EstadoTemporal {
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+
+  const inicio = new Date(fechaInicio);
+  inicio.setHours(0, 0, 0, 0);
+
+  const fin = new Date(fechaFin);
+  fin.setHours(0, 0, 0, 0);
+
+  if (fin < hoy) {
+    return 'VENCIDO';
+  } else if (inicio > hoy) {
+    return 'FUTURO';
+  }
+  return 'EN_CURSO';
+}
+
+// Configuracion de badges para estado temporal
+const estadoConfig: Record<EstadoTemporal, { label: string; className: string }> = {
+  VENCIDO: { label: 'Vencido', className: 'bg-red-100 text-red-800 border-red-200' },
+  EN_CURSO: { label: 'En curso', className: 'bg-green-100 text-green-800 border-green-200' },
+  FUTURO: { label: 'Futuro', className: 'bg-blue-100 text-blue-800 border-blue-200' },
+};
+
 // Card de microciclo para ENTRENADOR (solo lectura)
 export function MicrocicloCard({ microciclo }: MicrocicloCardProps) {
-  const fechaInicio = formatDateLocale(microciclo.fechaInicio);
-  const fechaFin = formatDateLocale(microciclo.fechaFin);
+  const fechaInicioStr = formatDateLocale(microciclo.fechaInicio);
+  const fechaFinStr = formatDateLocale(microciclo.fechaFin);
+  const estadoTemporal = calcularEstadoTemporal(microciclo.fechaInicio, microciclo.fechaFin);
+  const estadoBadge = estadoConfig[estadoTemporal];
 
   return (
     <Card>
@@ -31,14 +61,19 @@ export function MicrocicloCard({ microciclo }: MicrocicloCardProps) {
         <CardTitle className="text-lg">
           Microciclo {microciclo.codigoMicrociclo}
         </CardTitle>
-        <Badge variant={tipoVariants[microciclo.tipoMicrociclo] || 'outline'}>
-          {microciclo.tipoMicrociclo}
-        </Badge>
+        <div className="flex gap-2">
+          <Badge variant="outline" className={estadoBadge.className}>
+            {estadoBadge.label}
+          </Badge>
+          <Badge variant={tipoVariants[microciclo.tipoMicrociclo] || 'outline'}>
+            {microciclo.tipoMicrociclo}
+          </Badge>
+        </div>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Calendar className="h-4 w-4" />
-          <span>{fechaInicio} - {fechaFin}</span>
+          <span>{fechaInicioStr} - {fechaFinStr}</span>
         </div>
 
         <div className="grid grid-cols-2 gap-2 text-sm">

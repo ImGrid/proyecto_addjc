@@ -13,7 +13,7 @@ export const createMesocicloSchema = z
       .min(3, 'Nombre debe tener al menos 3 caracteres')
       .max(100, 'Nombre no puede exceder 100 caracteres'),
 
-    numeroMesociclo: z.coerce.number().int().min(1, 'El numero de mesociclo debe ser al menos 1'),
+    codigoMesociclo: z.string().min(1, 'Codigo de mesociclo es requerido').max(50, 'Codigo no puede exceder 50 caracteres'),
 
     etapa: z.enum(EtapaMesocicloValues as [string, ...string[]]),
 
@@ -26,8 +26,6 @@ export const createMesocicloSchema = z
     objetivoTecnico: z.string().min(1, 'Objetivo tecnico es requerido'),
 
     objetivoTactico: z.string().min(1, 'Objetivo tactico es requerido'),
-
-    totalMicrociclos: z.coerce.number().int().min(0).optional(),
   })
   .refine((data) => new Date(data.fechaFin) > new Date(data.fechaInicio), {
     message: 'La fecha de fin debe ser posterior a la fecha de inicio',
@@ -47,7 +45,7 @@ export const updateMesocicloSchema = z
       .max(100, 'Nombre no puede exceder 100 caracteres')
       .optional(),
 
-    numeroMesociclo: z.coerce.number().int().min(1).optional(),
+    codigoMesociclo: z.string().max(50, 'Codigo no puede exceder 50 caracteres').optional(),
 
     etapa: z.enum(EtapaMesocicloValues as [string, ...string[]]).optional(),
 
@@ -60,8 +58,6 @@ export const updateMesocicloSchema = z
     objetivoTecnico: z.string().optional(),
 
     objetivoTactico: z.string().optional(),
-
-    totalMicrociclos: z.coerce.number().int().min(0).optional(),
   })
   .refine(
     (data) => {

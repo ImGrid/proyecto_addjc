@@ -30,9 +30,10 @@ import type { Usuario } from '@/types/auth';
 
 interface AppSidebarProps {
   user: Usuario;
+  badgeCounts?: Record<string, number>;
 }
 
-export function AppSidebar({ user }: AppSidebarProps) {
+export function AppSidebar({ user, badgeCounts = {} }: AppSidebarProps) {
   const pathname = usePathname();
   const navigation = navigationConfig[user.rol];
 
@@ -171,7 +172,19 @@ export function AppSidebar({ user }: AppSidebarProps) {
                           className="h-5 w-5 flex-shrink-0"
                           strokeWidth={2}
                         />
-                        <span>{item.label}</span>
+                        <span className="flex-1">{item.label}</span>
+                        {item.badgeKey && badgeCounts[item.badgeKey] > 0 && (
+                          <span
+                            className={`
+                              inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-semibold rounded-full
+                              ${isActive ? 'bg-white text-primary' : 'bg-red-500 text-white'}
+                            `}
+                          >
+                            {badgeCounts[item.badgeKey] > 99
+                              ? '99+'
+                              : badgeCounts[item.badgeKey]}
+                          </span>
+                        )}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

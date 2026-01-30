@@ -6,7 +6,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../database/prisma.service';
-import { TipoAlerta, Severidad, TipoNotificacion, Prioridad } from '@prisma/client';
+import { Severidad } from '@prisma/client';
 import {
   analizarAlertas,
   DatosRegistroParaAlerta,
@@ -205,7 +205,8 @@ export class AlertasSistemaService {
 
     let alertasCreadas = 0;
     let alertasActualizadas = 0;
-    let notificacionesCreadas = 0;
+    // notificacionesCreadas ya no se usa - alertas se consultan directamente
+    const notificacionesCreadas = 0;
 
     for (const alerta of resultado.alertas) {
       // Buscar alerta similar existente (deduplicacion key-based)
@@ -277,7 +278,9 @@ export class AlertasSistemaService {
         alertaFinal = alertaCreada;
         alertasCreadas++;
 
-        // Solo crear destinatarios y notificaciones para alertas NUEVAS
+        // Solo crear destinatarios para alertas NUEVAS
+        // NOTA: No se crean notificaciones duplicadas, las alertas se consultan directamente
+        // desde la tabla alertas_sistema via el Centro de Notificaciones unificado
         for (const destinatarioId of destinatarios) {
           await this.prisma.alertaDestinatario.create({
             data: {
@@ -285,21 +288,6 @@ export class AlertasSistemaService {
               destinatarioId,
             },
           });
-
-          // Crear notificacion asociada
-          const tipoNotificacion = this.mapearTipoAlertaANotificacion(alerta.tipo);
-          const prioridad = this.mapearSeveridadAPrioridad(alerta.severidad);
-
-          await this.prisma.notificacion.create({
-            data: {
-              destinatarioId,
-              tipo: tipoNotificacion,
-              titulo: `Alerta: ${alerta.titulo}`,
-              mensaje: `${atleta.usuario.nombreCompleto}: ${alerta.mensaje} - ${alerta.accionSugerida}`,
-              prioridad,
-            },
-          });
-          notificacionesCreadas++;
         }
       }
     }
@@ -354,29 +342,6 @@ export class AlertasSistemaService {
     return destinatarios;
   }
 
-  // Mapea tipo de alerta a tipo de notificacion
-  private mapearTipoAlertaANotificacion(tipo: TipoAlerta): TipoNotificacion {
-    const mapa: Record<TipoAlerta, TipoNotificacion> = {
-      FATIGA_ALTA: 'ALERTA_FATIGA',
-      LESION_DETECTADA: 'ALERTA_LESION',
-      PESO_FUERA_RANGO: 'OTRO',
-      BAJO_RENDIMIENTO: 'OTRO',
-      TEST_FALLIDO: 'OTRO',
-      DESVIACION_CARGA: 'OTRO',
-    };
-    return mapa[tipo];
-  }
-
-  // Mapea severidad de alerta a prioridad de notificacion
-  private mapearSeveridadAPrioridad(severidad: Severidad): Prioridad {
-    const mapa: Record<Severidad, Prioridad> = {
-      CRITICA: 'CRITICA',
-      ALTA: 'ALTA',
-      MEDIA: 'MEDIA',
-      BAJA: 'BAJA',
-    };
-    return mapa[severidad];
-  }
 
   // Obtiene alertas de un atleta (todas, sin filtrar por destinatario)
   async obtenerAlertasAtleta(atletaId: bigint, soloNoLeidas: boolean = false) {
