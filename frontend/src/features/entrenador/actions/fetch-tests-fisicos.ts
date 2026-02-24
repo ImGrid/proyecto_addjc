@@ -94,3 +94,51 @@ export async function fetchTestsFisicosEntrenador(
     return null;
   }
 }
+
+// Obtener un test fisico por ID
+// Endpoint: GET /tests-fisicos/:id
+export async function fetchTestFisicoEntrenador(
+  id: string
+): Promise<TestFisico | null> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('accessToken')?.value;
+
+    if (!token) {
+      console.error('[fetchTestFisicoEntrenador] No se encontro token');
+      return null;
+    }
+
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+
+    const response = await fetch(
+      `${API_URL}/tests-fisicos/${id}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        cache: 'no-store',
+      }
+    );
+
+    if (!response.ok) {
+      console.error('[fetchTestFisicoEntrenador] Error:', response.status);
+      return null;
+    }
+
+    const result = await response.json();
+
+    const validation = testFisicoSchema.safeParse(result);
+
+    if (!validation.success) {
+      console.error('[fetchTestFisicoEntrenador] Error de validacion:', validation.error.issues);
+      return result as TestFisico;
+    }
+
+    return validation.data;
+  } catch (error) {
+    console.error('[fetchTestFisicoEntrenador] Error:', error);
+    return null;
+  }
+}

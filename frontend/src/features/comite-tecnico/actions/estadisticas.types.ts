@@ -12,7 +12,7 @@ export interface AtletaEstadisticas {
     promedio: number;
     desviacion: number;
   };
-  tendencia: 'ascendente' | 'descendente' | 'estable';
+  tendencia: 'MEJORANDO' | 'ESTANCADO' | 'EMPEORANDO';
   progreso: {
     absoluto: number;
     porcentaje: number;
@@ -35,7 +35,7 @@ export interface AtletaEvolucion {
     fechaTest: string;
     valor: number;
   }[];
-  tendencia: 'ascendente' | 'descendente' | 'estable';
+  tendencia: 'MEJORANDO' | 'ESTANCADO' | 'EMPEORANDO';
   mejora: {
     absoluto: number;
     porcentaje: number;

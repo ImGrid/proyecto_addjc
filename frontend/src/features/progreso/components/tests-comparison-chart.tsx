@@ -72,25 +72,25 @@ export const TestsComparisonChart = memo(({ data }: TestsComparisonChartProps) =
       <ResponsiveContainer width="100%" height={300}>
         <BarChart
           data={data}
-          layout="horizontal"
-          margin={{ top: 20, right: 30, left: 120, bottom: 20 }}
+          layout="vertical"
+          margin={{ top: 20, right: 30, left: 10, bottom: 20 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
 
-          {/* Eje X numérico (valores) */}
+          {/* Eje X numerico (valores) */}
           <XAxis
             type="number"
             stroke="#6b7280"
             style={{ fontSize: '12px' }}
           />
 
-          {/* Eje Y categórico (nombres de tests) */}
+          {/* Eje Y categorico (nombres de tests) */}
           <YAxis
             dataKey="nombre"
             type="category"
-            width={110}
+            width={100}
             stroke="#6b7280"
-            style={{ fontSize: '12px' }}
+            style={{ fontSize: '11px' }}
           />
 
           <Tooltip content={<CustomTooltip />} />

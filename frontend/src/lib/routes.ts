@@ -175,6 +175,7 @@ export const ENTRENADOR_ROUTES = {
 
   // Algoritmo - Analisis de rendimiento (sus atletas)
   analisis: {
+    list: '/entrenador/analisis',
     detalle: (atletaId: string | number) =>
       `/entrenador/analisis/${atletaId}`,
   },

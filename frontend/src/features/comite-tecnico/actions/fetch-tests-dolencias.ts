@@ -12,6 +12,9 @@ export interface FetchTestsFisicosParams {
   limit?: number;
   atletaId?: string;
   microcicloId?: string;
+  fechaDesde?: string;
+  fechaHasta?: string;
+  asistio?: string;
 }
 
 // Obtener lista paginada de tests fisicos
@@ -32,6 +35,9 @@ export async function fetchTestsFisicos(
     if (params.limit) searchParams.set('limit', params.limit.toString());
     if (params.atletaId) searchParams.set('atletaId', params.atletaId);
     if (params.microcicloId) searchParams.set('microcicloId', params.microcicloId);
+    if (params.fechaDesde) searchParams.set('fechaDesde', params.fechaDesde);
+    if (params.fechaHasta) searchParams.set('fechaHasta', params.fechaHasta);
+    if (params.asistio) searchParams.set('asistio', params.asistio);
 
     const queryString = searchParams.toString();
     const endpoint = `/tests-fisicos${queryString ? `?${queryString}` : ''}`;

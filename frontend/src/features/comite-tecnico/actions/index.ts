@@ -116,6 +116,9 @@ export type {
 } from './fetch-estadisticas';
 export { TIPOS_TEST } from './estadisticas.types';
 
+// Atletas para selector (dropdown)
+export { fetchAtletasParaSelector } from './fetch-atletas-selector';
+
 // Registros Post-Entrenamiento
 export {
   fetchRegistrosPostEntrenamiento,

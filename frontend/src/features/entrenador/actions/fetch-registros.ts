@@ -96,3 +96,51 @@ export async function fetchRegistrosEntrenador(
     return null;
   }
 }
+
+// Obtener un registro post-entrenamiento por ID
+// Endpoint: GET /registros-post-entrenamiento/:id
+export async function fetchRegistroEntrenador(
+  id: string
+): Promise<RegistroPostEntrenamiento | null> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('accessToken')?.value;
+
+    if (!token) {
+      console.error('[fetchRegistroEntrenador] No se encontro token');
+      return null;
+    }
+
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+
+    const response = await fetch(
+      `${API_URL}/registros-post-entrenamiento/${id}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        cache: 'no-store',
+      }
+    );
+
+    if (!response.ok) {
+      console.error('[fetchRegistroEntrenador] Error:', response.status);
+      return null;
+    }
+
+    const result = await response.json();
+
+    const validation = registroPostEntrenamientoSchema.safeParse(result);
+
+    if (!validation.success) {
+      console.error('[fetchRegistroEntrenador] Error de validacion:', validation.error.issues);
+      return result as RegistroPostEntrenamiento;
+    }
+
+    return validation.data;
+  } catch (error) {
+    console.error('[fetchRegistroEntrenador] Error:', error);
+    return null;
+  }
+}

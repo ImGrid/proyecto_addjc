@@ -10,7 +10,7 @@ import {
   Heart,
   AlertTriangle,
   UserCog,
-  Link,
+
   CalendarClock,
   Medal,
   LineChart,
@@ -85,11 +85,6 @@ export const navigationConfig: Record<RolUsuario, NavigationItem[]> = {
           label: 'Microciclos',
         },
       ],
-    },
-    {
-      href: '/comite-tecnico/asignaciones',
-      label: 'Asignaciones',
-      icon: Link,
     },
     {
       href: '/comite-tecnico/sesiones',
@@ -190,6 +185,11 @@ export const navigationConfig: Record<RolUsuario, NavigationItem[]> = {
       icon: AlertTriangle,
     },
     {
+      href: '/entrenador/estadisticas',
+      label: 'Estadisticas',
+      icon: BarChart,
+    },
+    {
       href: '/entrenador/ranking',
       label: 'Ranking',
       icon: Medal,
@@ -199,6 +199,11 @@ export const navigationConfig: Record<RolUsuario, NavigationItem[]> = {
       label: 'Recomendaciones',
       icon: Bell,
       badgeKey: 'centroNotificaciones',
+    },
+    {
+      href: '/entrenador/analisis',
+      label: 'Analisis',
+      icon: LineChart,
     },
   ],
 

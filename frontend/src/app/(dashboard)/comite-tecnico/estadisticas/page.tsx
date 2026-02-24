@@ -1,9 +1,19 @@
 import { fetchAtletas } from '@/features/comite-tecnico/actions';
+import { fetchRankingOverview } from '@/features/estadisticas/actions/fetch-ranking-overview';
+import { fetchRecomendacionesStats } from '@/features/estadisticas/actions/fetch-recomendaciones-stats';
+import { fetchBienestarGrupal } from '@/features/estadisticas/actions/fetch-bienestar-grupal';
+import { fetchAsistenciaGrupal } from '@/features/estadisticas/actions/fetch-asistencia-grupal';
 import { EstadisticasView } from './estadisticas-view';
 
 export default async function EstadisticasPage() {
-  // Obtener lista de atletas para el selector
-  const atletasResult = await fetchAtletas({ limit: 100 });
+  // Fetch en paralelo: atletas + ranking + recomendaciones + bienestar grupal + asistencia
+  const [atletasResult, rankingOverview, recomendacionesStats, bienestarGrupal, asistenciaGrupal] = await Promise.all([
+    fetchAtletas({ limit: 100 }),
+    fetchRankingOverview(),
+    fetchRecomendacionesStats(),
+    fetchBienestarGrupal(60),
+    fetchAsistenciaGrupal(8),
+  ]);
 
   const atletas = (atletasResult?.data || []).map((a) => ({
     id: a.id,
@@ -21,7 +31,13 @@ export default async function EstadisticasPage() {
         </p>
       </div>
 
-      <EstadisticasView atletas={atletas} />
+      <EstadisticasView
+        atletas={atletas}
+        rankingOverview={rankingOverview}
+        recomendacionesStats={recomendacionesStats}
+        bienestarGrupal={bienestarGrupal}
+        asistenciaGrupal={asistenciaGrupal}
+      />
     </div>
   );
 }

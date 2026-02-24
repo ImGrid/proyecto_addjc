@@ -1,6 +1,9 @@
 import Link from 'next/link';
-import { fetchRegistrosPostEntrenamiento } from '@/features/comite-tecnico/actions';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  fetchRegistrosPostEntrenamiento,
+  fetchAtletasParaSelector,
+} from '@/features/comite-tecnico/actions';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,11 +15,39 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Activity, Eye, Calendar, AlertTriangle } from 'lucide-react';
+import { ComiteAtletaFilter } from '@/features/comite-tecnico/components/comite-atleta-filter';
+import { ComitePagination } from '@/features/comite-tecnico/components/comite-pagination';
 
-export default async function PostEntrenamientoPage() {
-  const result = await fetchRegistrosPostEntrenamiento({ limit: 50 });
+interface PageProps {
+  searchParams: Promise<{
+    atletaId?: string;
+    fechaDesde?: string;
+    fechaHasta?: string;
+    asistio?: string;
+    rpeMin?: string;
+    page?: string;
+  }>;
+}
+
+export default async function PostEntrenamientoPage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const atletaId = params.atletaId || undefined;
+  const fechaDesde = params.fechaDesde || undefined;
+  const fechaHasta = params.fechaHasta || undefined;
+  const asistio = params.asistio || undefined;
+  const rpeMin = params.rpeMin ? parseInt(params.rpeMin, 10) : undefined;
+  const page = params.page ? parseInt(params.page, 10) : 1;
+  const limit = 20;
+
+  // Cargar registros y atletas en paralelo
+  const [result, atletas] = await Promise.all([
+    fetchRegistrosPostEntrenamiento({ atletaId, fechaDesde, fechaHasta, asistio, rpeMin, page, limit }),
+    fetchAtletasParaSelector(),
+  ]);
+
   const registros = result?.data || [];
   const total = result?.meta.total || 0;
+  const totalPages = result?.meta.totalPages || 1;
 
   return (
     <div className="space-y-6">
@@ -28,6 +59,8 @@ export default async function PostEntrenamientoPage() {
           </p>
         </div>
       </div>
+
+      <ComiteAtletaFilter atletas={atletas || []} />
 
       {registros.length === 0 ? (
         <Card>
@@ -41,13 +74,7 @@ export default async function PostEntrenamientoPage() {
         </Card>
       ) : (
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5" />
-              Registros Post-Entrenamiento
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -143,6 +170,13 @@ export default async function PostEntrenamientoPage() {
           </CardContent>
         </Card>
       )}
+
+      <ComitePagination
+        currentPage={page}
+        totalPages={totalPages}
+        total={total}
+        itemLabel="registros"
+      />
     </div>
   );
 }

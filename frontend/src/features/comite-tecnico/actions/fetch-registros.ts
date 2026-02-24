@@ -50,6 +50,10 @@ export interface RegistroPostEntrenamiento {
 export interface FetchRegistrosParams {
   atletaId?: string;
   sesionId?: string;
+  fechaDesde?: string;
+  fechaHasta?: string;
+  asistio?: string;
+  rpeMin?: number;
   page?: number;
   limit?: number;
 }
@@ -76,20 +80,19 @@ export async function fetchRegistrosPostEntrenamiento(
       return null;
     }
 
-    const { atletaId, sesionId, page = 1, limit = 20 } = params;
+    const { atletaId, sesionId, fechaDesde, fechaHasta, asistio, rpeMin, page = 1, limit = 20 } = params;
 
     const queryParams = new URLSearchParams({
       page: String(page),
       limit: String(limit),
     });
 
-    if (atletaId) {
-      queryParams.append('atletaId', atletaId);
-    }
-
-    if (sesionId) {
-      queryParams.append('sesionId', sesionId);
-    }
+    if (atletaId) queryParams.append('atletaId', atletaId);
+    if (sesionId) queryParams.append('sesionId', sesionId);
+    if (fechaDesde) queryParams.append('fechaDesde', fechaDesde);
+    if (fechaHasta) queryParams.append('fechaHasta', fechaHasta);
+    if (asistio) queryParams.append('asistio', asistio);
+    if (rpeMin !== undefined) queryParams.append('rpeMin', rpeMin.toString());
 
     const response = await authFetch(
       `/registros-post-entrenamiento?${queryParams.toString()}`

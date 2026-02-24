@@ -3,6 +3,7 @@ import { AnalisisDashboard } from '@/features/algoritmo/components/analisis-dash
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { ENTRENADOR_ROUTES } from '@/lib/routes';
 
 interface AnalisisAtletaENTPageProps {
   params: Promise<{ atletaId: string }>;
@@ -19,7 +20,7 @@ export default async function AnalisisAtletaENTPage({
       <div className="space-y-6">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
-            <Link href="/entrenador">
+            <Link href={ENTRENADOR_ROUTES.analisis.list}>
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>

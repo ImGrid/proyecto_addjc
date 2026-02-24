@@ -1,6 +1,10 @@
 import Link from 'next/link';
-import { fetchTestsFisicos } from '@/features/comite-tecnico/actions';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  fetchTestsFisicos,
+  fetchAtletasParaSelector,
+  fetchMicrociclosParaSelector,
+} from '@/features/comite-tecnico/actions';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,12 +17,40 @@ import {
 } from '@/components/ui/table';
 import { ClipboardList, Eye } from 'lucide-react';
 import { formatDateMedium } from '@/lib/date-utils';
+import { ComiteTestsFilter } from '@/features/comite-tecnico/components/comite-tests-filter';
+import { ComitePagination } from '@/features/comite-tecnico/components/comite-pagination';
 
-export default async function TestsFisicosPage() {
-  const result = await fetchTestsFisicos({ limit: 50 });
+interface PageProps {
+  searchParams: Promise<{
+    atletaId?: string;
+    microcicloId?: string;
+    fechaDesde?: string;
+    fechaHasta?: string;
+    asistio?: string;
+    page?: string;
+  }>;
+}
+
+export default async function TestsFisicosPage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const atletaId = params.atletaId || undefined;
+  const microcicloId = params.microcicloId || undefined;
+  const fechaDesde = params.fechaDesde || undefined;
+  const fechaHasta = params.fechaHasta || undefined;
+  const asistio = params.asistio || undefined;
+  const page = params.page ? parseInt(params.page, 10) : 1;
+  const limit = 20;
+
+  // Cargar tests, atletas y microciclos en paralelo
+  const [result, atletas, microciclos] = await Promise.all([
+    fetchTestsFisicos({ atletaId, microcicloId, fechaDesde, fechaHasta, asistio, page, limit }),
+    fetchAtletasParaSelector(),
+    fetchMicrociclosParaSelector(),
+  ]);
 
   const tests = result?.data || [];
   const total = result?.meta?.total || 0;
+  const totalPages = result?.meta?.totalPages || 1;
 
   return (
     <div className="space-y-6">
@@ -31,26 +63,24 @@ export default async function TestsFisicosPage() {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ClipboardList className="h-5 w-5" />
-            Historial de Tests
-          </CardTitle>
-          <CardDescription>
-            Todos los tests fisicos realizados a los atletas
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {tests.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <ClipboardList className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium">No hay tests registrados</h3>
-              <p className="text-muted-foreground mt-1">
-                Los tests apareceran aqui cuando los entrenadores los registren.
-              </p>
-            </div>
-          ) : (
+      <ComiteTestsFilter
+        atletas={atletas || []}
+        microciclos={(microciclos || []).map((m) => ({ id: m.id, label: m.label }))}
+      />
+
+      {tests.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium">No hay tests registrados</h3>
+            <p className="text-muted-foreground mt-1">
+              Los tests apareceran aqui cuando los entrenadores los registren.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="pt-6">
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
@@ -94,9 +124,16 @@ export default async function TestsFisicosPage() {
                 </TableBody>
               </Table>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
+
+      <ComitePagination
+        currentPage={page}
+        totalPages={totalPages}
+        total={total}
+        itemLabel="tests"
+      />
     </div>
   );
 }

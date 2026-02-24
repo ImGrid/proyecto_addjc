@@ -5,10 +5,18 @@ import { fetchRegistrosEntrenador } from '@/features/entrenador/actions/fetch-re
 import { fetchAtletasParaSelector } from '@/features/entrenador/actions/fetch-mis-atletas';
 import { RegistrosFilters } from '@/features/entrenador/components/registros-filters';
 import { RegistrosPagination } from '@/features/entrenador/components/registros-pagination';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Activity, Plus, Calendar, AlertTriangle } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Activity, Plus, Eye, Calendar, AlertTriangle } from 'lucide-react';
 import { AUTH_ROUTES } from '@/lib/routes';
 
 interface PageProps {
@@ -38,7 +46,7 @@ export default async function PostEntrenamientoPage({ searchParams }: PageProps)
   const asistio = params.asistio || undefined;
   const rpeMin = params.rpeMin ? parseInt(params.rpeMin, 10) : undefined;
   const page = Math.max(1, parseInt(params.page || '1', 10) || 1);
-  const limit = 10;
+  const limit = 20;
 
   // Cargar datos en paralelo
   const [registrosResult, atletas] = await Promise.all([
@@ -47,7 +55,7 @@ export default async function PostEntrenamientoPage({ searchParams }: PageProps)
   ]);
 
   const registros = registrosResult?.data || [];
-  const meta = registrosResult?.meta || { total: 0, page: 1, limit: 10, totalPages: 1 };
+  const meta = registrosResult?.meta || { total: 0, page: 1, limit: 20, totalPages: 1 };
   const total = meta.total || 0;
   const totalPages = meta.totalPages || 1;
 
@@ -70,7 +78,6 @@ export default async function PostEntrenamientoPage({ searchParams }: PageProps)
         </Button>
       </div>
 
-      {/* Filtros */}
       <RegistrosFilters atletas={atletas || []} />
 
       {registros.length === 0 ? (
@@ -96,82 +103,104 @@ export default async function PostEntrenamientoPage({ searchParams }: PageProps)
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {registros.map((registro) => (
-            <Card key={registro.id}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span>
-                      {new Date(registro.fechaRegistro).toLocaleDateString('es-ES', {
-                        weekday: 'long',
-                        day: '2-digit',
-                        month: 'long',
-                      })}
-                      {registro.sesion && ` - Sesion ${registro.sesion.numeroSesion}`}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {registro.atleta && (
-                      <Badge variant="outline">{registro.atleta.nombreCompleto}</Badge>
-                    )}
-                    <Badge variant={registro.asistio ? 'default' : 'destructive'}>
-                      {registro.asistio ? 'Asistio' : 'Falta'}
-                    </Badge>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">RPE</p>
-                    <p className="font-medium">{registro.rpe}/10</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Ejercicios</p>
-                    <p className="font-medium">{registro.ejerciciosCompletados}%</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Intensidad</p>
-                    <p className="font-medium">{registro.intensidadAlcanzada}%</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Sueno</p>
-                    <p className="font-medium">{registro.calidadSueno}/10</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Estado</p>
-                    <p className="font-medium">{registro.estadoAnimico}/10</p>
-                  </div>
-                </div>
-
-                {registro.dolencias && registro.dolencias.length > 0 && (
-                  <div className="mt-3 flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-orange-500" />
-                    <span className="text-sm text-muted-foreground">Dolencias:</span>
-                    <div className="flex flex-wrap gap-1">
-                      {registro.dolencias.map((d) => (
-                        <Badge key={d.id} variant="destructive" className="text-xs">
-                          {d.zona} (nivel {d.nivel})
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {!registro.asistio && registro.motivoInasistencia && (
-                  <p className="mt-3 text-sm text-muted-foreground">
-                    <span className="font-medium">Motivo:</span> {registro.motivoInasistencia}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Atleta</TableHead>
+                  <TableHead>Sesion</TableHead>
+                  <TableHead className="text-center">Asistencia</TableHead>
+                  <TableHead className="text-center">RPE</TableHead>
+                  <TableHead className="text-center">Ejercicios</TableHead>
+                  <TableHead className="text-center">Sueno</TableHead>
+                  <TableHead className="text-center">Dolencias</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {registros.map((registro) => (
+                  <TableRow key={registro.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        {new Date(registro.fechaRegistro).toLocaleDateString('es-ES', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {registro.atleta?.nombreCompleto || 'Sin nombre'}
+                    </TableCell>
+                    <TableCell>
+                      {registro.sesion ? (
+                        <span className="text-sm">
+                          Sesion {registro.sesion.numeroSesion}
+                          {registro.sesion.microciclo && (
+                            <span className="text-muted-foreground ml-1">
+                              (Mic. {registro.sesion.microciclo.codigoMicrociclo})
+                            </span>
+                          )}
+                        </span>
+                      ) : (
+                        '-'
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant={registro.asistio ? 'default' : 'destructive'}>
+                        {registro.asistio ? 'Si' : 'No'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge
+                        variant={
+                          registro.rpe >= 9
+                            ? 'destructive'
+                            : registro.rpe >= 7
+                              ? 'secondary'
+                              : 'outline'
+                        }
+                      >
+                        {registro.rpe}/10
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {registro.ejerciciosCompletados}%
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {registro.calidadSueno}/10
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {registro.dolencias && registro.dolencias.length > 0 ? (
+                        <div className="flex items-center justify-center gap-1">
+                          <AlertTriangle className="h-4 w-4 text-orange-500" />
+                          <span className="text-orange-600 font-medium">
+                            {registro.dolencias.length}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link href={`/entrenador/post-entrenamiento/${registro.id}`}>
+                          <Eye className="h-4 w-4 mr-1" />
+                          Ver
+                        </Link>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
 
-      {/* Paginacion */}
       <RegistrosPagination
         currentPage={page}
         totalPages={totalPages}

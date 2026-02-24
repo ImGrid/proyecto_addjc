@@ -6,12 +6,20 @@ import { fetchAtletasParaSelector } from '@/features/entrenador/actions/fetch-mi
 import { fetchMicrociclosParaSelector } from '@/features/comite-tecnico/actions/fetch-planificacion';
 import { TestsFilters } from '@/features/entrenador/components/tests-filters';
 import { TestsPagination } from '@/features/entrenador/components/tests-pagination';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ClipboardList, Plus, Calendar } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { ClipboardList, Plus, Eye } from 'lucide-react';
 import { AUTH_ROUTES } from '@/lib/routes';
-import { formatDateFull } from '@/lib/date-utils';
+import { formatDateMedium } from '@/lib/date-utils';
 
 interface PageProps {
   searchParams: Promise<{
@@ -40,7 +48,7 @@ export default async function TestsFisicosPage({ searchParams }: PageProps) {
   const fechaHasta = params.fechaHasta || undefined;
   const asistio = params.asistio || undefined;
   const page = Math.max(1, parseInt(params.page || '1', 10) || 1);
-  const limit = 10;
+  const limit = 20;
 
   // Cargar datos en paralelo
   const [testsResult, atletas, microciclos] = await Promise.all([
@@ -50,7 +58,7 @@ export default async function TestsFisicosPage({ searchParams }: PageProps) {
   ]);
 
   const tests = testsResult?.data || [];
-  const meta = testsResult?.meta || { total: 0, page: 1, limit: 10, totalPages: 1 };
+  const meta = testsResult?.meta || { total: 0, page: 1, limit: 20, totalPages: 1 };
   const total = meta.total || 0;
   const totalPages = meta.totalPages || 1;
 
@@ -73,7 +81,6 @@ export default async function TestsFisicosPage({ searchParams }: PageProps) {
         </Button>
       </div>
 
-      {/* Filtros */}
       <TestsFilters
         atletas={atletas || []}
         microciclos={(microciclos || []).map((m) => ({ id: m.id, label: m.label }))}
@@ -102,75 +109,55 @@ export default async function TestsFisicosPage({ searchParams }: PageProps) {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {tests.map((test) => (
-            <Card key={test.id}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span>{formatDateFull(test.fechaTest)}</span>
-                  </div>
-                  {test.atleta && (
-                    <Badge variant="outline">{test.atleta.nombreCompleto}</Badge>
-                  )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-sm">
-                  {test.pressBanca && (
-                    <div>
-                      <p className="text-muted-foreground">Press Banca</p>
-                      <p className="font-medium">{test.pressBanca} kg</p>
-                    </div>
-                  )}
-                  {test.tiron && (
-                    <div>
-                      <p className="text-muted-foreground">Tiron</p>
-                      <p className="font-medium">{test.tiron} kg</p>
-                    </div>
-                  )}
-                  {test.sentadilla && (
-                    <div>
-                      <p className="text-muted-foreground">Sentadilla</p>
-                      <p className="font-medium">{test.sentadilla} kg</p>
-                    </div>
-                  )}
-                  {test.barraFija !== null && (
-                    <div>
-                      <p className="text-muted-foreground">Barra Fija</p>
-                      <p className="font-medium">{test.barraFija} reps</p>
-                    </div>
-                  )}
-                  {test.paralelas !== null && (
-                    <div>
-                      <p className="text-muted-foreground">Paralelas</p>
-                      <p className="font-medium">{test.paralelas} reps</p>
-                    </div>
-                  )}
-                  {test.navettePalier && (
-                    <div>
-                      <p className="text-muted-foreground">Navette</p>
-                      <p className="font-medium">Palier {test.navettePalier}</p>
-                    </div>
-                  )}
-                  {test.navetteVO2max && (
-                    <div>
-                      <p className="text-muted-foreground">VO2max</p>
-                      <p className="font-medium">{test.navetteVO2max}</p>
-                    </div>
-                  )}
-                </div>
-                {test.observaciones && (
-                  <p className="mt-3 text-sm text-muted-foreground">{test.observaciones}</p>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Atleta</TableHead>
+                    <TableHead>Fecha</TableHead>
+                    <TableHead>Press Banca</TableHead>
+                    <TableHead>Sentadilla</TableHead>
+                    <TableHead>Navette</TableHead>
+                    <TableHead>VO2max</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {tests.map((test) => (
+                    <TableRow key={test.id}>
+                      <TableCell className="font-medium">
+                        {test.atleta?.nombreCompleto || 'N/A'}
+                      </TableCell>
+                      <TableCell>{formatDateMedium(test.fechaTest)}</TableCell>
+                      <TableCell>{test.pressBanca || '-'}</TableCell>
+                      <TableCell>{test.sentadilla || '-'}</TableCell>
+                      <TableCell>{test.navettePalier || '-'}</TableCell>
+                      <TableCell>
+                        {test.navetteVO2max ? (
+                          <Badge variant="outline">{test.navetteVO2max}</Badge>
+                        ) : (
+                          '-'
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" asChild>
+                          <Link href={`/entrenador/tests-fisicos/${test.id}`}>
+                            <Eye className="h-4 w-4 mr-1" />
+                            Ver
+                          </Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
-      {/* Paginacion */}
       <TestsPagination
         currentPage={page}
         totalPages={totalPages}
