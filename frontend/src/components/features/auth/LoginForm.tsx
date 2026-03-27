@@ -18,7 +18,6 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [showModal, setShowModal] = useState(false);
 
   const {
     register,
@@ -45,11 +44,6 @@ export function LoginForm() {
     }
 
     setIsLoading(false);
-  }
-
-  function handleForgotPassword(e: React.FormEvent) {
-    e.preventDefault();
-    setShowModal(false);
   }
 
   return (
@@ -130,8 +124,8 @@ export function LoginForm() {
                 )}
               </div>
 
-              {/* Opciones: Recordarme y Olvidé contraseña */}
-              <div className="flex justify-between items-center flex-wrap gap-2 pt-1">
+              {/* Opcion: Recordarme */}
+              <div className="flex items-center pt-1">
                 <label className="flex items-center gap-2 cursor-pointer text-[0.875rem] text-[#475569]">
                   <input
                     type="checkbox"
@@ -139,13 +133,6 @@ export function LoginForm() {
                   />
                   <span>Recordarme</span>
                 </label>
-                <button
-                  type="button"
-                  onClick={() => setShowModal(true)}
-                  className="text-primary text-[0.875rem] font-semibold no-underline transition-colors duration-300 hover:text-primary-dark hover:underline"
-                >
-                  ¿Olvidaste tu contraseña?
-                </button>
               </div>
 
               {/* Error del servidor */}
@@ -164,16 +151,6 @@ export function LoginForm() {
                 {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
               </Button>
 
-              {/* Link de registro */}
-              <p className="text-center mt-4 text-[0.9rem] text-[#64748b]">
-                ¿Eres nuevo?{' '}
-                <Link
-                  href="/registro"
-                  className="text-[#1a2a6c] no-underline font-semibold hover:underline hover:text-primary"
-                >
-                  Regístrate aquí
-                </Link>
-              </p>
             </form>
 
             {/* Volver al inicio */}
@@ -190,60 +167,6 @@ export function LoginForm() {
         </Card>
       </div>
 
-      {/* Modal de recuperación de contraseña */}
-      {showModal && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/70 backdrop-blur-[4px]"
-            onClick={() => setShowModal(false)}
-          />
-          <div className="relative bg-white rounded-2xl w-full max-w-[400px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] animate-[slideUp_0.3s_ease-out]">
-            <div className="p-6 border-b border-[#e2e8f0] flex justify-between items-center">
-              <h3 className="text-[1.25rem] font-bold text-[#1e293b]">Recuperar Contraseña</h3>
-              <button
-                onClick={() => setShowModal(false)}
-                className="bg-none border-none text-[1.5rem] text-[#64748b] cursor-pointer w-8 h-8 flex items-center justify-center rounded-md transition-all duration-300 hover:bg-[#e2e8f0] hover:text-[#1e293b]"
-              >
-                ×
-              </button>
-            </div>
-            <div className="p-6">
-              <p className="text-[#64748b] leading-[1.6] mb-5 text-[0.9rem]">
-                Ingresa tu correo electrónico y te enviaremos instrucciones para restablecer tu contraseña.
-              </p>
-              <form onSubmit={handleForgotPassword}>
-                <div className="mb-6">
-                  <Label htmlFor="recoveryEmail" className="block mb-2 font-semibold text-[#1e293b] text-[0.9rem]">
-                    Correo electrónico
-                  </Label>
-                  <Input
-                    id="recoveryEmail"
-                    type="email"
-                    placeholder="correo@ejemplo.com"
-                    required
-                    className="w-full px-4 py-[0.875rem] border-2 border-[#e2e8f0] rounded-lg text-base transition-all duration-300 focus:outline-none focus:border-primary focus:shadow-[0_0_0_3px_rgba(255,107,0,0.1)]"
-                  />
-                </div>
-                <div className="flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowModal(false)}
-                    className="px-6 py-3 border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 text-[0.9rem] bg-[#e2e8f0] text-[#1e293b] hover:bg-[#cbd5e1]"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-6 py-3 border-none rounded-lg font-semibold cursor-pointer transition-all duration-300 text-[0.9rem] bg-gradient-to-br from-primary to-primary-dark text-white shadow-[0_4px_12px_rgba(255,107,0,0.3)] hover:-translate-y-[2px] hover:shadow-[0_6px_16px_rgba(255,107,0,0.4)]"
-                  >
-                    Enviar instrucciones
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { KimonoIcon } from '@/components/ui/kimono-icon';
 import { Button } from '@/components/ui/button';
-import { Facebook, Youtube } from 'lucide-react';
+import { Facebook } from 'lucide-react';
 
 export function LandingHeader() {
   return (
@@ -49,20 +49,14 @@ export function LandingHeader() {
             <Link href="/login">Iniciar Sesión</Link>
           </Button>
 
-          <div className="flex gap-[0.8rem]">
-            <a
-              href="#"
-              className="w-9 h-9 flex items-center justify-center bg-text-dark text-white rounded-full transition-all duration-300 no-underline hover:bg-primary hover:-translate-y-[3px]"
-            >
-              <Facebook size={20} />
-            </a>
-            <a
-              href="#"
-              className="w-9 h-9 flex items-center justify-center bg-text-dark text-white rounded-full transition-all duration-300 no-underline hover:bg-primary hover:-translate-y-[3px]"
-            >
-              <Youtube size={20} />
-            </a>
-          </div>
+          <a
+            href="https://www.facebook.com/profile.php?id=61556345150638&mibextid=ZbWKwL"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-9 h-9 flex items-center justify-center bg-text-dark text-white rounded-full transition-all duration-300 no-underline hover:bg-primary hover:-translate-y-[3px]"
+          >
+            <Facebook size={20} />
+          </a>
         </div>
       </nav>
     </header>
