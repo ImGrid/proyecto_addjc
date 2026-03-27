@@ -5,6 +5,7 @@ import { MacrociclosController } from './controllers/macrociclos.controller';
 import { MesociclosController } from './controllers/mesociclos.controller';
 import { MicrociclosController } from './controllers/microciclos.controller';
 import { SesionesController } from './controllers/sesiones.controller';
+import { PublicPlanificacionController } from './controllers/public-planificacion.controller';
 import { MacrociclosService } from './services/macrociclos.service';
 import { MesociclosService } from './services/mesociclos.service';
 import { MicrociclosService } from './services/microciclos.service';
@@ -13,6 +14,7 @@ import { SesionFactory } from './services/sesion.factory';
 import { DateRangeValidator } from './validators/date-range.validator';
 import { PrismaService } from '../../database/prisma.service';
 import { CatalogoEjerciciosService } from '../algoritmo/services/catalogo-ejercicios.service';
+import { PublicPlanificacionService } from './services/public-planificacion.service';
 
 // Módulo de Planificación Deportiva
 // Incluye: Macrociclos, Mesociclos, Microciclos y Sesiones
@@ -26,6 +28,7 @@ import { CatalogoEjerciciosService } from '../algoritmo/services/catalogo-ejerci
     MesociclosController,
     MicrociclosController,
     SesionesController,
+    PublicPlanificacionController,
   ],
   providers: [
     MacrociclosService,
@@ -36,6 +39,7 @@ import { CatalogoEjerciciosService } from '../algoritmo/services/catalogo-ejerci
     DateRangeValidator,
     PrismaService,
     CatalogoEjerciciosService,
+    PublicPlanificacionService,
   ],
   exports: [
     MacrociclosService,

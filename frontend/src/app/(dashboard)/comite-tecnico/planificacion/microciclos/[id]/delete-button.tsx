@@ -74,7 +74,7 @@ export function DeleteMicrocicloButton({ microcicloId, microcicloNumero }: Delet
         toast.success('Microciclo eliminado', {
           description: result.message,
         });
-        router.push(COMITE_TECNICO_ROUTES.planificacion.microciclos.list);
+        router.push(COMITE_TECNICO_ROUTES.planificacion.macrociclos.list);
       } else {
         toast.error('Error', {
           description: result.error || 'No se pudo eliminar el microciclo',

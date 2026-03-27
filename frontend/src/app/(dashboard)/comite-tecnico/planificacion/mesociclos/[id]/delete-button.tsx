@@ -74,7 +74,7 @@ export function DeleteMesocicloButton({ mesocicloId, mesocicloNombre }: DeleteMe
         toast.success('Mesociclo eliminado', {
           description: result.message,
         });
-        router.push(COMITE_TECNICO_ROUTES.planificacion.mesociclos.list);
+        router.push(COMITE_TECNICO_ROUTES.planificacion.macrociclos.list);
       } else {
         toast.error('Error', {
           description: result.error || 'No se pudo eliminar el mesociclo',

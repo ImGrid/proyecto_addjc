@@ -74,7 +74,7 @@ export default async function EntrenadorMicrocicloDetallePage({ params }: Microc
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" asChild>
-            <Link href={ENTRENADOR_ROUTES.planificacion.microciclos.list}>
+            <Link href={ENTRENADOR_ROUTES.planificacion.macrociclos.list}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Volver
             </Link>

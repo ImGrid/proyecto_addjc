@@ -69,22 +69,8 @@ export const navigationConfig: Record<RolUsuario, NavigationItem[]> = {
     },
     {
       href: '/comite-tecnico/planificacion',
-      label: 'Planificacion',
+      label: 'Calendario',
       icon: Calendar,
-      children: [
-        {
-          href: '/comite-tecnico/planificacion',
-          label: 'Macrociclos',
-        },
-        {
-          href: '/comite-tecnico/planificacion/mesociclos',
-          label: 'Mesociclos',
-        },
-        {
-          href: '/comite-tecnico/planificacion/microciclos',
-          label: 'Microciclos',
-        },
-      ],
     },
     {
       href: '/comite-tecnico/sesiones',
@@ -147,22 +133,8 @@ export const navigationConfig: Record<RolUsuario, NavigationItem[]> = {
     },
     {
       href: '/entrenador/planificacion',
-      label: 'Planificacion',
+      label: 'Calendario',
       icon: Calendar,
-      children: [
-        {
-          href: '/entrenador/planificacion',
-          label: 'Macrociclos',
-        },
-        {
-          href: '/entrenador/planificacion/mesociclos',
-          label: 'Mesociclos',
-        },
-        {
-          href: '/entrenador/planificacion/microciclos',
-          label: 'Microciclos',
-        },
-      ],
     },
     {
       href: '/entrenador/sesiones',

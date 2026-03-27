@@ -25,7 +25,7 @@ export default async function NuevoMesocicloPage({ searchParams }: NuevoMesocicl
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="sm" asChild>
-          <Link href="/comite-tecnico/planificacion/mesociclos">
+          <Link href="/comite-tecnico/planificacion">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Volver
           </Link>

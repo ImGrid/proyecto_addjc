@@ -50,7 +50,8 @@ const TURNO_LABELS: Record<string, string> = {
 };
 
 // Tipos de sesion que NO requieren campos de planificacion detallada ni contenidos
-const TIPOS_SIN_PLANIFICACION = ['COMPETENCIA', 'DESCANSO'];
+// TEST tiene ejercicios predefinidos (press banca, tiron, sentadilla, navette, etc.)
+const TIPOS_SIN_PLANIFICACION = ['COMPETENCIA', 'DESCANSO', 'TEST'];
 
 export function CreateSesionForm({ microciclos, redirectUrl, catalogoPorTipo }: CreateSesionFormProps) {
   const router = useRouter();

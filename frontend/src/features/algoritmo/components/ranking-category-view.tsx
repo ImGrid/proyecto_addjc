@@ -7,6 +7,16 @@ import { RankingTable } from './ranking-table';
 import { fetchRankingCategoria } from '../actions/fetch-ranking';
 import type { RankingCategoria } from '../types/algoritmo.types';
 
+const CATEGORIA_LABELS: Record<string, string> = {
+  MENOS_60K: 'Menos de 60 kg',
+  MENOS_66K: 'Menos de 66 kg',
+  MENOS_73K: 'Menos de 73 kg',
+  MENOS_81K: 'Menos de 81 kg',
+  MENOS_90K: 'Menos de 90 kg',
+  MENOS_100K: 'Menos de 100 kg',
+  MAS_100K: 'Mas de 100 kg',
+};
+
 interface RankingCategoryViewProps {
   categoriaInicial: string;
   dataInicial: RankingCategoria | null;
@@ -47,7 +57,7 @@ export function RankingCategoryView({
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              <span>Ranking - {data.categoriaPeso}</span>
+              <span>Ranking - {CATEGORIA_LABELS[data.categoriaPeso] || data.categoriaPeso}</span>
               <span className="text-sm font-normal text-muted-foreground">
                 {data.totalAtletas} atletas evaluados
               </span>

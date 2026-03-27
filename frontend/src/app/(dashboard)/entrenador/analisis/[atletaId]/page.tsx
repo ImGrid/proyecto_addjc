@@ -1,5 +1,6 @@
 import { fetchAnalisisRendimiento } from '@/features/algoritmo/actions/fetch-analisis';
 import { AnalisisDashboard } from '@/features/algoritmo/components/analisis-dashboard';
+import { DescargarPDFAnalisisBtn } from '@/features/algoritmo/components/descargar-pdf-analisis-btn';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -40,7 +41,7 @@ export default async function AnalisisAtletaENTPage({
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-3xl font-bold">
             Analisis de {analisis.nombreAtleta}
           </h1>
@@ -48,6 +49,7 @@ export default async function AnalisisAtletaENTPage({
             Analisis de rendimiento por ejercicio
           </p>
         </div>
+        <DescargarPDFAnalisisBtn analisis={analisis} />
       </div>
 
       <AnalisisDashboard analisis={analisis} />

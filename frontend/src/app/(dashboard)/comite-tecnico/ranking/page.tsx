@@ -3,6 +3,16 @@ import { RankingCategoryView } from '@/features/algoritmo/components/ranking-cat
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
+const CATEGORIA_LABELS: Record<string, string> = {
+  MENOS_60K: 'Menos de 60 kg',
+  MENOS_66K: 'Menos de 66 kg',
+  MENOS_73K: 'Menos de 73 kg',
+  MENOS_81K: 'Menos de 81 kg',
+  MENOS_90K: 'Menos de 90 kg',
+  MENOS_100K: 'Menos de 100 kg',
+  MAS_100K: 'Mas de 100 kg',
+};
+
 export default async function RankingCTPage() {
   // Cargar con categoria por defecto
   const categoriaInicial = 'MENOS_60K';
@@ -36,7 +46,7 @@ export default async function RankingCTPage() {
             <Card key={est.categoria}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  {est.categoria}
+                  {CATEGORIA_LABELS[est.categoria] || est.categoria}
                 </CardTitle>
               </CardHeader>
               <CardContent>
