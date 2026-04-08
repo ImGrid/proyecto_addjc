@@ -40,8 +40,8 @@ export async function loginAction(data: LoginFormData) {
     const cookieStore = await cookies();
     cookieStore.set('accessToken', loginResponse.access_token, {
       httpOnly: true, // No accesible desde JavaScript del navegador
-      secure: process.env.NODE_ENV === 'production', // Solo HTTPS en produccion
-      sameSite: 'lax', // Proteccion CSRF (lax para desarrollo local)
+      secure: process.env.COOKIE_SECURE === 'true', // true solo con HTTPS (dominio con SSL)
+      sameSite: 'lax', // Proteccion CSRF
       maxAge: 60 * 60, // 1 hora (3600 segundos)
       path: '/', // Disponible en toda la app
     });
