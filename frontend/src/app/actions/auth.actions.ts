@@ -11,14 +11,10 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 // Server Action para hacer login
 export async function loginAction(data: LoginFormData) {
   try {
-    console.log('[loginAction] Iniciando login con email:', data.email);
-
     // Validar datos con Zod
     const validatedData = loginSchema.parse(data);
-    console.log('[loginAction] Datos validados correctamente');
 
     // Hacer POST al backend
-    console.log('[loginAction] Enviando request a:', `${API_URL}/auth/login`);
     const response = await fetch(`${API_URL}/auth/login`, {
       method: 'POST',
       headers: {
@@ -28,12 +24,9 @@ export async function loginAction(data: LoginFormData) {
       credentials: 'include', // IMPORTANTE: Para enviar/recibir cookies
     });
 
-    console.log('[loginAction] Response status:', response.status);
-
     // Si la respuesta no es exitosa, lanzar error
     if (!response.ok) {
       const error = await response.json();
-      console.log('[loginAction] Error del backend:', error);
       return {
         success: false,
         error: error.message || 'Email o contrasena incorrectos',
@@ -42,7 +35,6 @@ export async function loginAction(data: LoginFormData) {
 
     // Obtener el token y datos del usuario
     const loginResponse: LoginResponse = await response.json();
-    console.log('[loginAction] Login exitoso para usuario:', loginResponse.user.email, 'Rol:', loginResponse.user.rol);
 
     // Guardar el token en una cookie HttpOnly
     const cookieStore = await cookies();
@@ -54,8 +46,6 @@ export async function loginAction(data: LoginFormData) {
       path: '/', // Disponible en toda la app
     });
 
-    console.log('[loginAction] Token guardado en cookie');
-
     // Redirect segun el rol del usuario
     const redirectMap = {
       ADMINISTRADOR: '/admin',
@@ -65,7 +55,6 @@ export async function loginAction(data: LoginFormData) {
     };
 
     const redirectPath = redirectMap[loginResponse.user.rol] || '/dashboard';
-    console.log('[loginAction] Redirigiendo a:', redirectPath);
 
     // IMPORTANTE: redirect() lanza un error NEXT_REDIRECT que Next.js captura internamente
     // NO debemos capturar este error - debe propagarse para que funcione la redireccion
@@ -76,13 +65,11 @@ export async function loginAction(data: LoginFormData) {
     if (error && typeof error === 'object' && 'digest' in error) {
       const digest = (error as any).digest;
       if (typeof digest === 'string' && digest.startsWith('NEXT_REDIRECT')) {
-        console.log('[loginAction] Redirect iniciado correctamente');
         throw error; // Re-lanzar para que Next.js lo maneje
       }
     }
 
     // Solo capturamos errores reales (validacion, red, etc)
-    console.error('[loginAction] Error real:', error);
     return {
       success: false,
       error: 'Error al iniciar sesion. Por favor intenta nuevamente.',
@@ -99,8 +86,7 @@ export async function logoutAction() {
 
     // Redirect a la pagina de login
     redirect(AUTH_ROUTES.login);
-  } catch (error) {
-    console.error('Error en logoutAction:', error);
+  } catch {
     // Si falla, igual intentar redirect
     redirect(AUTH_ROUTES.login);
   }
@@ -134,8 +120,7 @@ export async function getCurrentUserAction() {
       success: true,
       user: data.user,
     };
-  } catch (error) {
-    console.error('Error en getCurrentUserAction:', error);
+  } catch {
     return { success: false, error: 'Error al obtener usuario' };
   }
 }

@@ -36,4 +36,9 @@ export const validationSchema = Joi.object({
     .messages({
       'string.pattern.base': 'JWT_EXPIRATION debe tener formato: 60s, 15m, 1h, 7d',
     }),
+
+  // URL del frontend para configurar CORS
+  CORS_ORIGIN: Joi.string().default('http://localhost:5000').messages({
+    'string.base': 'CORS_ORIGIN debe ser una URL valida del frontend',
+  }),
 });

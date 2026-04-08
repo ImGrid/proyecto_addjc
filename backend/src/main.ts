@@ -33,15 +33,18 @@ async function bootstrap() {
 
   // Habilitar CORS para permitir peticiones desde el frontend
   // IMPORTANTE: credentials: true es necesario para HttpOnly cookies
+  // CORS_ORIGIN se configura via variable de entorno para cada ambiente
+  const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5000';
   app.enableCors({
-    origin: 'http://localhost:5000', // URL del frontend Next.js
-    credentials: true, // Permite enviar y recibir cookies
+    origin: corsOrigin,
+    credentials: true,
   });
 
   // Agregar prefijo global 'api' a todas las rutas
   // Ejemplo: /auth/login se convierte en /api/auth/login
   app.setGlobalPrefix('api');
 
-  await app.listen(process.env.PORT ?? 3000);
+  // '0.0.0.0' permite conexiones externas (necesario en VM/servidor)
+  await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
 }
 void bootstrap();
