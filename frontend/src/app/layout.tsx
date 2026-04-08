@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { Toaster } from 'sonner';
 import { Providers } from './providers';
@@ -17,6 +17,16 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Sistema ADDJC',
   description: 'Sistema de gestion y planificacion de entrenamiento para ADDJC',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'ADDJC',
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#1e3a5f',
 };
 
 export default function RootLayout({
