@@ -6,7 +6,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { PrismaService } from '../../../database/prisma.service';
-import { CategoriaPeso } from '@prisma/client';
+import { CategoriaPeso, TipoLesion } from '@prisma/client';
 import {
   generarRanking,
   generarRankingGlobal,
@@ -196,24 +196,33 @@ export class RankingAtletasService {
       },
     });
 
-    // Obtener conteo de dolencias activas para TODOS los atletas en una sola query
-    const dolenciasPorAtleta = await this.prisma.$queryRaw<{ atletaId: bigint; count: bigint }[]>`
-      SELECT r."atletaId", COUNT(d.id)::bigint as count
+    // Obtener dolencias activas (nivel y tipo) para TODOS los atletas en una sola query
+    // Necesitamos el detalle, no solo el conteo, para que la regla de aptitud
+    // pueda discriminar entre dolencia leve y grave (UMBRALES_ALERTA.NIVEL_DOLOR_ALTO)
+    const dolenciasPorAtleta = await this.prisma.$queryRaw<
+      { atletaId: bigint; nivel: number; tipoLesion: TipoLesion | null }[]
+    >`
+      SELECT r."atletaId", d.nivel, d."tipoLesion"
       FROM dolencias d
       JOIN registros_post_entrenamiento r ON d."registroPostEntrenamientoId" = r.id
       WHERE d.recuperado = false
-      GROUP BY r."atletaId"
     `;
 
-    // Construir Map para lookup O(1)
-    const dolenciasMap = new Map<string, number>();
+    // Construir Map para lookup O(1): un atleta puede tener varias dolencias activas
+    const dolenciasMap = new Map<
+      string,
+      Array<{ nivel: number; tipoLesion: TipoLesion | null }>
+    >();
     for (const row of dolenciasPorAtleta) {
-      dolenciasMap.set(row.atletaId.toString(), Number(row.count));
+      const key = row.atletaId.toString();
+      const lista = dolenciasMap.get(key) || [];
+      lista.push({ nivel: row.nivel, tipoLesion: row.tipoLesion });
+      dolenciasMap.set(key, lista);
     }
 
     return atletas.map((atleta) => {
       const ultimoTest = atleta.testsFisicos[0] || null;
-      const dolenciasActivas = dolenciasMap.get(atleta.id.toString()) || 0;
+      const dolenciasActivas = dolenciasMap.get(atleta.id.toString()) || [];
 
       return {
         atletaId: atleta.id,

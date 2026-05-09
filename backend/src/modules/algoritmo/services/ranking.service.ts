@@ -2,7 +2,7 @@
 // Usa score.calculator.ts para evaluar y ordenar atletas
 // Basado en: docs/algoritmo_03_diseno.md
 
-import { CategoriaPeso } from '@prisma/client';
+import { CategoriaPeso, TipoLesion } from '@prisma/client';
 import {
   calcularScoreAtleta,
   DatosTestFisico,
@@ -10,6 +10,7 @@ import {
   DatosPesoAtleta,
   ResultadoScore,
 } from '../calculators/score.calculator';
+import { UMBRALES_ALERTA } from './alertas.service';
 
 // Datos completos de un atleta para ranking
 export interface DatosAtletaParaRanking {
@@ -34,8 +35,8 @@ export interface DatosAtletaParaRanking {
     calidadSueno: number;
     estadoAnimico: number;
   }>;
-  // Dolencias activas
-  dolenciasActivas: number;
+  // Dolencias activas (nivel y tipo para evaluar gravedad en la regla de aptitud)
+  dolenciasActivas: Array<{ nivel: number; tipoLesion: TipoLesion | null }>;
 }
 
 // Resultado del ranking para un atleta
@@ -126,9 +127,15 @@ function generarAlertasAtleta(atleta: DatosAtletaParaRanking, score: ResultadoSc
     }
   }
 
-  // Alerta si tiene dolencias activas
-  if (atleta.dolenciasActivas > 0) {
-    alertas.push(`${atleta.dolenciasActivas} dolencia(s) activa(s)`);
+  // Alerta si tiene dolencias activas (clasifica gravedad por nivel maximo)
+  if (atleta.dolenciasActivas.length > 0) {
+    const nivelMaximo = Math.max(...atleta.dolenciasActivas.map((d) => d.nivel));
+    const cantidad = atleta.dolenciasActivas.length;
+    if (nivelMaximo >= UMBRALES_ALERTA.NIVEL_DOLOR_ALTO) {
+      alertas.push(`${cantidad} dolencia(s) grave(s) activa(s) (nivel max ${nivelMaximo})`);
+    } else {
+      alertas.push(`${cantidad} dolencia(s) leve(s) activa(s) (nivel max ${nivelMaximo})`);
+    }
   }
 
   // Alerta si estado es bajo
@@ -150,18 +157,26 @@ function generarAlertasAtleta(atleta: DatosAtletaParaRanking, score: ResultadoSc
 }
 
 // Determina si el atleta es apto para competir
+// Regla suavizada por nivel de dolencia (alineada con UMBRALES_ALERTA.NIVEL_DOLOR_ALTO):
+// - NO_APTO: tiene dolencia grave (nivel >= 7), score de estado muy bajo, o peso muy fuera de rango
+// - RESERVA: tiene dolencia leve (nivel < 7), o varias alertas, o score moderado
+// - COMPETIR: pasa todo
 function determinarAptitud(
   score: ResultadoScore,
   alertas: string[],
-  dolenciasActivas: number
+  dolenciasActivas: DatosAtletaParaRanking['dolenciasActivas']
 ): 'COMPETIR' | 'RESERVA' | 'NO_APTO' {
-  // No apto si tiene dolencias graves o score muy bajo
-  if (dolenciasActivas > 0 || score.scoreEstado < 30 || score.scorePeso < 50) {
+  const tieneDolenciaGrave = dolenciasActivas.some(
+    (d) => d.nivel >= UMBRALES_ALERTA.NIVEL_DOLOR_ALTO
+  );
+
+  // No apto si tiene dolencia grave, score de estado muy bajo, o peso muy fuera de rango
+  if (tieneDolenciaGrave || score.scoreEstado < 30 || score.scorePeso < 50) {
     return 'NO_APTO';
   }
 
-  // Reserva si tiene alertas o score moderado
-  if (alertas.length >= 2 || score.scoreTotal < 50) {
+  // Reserva si hay dolencia leve activa, varias alertas, o score moderado
+  if (dolenciasActivas.length > 0 || alertas.length >= 2 || score.scoreTotal < 50) {
     return 'RESERVA';
   }
 

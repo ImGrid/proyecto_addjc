@@ -4,8 +4,13 @@ import { useState } from 'react';
 import { Download, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+// Datos minimos por atleta que necesita el boton
+// Identificacion garantizada para que la hoja resumen siempre tenga algo que mostrar
+// (incluso si los 4 fetches de un atleta fallan)
 interface AtletaParaPDF {
   id: string;
+  nombreCompleto: string;
+  categoriaPeso: string;
 }
 
 interface DescargarPDFGrupalBtnProps {
@@ -13,7 +18,9 @@ interface DescargarPDFGrupalBtnProps {
 }
 
 // Boton para descargar el PDF de analisis de TODOS los atletas
-// Hace fetch de cada atleta en paralelo, luego genera un unico PDF
+// Para cada atleta hace 4 fetches en paralelo (analisis + ranking + dolencias + recomendaciones)
+// y compone un objeto DatosAtletaParaPDFGrupal por atleta antes de generar el PDF
+// Usa Promise.allSettled para que un fallo aislado no tumbe el reporte completo
 export function DescargarPDFGrupalBtn({
   atletas,
 }: DescargarPDFGrupalBtnProps) {
@@ -27,33 +34,68 @@ export function DescargarPDFGrupalBtn({
     setProgreso('Obteniendo datos...');
 
     try {
+      // Cargas dinamicas para no inflar el bundle inicial
       const { fetchAnalisisRendimiento } = await import(
         '@/features/algoritmo/actions/fetch-analisis'
+      );
+      const { fetchRankingAtleta } = await import(
+        '@/features/algoritmo/actions/fetch-ranking'
+      );
+      const { fetchRecomendaciones } = await import(
+        '@/features/algoritmo/actions/fetch-recomendaciones'
+      );
+      const { fetchDolenciasActivasPorAtleta } = await import(
+        '@/features/entrenador/actions/fetch-dolencias-entrenador'
       );
       const { descargarPDFAnalisisGrupal } = await import(
         '@/lib/pdf/generar-pdf-analisis'
       );
 
-      // Obtener analisis de cada atleta en paralelo
-      const promesas = atletas.map((a) => fetchAnalisisRendimiento(a.id));
-      const resultados = await Promise.all(promesas);
+      // Por cada atleta lanzamos 4 fetches en paralelo con allSettled
+      // para que un fallo aislado (ej. ranking sin datos) no tumbe el resto
+      // Filtramos las recomendaciones a estados accionables (PENDIENTE + EN_PROCESO)
+      // dado que el endpoint solo acepta un estado a la vez, traemos todas con limit
+      // alto y filtramos en memoria
+      const resultados = await Promise.all(
+        atletas.map(async (atleta) => {
+          const [analisisRes, rankingRes, dolenciasRes, recomendacionesRes] =
+            await Promise.allSettled([
+              fetchAnalisisRendimiento(atleta.id),
+              fetchRankingAtleta(atleta.id),
+              fetchDolenciasActivasPorAtleta(atleta.id),
+              fetchRecomendaciones({ atletaId: atleta.id, limit: 100 }),
+            ]);
 
-      // Filtrar los que retornaron datos (no null)
-      const analisisValidos = resultados.filter(
-        (r) => r !== null
+          const analisis =
+            analisisRes.status === 'fulfilled' ? analisisRes.value : null;
+          const ranking =
+            rankingRes.status === 'fulfilled' ? rankingRes.value : null;
+          const dolencias =
+            dolenciasRes.status === 'fulfilled' && dolenciasRes.value !== null
+              ? dolenciasRes.value
+              : [];
+          const recomendaciones =
+            recomendacionesRes.status === 'fulfilled' &&
+            recomendacionesRes.value !== null
+              ? recomendacionesRes.value.data.filter(
+                  (r) => r.estado === 'PENDIENTE' || r.estado === 'EN_PROCESO'
+                )
+              : [];
+
+          return {
+            atletaId: atleta.id,
+            nombreCompleto: atleta.nombreCompleto,
+            categoriaPeso: atleta.categoriaPeso,
+            analisis,
+            ranking,
+            dolenciasActivas: dolencias,
+            recomendacionesPendientes: recomendaciones,
+          };
+        })
       );
 
-      if (analisisValidos.length === 0) {
-        setProgreso('No se encontraron datos de analisis');
-        setTimeout(() => {
-          setGenerando(false);
-          setProgreso('');
-        }, 2000);
-        return;
-      }
-
-      setProgreso(`Generando PDF (${analisisValidos.length} atletas)...`);
-      await descargarPDFAnalisisGrupal(analisisValidos);
+      setProgreso(`Generando PDF (${resultados.length} atletas)...`);
+      await descargarPDFAnalisisGrupal(resultados);
     } catch (error) {
       console.error('[DescargarPDFGrupalBtn] Error:', error);
       setProgreso('Error al generar PDF');

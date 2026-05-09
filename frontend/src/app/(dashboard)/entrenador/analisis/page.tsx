@@ -18,7 +18,11 @@ export default async function AnalisisEntrenadorPage() {
         </div>
         {atletas.length > 0 && (
           <DescargarPDFGrupalBtn
-            atletas={atletas.map((a) => ({ id: a.id }))}
+            atletas={atletas.map((a) => ({
+              id: a.id,
+              nombreCompleto: a.usuario.nombreCompleto,
+              categoriaPeso: a.categoriaPeso,
+            }))}
           />
         )}
       </div>
