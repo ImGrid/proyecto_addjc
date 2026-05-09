@@ -28,9 +28,13 @@ import { COMITE_TECNICO_ROUTES } from '@/lib/routes';
 interface DeleteMacrocicloButtonProps {
   macrocicloId: string;
   macrocicloNombre: string;
+  // Callback opcional que se ejecuta despues de eliminar exitosamente
+  // Si no se pasa, redirige a la lista de macrociclos (comportamiento por defecto)
+  // Util para reusar este boton en el calendario donde queremos refrescar en lugar de navegar
+  onDeleteSuccess?: () => void;
 }
 
-export function DeleteMacrocicloButton({ macrocicloId, macrocicloNombre }: DeleteMacrocicloButtonProps) {
+export function DeleteMacrocicloButton({ macrocicloId, macrocicloNombre, onDeleteSuccess }: DeleteMacrocicloButtonProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -74,7 +78,11 @@ export function DeleteMacrocicloButton({ macrocicloId, macrocicloNombre }: Delet
         toast.success('Macrociclo eliminado', {
           description: result.message,
         });
-        router.push(COMITE_TECNICO_ROUTES.planificacion.macrociclos.list);
+        if (onDeleteSuccess) {
+          onDeleteSuccess();
+        } else {
+          router.push(COMITE_TECNICO_ROUTES.planificacion.macrociclos.list);
+        }
       } else {
         toast.error('Error', {
           description: result.error || 'No se pudo eliminar el macrociclo',

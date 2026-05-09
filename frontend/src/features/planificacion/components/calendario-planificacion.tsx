@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Plus } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Plus, Edit } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { CalendarioGeneral } from './calendario-general';
 import { CalendarioMesociclos } from './calendario-mesociclos';
 import { CalendarioMicrociclos } from './calendario-microciclos';
+import { DeleteMacrocicloButton } from '@/app/(dashboard)/comite-tecnico/planificacion/[id]/delete-button';
 import type { Macrociclo, Mesociclo, MicrocicloType } from '@/features/comite-tecnico/types/planificacion.types';
 
 interface CalendarioPlanificacionProps {
@@ -67,6 +69,7 @@ export function CalendarioPlanificacion({
   baseSesiones,
   puedeEditar,
 }: CalendarioPlanificacionProps) {
+  const router = useRouter();
   const defaultId = getMacrocicloDefaultId(macrociclos);
   const [macrocicloSeleccionadoId, setMacrocicloSeleccionadoId] = useState<string | null>(defaultId);
   const [tabActivo, setTabActivo] = useState('general');
@@ -76,6 +79,17 @@ export function CalendarioPlanificacion({
     () => macrociclos.find((m) => m.id === macrocicloSeleccionadoId) || null,
     [macrociclos, macrocicloSeleccionadoId],
   );
+
+  // Si el macrociclo seleccionado ya no existe (ej. fue eliminado y router.refresh trajo
+  // la nueva lista sin el), reasignar al default de la lista actual
+  useEffect(() => {
+    if (
+      macrocicloSeleccionadoId &&
+      !macrociclos.find((m) => m.id === macrocicloSeleccionadoId)
+    ) {
+      setMacrocicloSeleccionadoId(getMacrocicloDefaultId(macrociclos));
+    }
+  }, [macrociclos, macrocicloSeleccionadoId]);
 
   // Mesociclos del macrociclo seleccionado
   const mesociclosDelMacro = useMemo(
@@ -123,15 +137,39 @@ export function CalendarioPlanificacion({
           <div />
         )}
 
-        {/* Boton de crear dinamico */}
-        {botonCrear && (
-          <Button asChild>
-            <Link href={botonCrear.href}>
-              <Plus className="mr-2 h-4 w-4" />
-              {botonCrear.label}
-            </Link>
-          </Button>
-        )}
+        {/* Botones de accion: Nuevo (siempre) + Editar/Eliminar del macrociclo seleccionado */}
+        <div className="flex items-center gap-2">
+          {botonCrear && (
+            <Button asChild>
+              <Link href={botonCrear.href}>
+                <Plus className="mr-2 h-4 w-4" />
+                {botonCrear.label}
+              </Link>
+            </Button>
+          )}
+
+          {/* Editar y Eliminar del macrociclo actualmente seleccionado en el dropdown */}
+          {puedeEditar && macrocicloActivo && (
+            <>
+              <Button asChild variant="outline">
+                <Link href={`${basePlanificacion}/${macrocicloActivo.id}/editar`}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Editar
+                </Link>
+              </Button>
+              <DeleteMacrocicloButton
+                macrocicloId={macrocicloActivo.id}
+                macrocicloNombre={macrocicloActivo.nombre}
+                onDeleteSuccess={() => {
+                  // Limpiar la seleccion local; el useEffect reasignara al default
+                  // cuando router.refresh traiga la lista nueva sin el eliminado
+                  setMacrocicloSeleccionadoId(null);
+                  router.refresh();
+                }}
+              />
+            </>
+          )}
+        </div>
       </div>
 
       <Tabs
