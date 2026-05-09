@@ -56,6 +56,13 @@ function getBotonCrear(
         label: 'Nuevo Microciclo',
         href: `${basePlanificacion}/microciclos/nuevo`,
       };
+    case 'sin-asignar':
+      // En el tab "sin asignar" tambien permitimos crear microciclos sueltos
+      // Se crea sin macrocicloId ni mesocicloId; el form acepta esos campos como opcionales
+      return {
+        label: 'Nuevo Microciclo',
+        href: `${basePlanificacion}/microciclos/nuevo`,
+      };
     default:
       return null;
   }
@@ -105,6 +112,13 @@ export function CalendarioPlanificacion({
     return microciclos.filter((mc) => mc.mesocicloId && ids.has(mc.mesocicloId));
   }, [microciclos, mesociclosDelMacro]);
 
+  // Microciclos sueltos: los creados sin mesociclo padre (caso valido del modelo)
+  // No dependen del macrociclo seleccionado en el dropdown porque no pertenecen a ninguno
+  const microciclosSinMesociclo = useMemo(
+    () => microciclos.filter((mc) => !mc.mesocicloId),
+    [microciclos],
+  );
+
   // Boton de creacion dinamico segun tab
   const botonCrear = puedeEditar
     ? getBotonCrear(tabActivo, basePlanificacion, macrocicloSeleccionadoId)
@@ -114,8 +128,9 @@ export function CalendarioPlanificacion({
     <div className="space-y-6">
       {/* Selector de macrociclo + boton crear */}
       <div className="flex items-center justify-between">
-        {/* Selector de macrociclo (solo si hay mas de 1) */}
-        {macrociclos.length > 1 ? (
+        {/* Selector de macrociclo (solo si hay mas de 1 y NO estamos en el tab sin-asignar
+            porque los microciclos sueltos no pertenecen a ningun macrociclo) */}
+        {macrociclos.length > 1 && tabActivo !== 'sin-asignar' ? (
           <div className="flex items-center gap-2">
             <label htmlFor="macrociclo-select" className="text-sm text-gray-500">
               Macrociclo:
@@ -148,8 +163,9 @@ export function CalendarioPlanificacion({
             </Button>
           )}
 
-          {/* Editar y Eliminar del macrociclo actualmente seleccionado en el dropdown */}
-          {puedeEditar && macrocicloActivo && (
+          {/* Editar y Eliminar del macrociclo actualmente seleccionado en el dropdown.
+              Se ocultan en el tab sin-asignar porque ahi no hay macrociclo de contexto. */}
+          {puedeEditar && macrocicloActivo && tabActivo !== 'sin-asignar' && (
             <>
               <Button asChild variant="outline">
                 <Link href={`${basePlanificacion}/${macrocicloActivo.id}/editar`}>
@@ -181,6 +197,14 @@ export function CalendarioPlanificacion({
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="mesociclos">Mesociclos</TabsTrigger>
           <TabsTrigger value="microciclos">Microciclos</TabsTrigger>
+          <TabsTrigger value="sin-asignar">
+            Sin asignar
+            {microciclosSinMesociclo.length > 0 && (
+              <span className="ml-2 inline-flex items-center justify-center rounded-full bg-amber-100 text-amber-700 text-[10px] font-semibold w-5 h-5">
+                {microciclosSinMesociclo.length}
+              </span>
+            )}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="general">
@@ -208,6 +232,35 @@ export function CalendarioPlanificacion({
             basePlanificacion={basePlanificacion}
             baseSesiones={baseSesiones}
           />
+        </TabsContent>
+
+        <TabsContent value="sin-asignar">
+          {microciclosSinMesociclo.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <p className="font-medium">No hay microciclos sin asignar</p>
+              <p className="text-sm mt-1">
+                Todos los microciclos del sistema pertenecen a algun mesociclo.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+                <p className="text-sm text-amber-800">
+                  <span className="font-semibold">
+                    Microciclos sueltos ({microciclosSinMesociclo.length})
+                  </span>
+                  : creados sin un mesociclo padre. No pertenecen a ningun macrociclo
+                  de la jerarquia de planificacion.
+                </p>
+              </div>
+              <CalendarioMicrociclos
+                microciclos={microciclosSinMesociclo}
+                mesociclos={[]}
+                basePlanificacion={basePlanificacion}
+                baseSesiones={baseSesiones}
+              />
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>
