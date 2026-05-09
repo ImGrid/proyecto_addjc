@@ -48,7 +48,7 @@ interface CargaPlanVsRealDataPoint {
 export class EstadisticasService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly accessControl: AccessControlService,
+    private readonly accessControl: AccessControlService
   ) {}
 
   // Obtener datos de bienestar temporal de un atleta
@@ -57,8 +57,11 @@ export class EstadisticasService {
     atletaId: bigint,
     userId: bigint,
     userRole: RolUsuario,
-    dias: number,
-  ): Promise<{ data: BienestarDataPoint[]; meta: { atletaId: string; dias: number; totalRegistros: number } }> {
+    dias: number
+  ): Promise<{
+    data: BienestarDataPoint[];
+    meta: { atletaId: string; dias: number; totalRegistros: number };
+  }> {
     // Verificar acceso
     const hasAccess = await this.accessControl.checkAtletaOwnership(userId, userRole, atletaId);
     if (!hasAccess) {
@@ -115,8 +118,11 @@ export class EstadisticasService {
     userId: bigint,
     userRole: RolUsuario,
     desde?: string,
-    hasta?: string,
-  ): Promise<{ data: CargaPlanVsRealDataPoint[]; meta: { atletaId: string; totalSesiones: number; cumplimientoPromedio: number | null } }> {
+    hasta?: string
+  ): Promise<{
+    data: CargaPlanVsRealDataPoint[];
+    meta: { atletaId: string; totalSesiones: number; cumplimientoPromedio: number | null };
+  }> {
     // Verificar acceso
     const hasAccess = await this.accessControl.checkAtletaOwnership(userId, userRole, atletaId);
     if (!hasAccess) {
@@ -212,9 +218,8 @@ export class EstadisticasService {
       // Solo incluir sesiones que tienen registro
       if (intensidadReal !== undefined) {
         const planificada = sesion.intensidadPlanificada;
-        const cumplimiento = planificada && planificada > 0
-          ? Math.round((intensidadReal / planificada) * 100)
-          : null;
+        const cumplimiento =
+          planificada && planificada > 0 ? Math.round((intensidadReal / planificada) * 100) : null;
 
         if (cumplimiento !== null) {
           sumaCumplimiento += cumplimiento;
@@ -238,18 +243,18 @@ export class EstadisticasService {
       meta: {
         atletaId: atletaId.toString(),
         totalSesiones: data.length,
-        cumplimientoPromedio: countCumplimiento > 0
-          ? Math.round(sumaCumplimiento / countCumplimiento)
-          : null,
+        cumplimientoPromedio:
+          countCumplimiento > 0 ? Math.round(sumaCumplimiento / countCumplimiento) : null,
       },
     };
   }
 
   // Obtener bienestar grupal (RPE promedio/max/min de todos los atletas por fecha)
   // Solo COMITE_TECNICO puede ver datos agregados de todos los atletas
-  async getBienestarGrupal(
-    dias: number,
-  ): Promise<{ data: BienestarGrupalDataPoint[]; meta: { dias: number; totalRegistros: number; atletasUnicos: number } }> {
+  async getBienestarGrupal(dias: number): Promise<{
+    data: BienestarGrupalDataPoint[];
+    meta: { dias: number; totalRegistros: number; atletasUnicos: number };
+  }> {
     const fechaLimite = new Date();
     fechaLimite.setDate(fechaLimite.getDate() - dias);
 
@@ -276,7 +281,10 @@ export class EstadisticasService {
     }
 
     // Agrupar por fecha (dia)
-    const porFecha = new Map<string, { rpes: number[]; suenos: number[]; animos: number[]; atletaIds: Set<bigint> }>();
+    const porFecha = new Map<
+      string,
+      { rpes: number[]; suenos: number[]; animos: number[]; atletaIds: Set<bigint> }
+    >();
 
     for (const r of registros) {
       const fechaKey = r.fechaRegistro.toISOString().split('T')[0];
@@ -307,8 +315,10 @@ export class EstadisticasService {
         rpePromedio: Math.round((sumaRpe / rpes.length) * 10) / 10,
         rpeMax: Math.max(...rpes),
         rpeMin: Math.min(...rpes),
-        calidadSuenoPromedio: Math.round((grupo.suenos.reduce((a, b) => a + b, 0) / grupo.suenos.length) * 10) / 10,
-        estadoAnimicoPromedio: Math.round((grupo.animos.reduce((a, b) => a + b, 0) / grupo.animos.length) * 10) / 10,
+        calidadSuenoPromedio:
+          Math.round((grupo.suenos.reduce((a, b) => a + b, 0) / grupo.suenos.length) * 10) / 10,
+        estadoAnimicoPromedio:
+          Math.round((grupo.animos.reduce((a, b) => a + b, 0) / grupo.animos.length) * 10) / 10,
         atletasConRegistro: grupo.atletaIds.size,
       });
     }
@@ -328,11 +338,12 @@ export class EstadisticasService {
 
   // Obtener asistencia grupal por semana
   // Solo COMITE_TECNICO puede ver datos agregados
-  async getAsistenciaGrupal(
-    semanas: number,
-  ): Promise<{ data: AsistenciaGrupalDataPoint[]; meta: { semanas: number; totalRegistros: number } }> {
+  async getAsistenciaGrupal(semanas: number): Promise<{
+    data: AsistenciaGrupalDataPoint[];
+    meta: { semanas: number; totalRegistros: number };
+  }> {
     const fechaLimite = new Date();
-    fechaLimite.setDate(fechaLimite.getDate() - (semanas * 7));
+    fechaLimite.setDate(fechaLimite.getDate() - semanas * 7);
 
     const registros = await this.prisma.registroPostEntrenamiento.findMany({
       where: {
@@ -353,7 +364,10 @@ export class EstadisticasService {
     }
 
     // Agrupar por semana ISO
-    const porSemana = new Map<string, { asistieron: number; faltaron: number; fechaInicio: Date }>();
+    const porSemana = new Map<
+      string,
+      { asistieron: number; faltaron: number; fechaInicio: Date }
+    >();
 
     for (const r of registros) {
       const fecha = r.fechaRegistro;

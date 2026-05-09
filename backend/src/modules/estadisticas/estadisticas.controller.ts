@@ -27,13 +27,13 @@ export class EstadisticasController {
   getBienestarAtleta(
     @Param('atletaId') atletaId: string,
     @Query('dias', new DefaultValuePipe(30), ParseIntPipe) dias: number,
-    @CurrentUser() user: any,
+    @CurrentUser() user: any
   ) {
     return this.estadisticasService.getBienestarAtleta(
       BigInt(atletaId),
       BigInt(user.id),
       user.rol,
-      dias,
+      dias
     );
   }
 
@@ -41,9 +41,7 @@ export class EstadisticasController {
   // Retorna RPE promedio/max/min, calidad sueno y estado animico agregado de todos los atletas
   @Get('bienestar-grupal')
   @Roles('COMITE_TECNICO')
-  getBienestarGrupal(
-    @Query('dias', new DefaultValuePipe(30), ParseIntPipe) dias: number,
-  ) {
+  getBienestarGrupal(@Query('dias', new DefaultValuePipe(30), ParseIntPipe) dias: number) {
     return this.estadisticasService.getBienestarGrupal(dias);
   }
 
@@ -51,9 +49,7 @@ export class EstadisticasController {
   // Retorna asistencia semanal agregada de todos los atletas
   @Get('asistencia-grupal')
   @Roles('COMITE_TECNICO')
-  getAsistenciaGrupal(
-    @Query('semanas', new DefaultValuePipe(8), ParseIntPipe) semanas: number,
-  ) {
+  getAsistenciaGrupal(@Query('semanas', new DefaultValuePipe(8), ParseIntPipe) semanas: number) {
     return this.estadisticasService.getAsistenciaGrupal(semanas);
   }
 
@@ -65,14 +61,14 @@ export class EstadisticasController {
     @Param('atletaId') atletaId: string,
     @Query('desde') desde: string | undefined,
     @Query('hasta') hasta: string | undefined,
-    @CurrentUser() user: any,
+    @CurrentUser() user: any
   ) {
     return this.estadisticasService.getCargaPlanVsReal(
       BigInt(atletaId),
       BigInt(user.id),
       user.rol,
       desde,
-      hasta,
+      hasta
     );
   }
 }

@@ -9,9 +9,7 @@ import { Public } from '../../../common/decorators/public.decorator';
 @Controller('public/planificacion')
 @UseGuards(JwtAuthGuard)
 export class PublicPlanificacionController {
-  constructor(
-    private readonly publicPlanificacionService: PublicPlanificacionService,
-  ) {}
+  constructor(private readonly publicPlanificacionService: PublicPlanificacionService) {}
 
   // GET /api/public/planificacion - Datos publicos del calendario
   // Retorna el macrociclo activo con sus mesociclos (nombre + etapa + fechas)

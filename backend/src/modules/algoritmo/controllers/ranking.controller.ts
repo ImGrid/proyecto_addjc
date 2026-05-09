@@ -160,7 +160,7 @@ export class RankingController {
       const hasAccess = await this.accessControl.checkAtletaOwnership(
         BigInt(user.id),
         user.rol,
-        BigInt(id),
+        BigInt(id)
       );
       if (!hasAccess) {
         throw new ForbiddenException('Solo puedes ver el ranking de tus atletas asignados');

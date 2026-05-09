@@ -30,7 +30,7 @@ export class NotificacionesController {
   constructor(
     private readonly notificacionesService: NotificacionesService,
     private readonly alertasService: AlertasSistemaService,
-    private readonly accessControl: AccessControlService,
+    private readonly accessControl: AccessControlService
   ) {}
 
   // =====================
@@ -110,7 +110,7 @@ export class NotificacionesController {
       const hasAccess = await this.accessControl.checkAtletaOwnership(
         BigInt(user.id),
         user.rol,
-        BigInt(atletaId),
+        BigInt(atletaId)
       );
       if (!hasAccess) {
         throw new ForbiddenException('Solo puedes ver alertas de tus atletas asignados');

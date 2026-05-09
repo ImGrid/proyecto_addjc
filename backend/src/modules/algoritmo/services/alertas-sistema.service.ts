@@ -342,7 +342,6 @@ export class AlertasSistemaService {
     return destinatarios;
   }
 
-
   // Obtiene alertas de un atleta (todas, sin filtrar por destinatario)
   async obtenerAlertasAtleta(atletaId: bigint, soloNoLeidas: boolean = false) {
     // Si soloNoLeidas, filtrar por alertas que tengan al menos un destinatario sin leer

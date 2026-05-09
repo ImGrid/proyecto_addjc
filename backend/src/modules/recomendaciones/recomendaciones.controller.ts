@@ -32,7 +32,7 @@ import {
 export class RecomendacionesController {
   constructor(
     private readonly recomendacionesService: RecomendacionesService,
-    private readonly accessControl: AccessControlService,
+    private readonly accessControl: AccessControlService
   ) {}
 
   // GET /api/recomendaciones/pendientes - Listar recomendaciones pendientes de revision
@@ -81,7 +81,7 @@ export class RecomendacionesController {
       const hasAccess = await this.accessControl.checkAtletaOwnership(
         BigInt(user.id),
         user.rol,
-        BigInt(atletaId),
+        BigInt(atletaId)
       );
       if (!hasAccess) {
         throw new ForbiddenException('Solo puedes ver recomendaciones de tus atletas asignados');
@@ -99,13 +99,14 @@ export class RecomendacionesController {
 
     // ENTRENADOR: validar que la recomendacion pertenece a uno de sus atletas
     if (user.rol === 'ENTRENADOR' && recomendacion && recomendacion.atletaId) {
-      const atletaId = typeof recomendacion.atletaId === 'string'
-        ? BigInt(recomendacion.atletaId)
-        : recomendacion.atletaId;
+      const atletaId =
+        typeof recomendacion.atletaId === 'string'
+          ? BigInt(recomendacion.atletaId)
+          : recomendacion.atletaId;
       const hasAccess = await this.accessControl.checkAtletaOwnership(
         BigInt(user.id),
         user.rol,
-        atletaId,
+        atletaId
       );
       if (!hasAccess) {
         throw new ForbiddenException('No tienes acceso a esta recomendacion');

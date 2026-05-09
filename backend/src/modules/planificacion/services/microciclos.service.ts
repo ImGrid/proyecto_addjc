@@ -579,7 +579,15 @@ export class MicrociclosService {
 
       // Validar que fechaInicio sea LUNES
       if (fechaInicio.getUTCDay() !== 1) {
-        const diasSemana = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+        const diasSemana = [
+          'domingo',
+          'lunes',
+          'martes',
+          'miercoles',
+          'jueves',
+          'viernes',
+          'sabado',
+        ];
         const diaSeleccionado = diasSemana[fechaInicio.getUTCDay()];
         throw new BadRequestException(
           `La fecha de inicio debe ser un LUNES. La fecha seleccionada es ${diaSeleccionado}.`

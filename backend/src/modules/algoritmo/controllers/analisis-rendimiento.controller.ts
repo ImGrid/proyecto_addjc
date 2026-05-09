@@ -1,7 +1,16 @@
 // Controller para exponer el analisis de rendimiento por ejercicio
 // Permite al frontend consultar el analisis y recomendaciones de un atleta
 
-import { Controller, Get, Param, Query, UseGuards, ParseIntPipe, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  UseGuards,
+  ParseIntPipe,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -15,7 +24,7 @@ import { evaluarReglas, ContextoEvaluacion } from '../reglas';
 export class AnalisisRendimientoController {
   constructor(
     private readonly analisisService: AnalisisRendimientoService,
-    private readonly accessControl: AccessControlService,
+    private readonly accessControl: AccessControlService
   ) {}
 
   // Obtener mi analisis de rendimiento (solo ATLETA)
@@ -23,10 +32,7 @@ export class AnalisisRendimientoController {
   // Resuelve el atletaId a partir del userId del token JWT
   @Get('mi-analisis')
   @Roles('ATLETA')
-  async obtenerMiAnalisis(
-    @CurrentUser() user: any,
-    @Query('dias') dias?: string
-  ) {
+  async obtenerMiAnalisis(@CurrentUser() user: any, @Query('dias') dias?: string) {
     const atletaId = await this.accessControl.getAtletaId(BigInt(user.id));
 
     if (!atletaId) {
@@ -50,7 +56,7 @@ export class AnalisisRendimientoController {
       const hasAccess = await this.accessControl.checkAtletaOwnership(
         BigInt(user.id),
         user.rol,
-        BigInt(atletaId),
+        BigInt(atletaId)
       );
       if (!hasAccess) {
         throw new ForbiddenException('Solo puedes ver el analisis de tus atletas asignados');
@@ -155,10 +161,12 @@ export class AnalisisRendimientoController {
       const hasAccess = await this.accessControl.checkAtletaOwnership(
         BigInt(user.id),
         user.rol,
-        BigInt(atletaId),
+        BigInt(atletaId)
       );
       if (!hasAccess) {
-        throw new ForbiddenException('Solo puedes ver las recomendaciones de tus atletas asignados');
+        throw new ForbiddenException(
+          'Solo puedes ver las recomendaciones de tus atletas asignados'
+        );
       }
     }
 

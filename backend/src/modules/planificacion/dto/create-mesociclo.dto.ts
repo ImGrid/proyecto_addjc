@@ -1,11 +1,4 @@
-import {
-  IsString,
-  IsNotEmpty,
-  MinLength,
-  MaxLength,
-  IsDateString,
-  IsEnum,
-} from 'class-validator';
+import { IsString, IsNotEmpty, MinLength, MaxLength, IsDateString, IsEnum } from 'class-validator';
 import { EtapaMesociclo } from '@prisma/client';
 
 export class CreateMesocicloDto {

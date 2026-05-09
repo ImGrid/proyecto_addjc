@@ -1,10 +1,27 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+
 export default function OfflinePage() {
+  const [isOnline, setIsOnline] = useState(false);
+
+  useEffect(() => {
+    setIsOnline(navigator.onLine);
+
+    const handleOnline = () => {
+      setIsOnline(true);
+      // Recargar automaticamente cuando vuelve la conexion
+      window.location.reload();
+    };
+
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4">
       <div className="text-center max-w-md">
-        <div className="mb-6 text-6xl">
+        <div className="mb-6">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="80"
@@ -29,16 +46,25 @@ export default function OfflinePage() {
         <h1 className="mb-3 text-2xl font-bold text-gray-900">
           Sin conexion a internet
         </h1>
-        <p className="mb-6 text-gray-600">
-          No se pudo establecer conexion con el servidor. Verifica tu conexion a
-          internet e intenta nuevamente.
+        <p className="mb-2 text-gray-600">
+          No se pudo cargar esta pagina porque no hay conexion a internet.
         </p>
-        <button
-          onClick={() => window.location.reload()}
-          className="rounded-lg bg-[#1e3a5f] px-6 py-3 text-white font-medium hover:bg-[#2a4a6f] transition-colors"
-        >
-          Reintentar
-        </button>
+        <p className="mb-6 text-sm text-gray-500">
+          Las paginas que visitaste anteriormente pueden estar disponibles.
+          Intenta navegar a una seccion que ya hayas visitado.
+        </p>
+        {isOnline ? (
+          <p className="text-green-600 font-medium">
+            Conexion restaurada. Recargando...
+          </p>
+        ) : (
+          <button
+            onClick={() => window.location.reload()}
+            className="rounded-lg bg-[#1e3a5f] px-6 py-3 text-white font-medium hover:bg-[#2a4a6f] transition-colors"
+          >
+            Reintentar
+          </button>
+        )}
       </div>
     </div>
   );

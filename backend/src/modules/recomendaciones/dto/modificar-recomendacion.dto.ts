@@ -1,13 +1,7 @@
 // DTO para modificar una recomendacion del algoritmo antes de aplicarla
 // Simplificado: solo justificacion + comentario adicional
 
-import {
-  IsString,
-  IsNotEmpty,
-  MaxLength,
-  IsOptional,
-  IsObject,
-} from 'class-validator';
+import { IsString, IsNotEmpty, MaxLength, IsOptional, IsObject } from 'class-validator';
 
 // Modificaciones se guardan como JSON de auditoria (sin campos especificos)
 export class ModificacionesDto {}
