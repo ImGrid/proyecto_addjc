@@ -1,6 +1,8 @@
 import { fetchAnalisisRendimiento } from '@/features/algoritmo/actions/fetch-analisis';
 import { AnalisisDashboard } from '@/features/algoritmo/components/analisis-dashboard';
 import { DescargarPDFAnalisisBtn } from '@/features/algoritmo/components/descargar-pdf-analisis-btn';
+import { SelectorPeriodoAnalisis } from '@/features/algoritmo/components/selector-periodo-analisis';
+import { parsearPeriodo } from '@/features/algoritmo/lib/periodo-analisis';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -8,13 +10,17 @@ import { ENTRENADOR_ROUTES } from '@/lib/routes';
 
 interface AnalisisAtletaENTPageProps {
   params: Promise<{ atletaId: string }>;
+  searchParams: Promise<{ dias?: string }>;
 }
 
 export default async function AnalisisAtletaENTPage({
   params,
+  searchParams,
 }: AnalisisAtletaENTPageProps) {
   const { atletaId } = await params;
-  const analisis = await fetchAnalisisRendimiento(atletaId);
+  const { dias: diasRaw } = await searchParams;
+  const dias = parsearPeriodo(diasRaw);
+  const analisis = await fetchAnalisisRendimiento(atletaId, dias);
 
   if (!analisis) {
     return (
@@ -35,13 +41,13 @@ export default async function AnalisisAtletaENTPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 flex-wrap">
         <Button variant="ghost" size="icon" asChild>
           <Link href="/entrenador">
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
-        <div className="flex-1">
+        <div className="flex-1 min-w-[200px]">
           <h1 className="text-3xl font-bold">
             Analisis de {analisis.nombreAtleta}
           </h1>
@@ -49,6 +55,7 @@ export default async function AnalisisAtletaENTPage({
             Analisis de rendimiento por ejercicio
           </p>
         </div>
+        <SelectorPeriodoAnalisis />
         <DescargarPDFAnalisisBtn analisis={analisis} />
       </div>
 

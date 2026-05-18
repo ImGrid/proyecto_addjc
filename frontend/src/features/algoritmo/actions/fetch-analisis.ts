@@ -8,11 +8,12 @@ import type {
 
 // Obtener analisis completo de rendimiento de un atleta
 // Verificado: analisis-rendimiento.controller.ts GET /algoritmo/analisis/:atletaId
-// Query: dias (default 30)
+// Query: dias (default 90 - cubre un trimestre, suficiente para tendencia y Z-Score)
+// Nota: el parámetro se llama `dias` (sin acento) porque es un identificador de query string
 // Roles: COMITE_TECNICO, ENTRENADOR, ADMINISTRADOR
 export async function fetchAnalisisRendimiento(
   atletaId: string,
-  dias: number = 30
+  dias: number = 90
 ): Promise<AnalisisRendimiento | null> {
   try {
     const token = await getAuthToken();
@@ -42,7 +43,7 @@ export async function fetchAnalisisRendimiento(
 // El backend resuelve el atletaId a partir del userId del token JWT
 // Roles: ATLETA
 export async function fetchMiAnalisis(
-  dias: number = 30
+  dias: number = 90
 ): Promise<AnalisisRendimiento | null> {
   try {
     const token = await getAuthToken();
@@ -73,7 +74,7 @@ export async function fetchMiAnalisis(
 // Roles: COMITE_TECNICO, ENTRENADOR, ADMINISTRADOR
 export async function fetchAnalisisRecomendaciones(
   atletaId: string,
-  dias: number = 30
+  dias: number = 90
 ): Promise<RecomendacionesSimplificadas | null> {
   try {
     const token = await getAuthToken();

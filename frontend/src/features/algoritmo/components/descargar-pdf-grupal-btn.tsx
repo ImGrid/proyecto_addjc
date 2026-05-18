@@ -15,6 +15,9 @@ interface AtletaParaPDF {
 
 interface DescargarPDFGrupalBtnProps {
   atletas: AtletaParaPDF[];
+  // Ventana de análisis en días - lo pasa la página padre desde el selector
+  // para que el PDF respete el mismo rango que el usuario está viendo en pantalla
+  dias: number;
 }
 
 // Boton para descargar el PDF de analisis de TODOS los atletas
@@ -23,6 +26,7 @@ interface DescargarPDFGrupalBtnProps {
 // Usa Promise.allSettled para que un fallo aislado no tumbe el reporte completo
 export function DescargarPDFGrupalBtn({
   atletas,
+  dias,
 }: DescargarPDFGrupalBtnProps) {
   const [generando, setGenerando] = useState(false);
   const [progreso, setProgreso] = useState('');
@@ -60,7 +64,7 @@ export function DescargarPDFGrupalBtn({
         atletas.map(async (atleta) => {
           const [analisisRes, rankingRes, dolenciasRes, recomendacionesRes] =
             await Promise.allSettled([
-              fetchAnalisisRendimiento(atleta.id),
+              fetchAnalisisRendimiento(atleta.id, dias),
               fetchRankingAtleta(atleta.id),
               fetchDolenciasActivasPorAtleta(atleta.id),
               fetchRecomendaciones({ atletaId: atleta.id, limit: 100 }),
